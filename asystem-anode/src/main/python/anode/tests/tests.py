@@ -25,4 +25,3 @@ class ANodeTest(TestCase):
     def test_main_quiet_long(self):
         with patch.object(sys, 'argv', ["anode", "--quiet"]):
             main(Clock())
-

@@ -3,10 +3,7 @@ from anode.plugin.plugin import Plugin
 
 class Davis(Plugin):
     def __init__(self, config):
-        self.config = config
-        if not self.config['quiet']:
-            print __name__ + ":init"
+        super(self.__class__, self).__init__(config)
 
     def loop(self):
-        if not self.config['quiet']:
-            print __name__ + ":loop"
+        super(self.__class__, self).loop
