@@ -1,3 +1,3 @@
-# asystem
+# ASystem
 
-ASystem
+Asystem, a pluggable IoT set of modules
