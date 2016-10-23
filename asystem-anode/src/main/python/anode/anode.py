@@ -23,7 +23,8 @@ class ANode():
         self.plugins.append(self.plugin("davis", {"quiet": self.options.quiet, "poll": 1}))
         self.plugins.append(self.plugin("fronius", {"quiet": self.options.quiet, "poll": 1}))
         self.plugins.append(self.plugin("netatmo", {"quiet": self.options.quiet, "poll": 1}))
-        self.plugins.append(self.plugin("poll", {"quiet": self.options.quiet, "poll": 1, "callback": self.callback}))
+        self.plugins.append(self.plugin("publish", {"quiet": self.options.quiet, "poll": 1}))
+        self.plugins.append(self.plugin("callback", {"quiet": self.options.quiet, "poll": 1, "callback": self.callback}))
         if hasattr(self.clock, 'run'):
             self.clock.run()
 
