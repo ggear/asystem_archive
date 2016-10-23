@@ -21,7 +21,7 @@ setup(
         'Topic :: Other/Nonlisted Topic',
     ],
     keywords='asystem anode',
-    url='http://github.com/ggear/asystem/asystem-anode',
+    url='https://github.com/ggear/asystem/tree/master/asystem-anode',
     author='Graham Gear',
     author_email='notmyemail@company.com',
     packages=['anode'],

@@ -6,4 +6,4 @@ class Fronius(Plugin):
         super(self.__class__, self).__init__(config)
 
     def loop(self):
-        super(self.__class__, self).loop
+        super(self.__class__, self).loop()

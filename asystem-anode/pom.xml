@@ -64,6 +64,7 @@
                             <arguments>
                                 <argument>setup.py</argument>
                                 <argument>develop</argument>
+                                <argument>--user</argument>
                             </arguments>
                         </configuration>
                     </execution>

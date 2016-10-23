@@ -9,19 +9,23 @@ from anode.anode import main
 
 class ANodeTest(TestCase):
     def setUp(self):
-        print 'setUp'
+        self.clock = Clock()
+
+    def tickTock(self, period, periods):
+        for tickTock in range(0, period * periods, period):
+            self.clock.advance(period)
 
     def tearDown(self):
-        print 'tearDown'
+        None
 
     def test_main_default(self):
         with patch.object(sys, 'argv', ["anode"]):
-            main(Clock())
+            main(self.clock, lambda: self.tickTock(1, 3))
 
     def test_main_quiet_short(self):
         with patch.object(sys, 'argv', ["anode", "-q"]):
-            main(Clock())
+            main(self.clock, lambda: self.tickTock(1, 1))
 
     def test_main_quiet_long(self):
         with patch.object(sys, 'argv', ["anode", "--quiet"]):
-            main(Clock())
+            main(self.clock, lambda: self.tickTock(1, 1))
