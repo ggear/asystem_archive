@@ -2,6 +2,14 @@
   {
     "namespace": "com.janeandgraham.asystem",
     "type": "enum",
+    "name": "version",
+    "symbols": [
+      "1.0"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "enum",
     "name": "source",
     "symbols": [
       "",
