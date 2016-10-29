@@ -4,6 +4,7 @@
     "type": "enum",
     "name": "source",
     "symbols": [
+      "",
       "bom",
       "davis",
       "fronius",
@@ -15,6 +16,7 @@
     "type": "enum",
     "name": "metric",
     "symbols": [
+      "",
       "temperature.outdoor.forecast",
       "temperature.outdoor.roof",
       "temperature.outdoor.deck",
@@ -32,6 +34,7 @@
     "type": "enum",
     "name": "type",
     "symbols": [
+      "",
       "point",
       "summation",
       "maximum",
@@ -45,6 +48,7 @@
     "type": "enum",
     "name": "unit",
     "symbols": [
+      "",
       "s",
       "kW",
       "KWh"
@@ -57,43 +61,53 @@
     "fields": [
       {
         "name": "anode",
-        "type": "bytes"
+        "type": "bytes",
+        "default": "\u0000"
       },
       {
         "name": "source",
-        "type": "source"
+        "type": "source",
+        "default": ""
       },
       {
         "name": "metric",
-        "type": "metric"
+        "type": "metric",
+        "default": ""
       },
       {
         "name": "type",
-        "type": "type"
+        "type": "type",
+        "default": ""
       },
       {
         "name": "bin_width",
-        "type": "int"
+        "type": "int",
+        "default": 0
       },
       {
         "name": "bin_unit",
-        "type": "unit"
+        "type": "unit",
+        "default": ""
       },
       {
         "name": "bin_timestamp",
-        "type": "long"
+        "type": "long",
+        "default": 0
       },
       {
         "name": "data_timestamp",
-        "type": "long"
+        "type": "long",
+        "default": 0
       },
       {
         "name": "data_unit",
-        "type": "unit"
+        "type": "unit",
+        "default": ""
       },
       {
         "name": "data_value",
-        "type": "long"
+        "type": "long",
+        "default": 0
       }
     ]
   }
