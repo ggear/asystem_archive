@@ -17,11 +17,11 @@
 
 ANODE=anode
 ANODE_PATH=$(which anode)
-ANODE_LOCK=/var/lock/subsys/$ANODE
+ANODE_LOCK=/var/lock/subsys/${ANODE}
 ANODE_FUNCTIONS=/etc/init.d/functions
 
-if [ -f $ANODE_FUNCTIONS ]; then
-  . $ANODE_FUNCTIONS
+if [ -f ${ANODE_FUNCTIONS} ]; then
+  . ${ANODE_FUNCTIONS}
 else
   echo "Unrecognised system [$(uname)], cannot start daemon"
   exit 1
@@ -29,9 +29,9 @@ fi
 
 start() {
   initlog -c "echo -n Starting anode: "
-  if [ ! -f $ANODE_LOCK ]; then
-    nohup $ANODE_PATH -q > /dev/null &
-    touch $ANODE_LOCK
+  if [ ! -f ${ANODE_LOCK} ]; then
+    nohup ${ANODE_PATH} -q > /dev/null &
+    touch ${ANODE_LOCK}
     success $"anode started"
   else
     failure $"anode started"
@@ -41,15 +41,15 @@ start() {
 
 stop() {
   initlog -c "echo -n Stopping anode: "
-  killproc $ANODE_PATH
-  rm -f $ANODE_LOCK
+  killproc ${ANODE_PATH}
+  rm -f ${ANODE_LOCK}
   success $"anode stopped"
   echo
 }
 
 status() {
   initlog -c "echo -n Status anode: "
-  if [ -f $ANODE_LOCK ]; then
+  if [ -f ${ANODE_LOCK} ]; then
     success $"anode started"
   else
     failure $"anode stopped"

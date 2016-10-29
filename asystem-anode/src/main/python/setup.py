@@ -25,9 +25,10 @@ setup(
     author='Graham Gear',
     author_email='notmyemail@company.com',
     packages=['anode'],
-    install_requires=['twisted'],
-    test_suite='nose.collector',
-    tests_require=['mock', 'nose', 'nose-cover3'],
+    install_requires=['twisted', 'avro'],
+    tests_require=['mock'],
+    test_suite='anode.test.test',
+    setup_requires=['setuptools_trial'],
     entry_points={'console_scripts': ['anode=anode.anode:main']},
     include_package_data=True,
     zip_safe=False

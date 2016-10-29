@@ -1,23 +1,22 @@
 from optparse import OptionParser
 
+from plugin import Plugin
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
-from plugin import Plugin
 
-
-class ANode():
+class ANode:
     def __init__(self, clock, callback, options):
         self.clock = clock
         self.callback = callback
         self.options = options
         self.plugins = []
 
-    def plugin(self, plugin, config):
-        plugin = LoopingCall(Plugin.get(plugin, config).loop)
+    def plugin(self, plugin_name, plugin_config):
+        plugin = LoopingCall(Plugin.get(plugin_name, plugin_config).loop)
         plugin.clock = self.clock
-        plugin.start(config['poll'])
-        return plugin
+        plugin.start(plugin_config['poll'])
+        return plugin_name
 
     def start(self):
         self.plugins.append(self.plugin("davis", {"quiet": self.options.quiet, "poll": 1}))

@@ -26,8 +26,24 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>copy-model</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${sourceDirectoryPython}/anode/model</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-resources</id>
-                        <phase>validate</phase>
+                        <phase>process-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -56,16 +72,16 @@
                 <executions>
                     <execution>
                         <id>python-install</id>
-                        <phase>compile</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
                             <arguments>
                                 <argument>setup.py</argument>
-                                <argument>develop</argument>
-                                <argument>--user</argument>
+                                <argument>install</argument>
                             </arguments>
+                            <skip>${maven.install.skip}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -78,7 +94,8 @@
                             <skip>${maven.test.skip}</skip>
                             <arguments>
                                 <argument>setup.py</argument>
-                                <argument>nosetests</argument>
+                                <argument>trial</argument>
+                                <argument>--reporter=text</argument>
                             </arguments>
                         </configuration>
                     </execution>

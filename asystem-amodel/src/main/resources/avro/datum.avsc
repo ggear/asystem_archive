@@ -1,0 +1,100 @@
+[
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "enum",
+    "name": "source",
+    "symbols": [
+      "bom",
+      "davis",
+      "fronius",
+      "netatmo"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "enum",
+    "name": "metric",
+    "symbols": [
+      "temperature.outdoor.forecast",
+      "temperature.outdoor.roof",
+      "temperature.outdoor.deck",
+      "temperature.indoor.edwin",
+      "temperature.indoor.office",
+      "energy.production.grid",
+      "energy.production.battery",
+      "energy.consumption.grid",
+      "energy.consumption.battery",
+      "energy.consumption.solar"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "enum",
+    "name": "type",
+    "symbols": [
+      "point",
+      "summation",
+      "maximum",
+      "minimum",
+      "average",
+      "median"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "enum",
+    "name": "unit",
+    "symbols": [
+      "s",
+      "kW",
+      "KWh"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "type": "record",
+    "name": "datum",
+    "fields": [
+      {
+        "name": "anode",
+        "type": "bytes"
+      },
+      {
+        "name": "source",
+        "type": "source"
+      },
+      {
+        "name": "metric",
+        "type": "metric"
+      },
+      {
+        "name": "type",
+        "type": "type"
+      },
+      {
+        "name": "bin_width",
+        "type": "int"
+      },
+      {
+        "name": "bin_unit",
+        "type": "unit"
+      },
+      {
+        "name": "bin_timestamp",
+        "type": "long"
+      },
+      {
+        "name": "data_timestamp",
+        "type": "long"
+      },
+      {
+        "name": "data_unit",
+        "type": "unit"
+      },
+      {
+        "name": "data_value",
+        "type": "long"
+      }
+    ]
+  }
+]
