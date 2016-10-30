@@ -1,16 +1,16 @@
 [
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "enum",
     "name": "version",
+    "type": "enum",
     "symbols": [
       "1.0"
     ]
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "enum",
     "name": "source",
+    "type": "enum",
     "symbols": [
       "",
       "bom",
@@ -21,8 +21,8 @@
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "enum",
     "name": "metric",
+    "type": "enum",
     "symbols": [
       "",
       "temperature.outdoor.forecast",
@@ -39,8 +39,8 @@
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "enum",
     "name": "type",
+    "type": "enum",
     "symbols": [
       "",
       "point",
@@ -53,8 +53,8 @@
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "enum",
     "name": "unit",
+    "type": "enum",
     "symbols": [
       "",
       "s",
@@ -64,12 +64,16 @@
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "type": "record",
     "name": "datum",
+    "type": "record",
     "fields": [
       {
         "name": "anode",
-        "type": "bytes",
+        "type": {
+          "name": "mac",
+          "type": "fixed",
+          "size": 6
+        },
         "default": "\u0000"
       },
       {

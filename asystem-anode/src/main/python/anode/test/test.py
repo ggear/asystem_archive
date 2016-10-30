@@ -42,7 +42,7 @@ class ANodeTest(TestCase):
         writer = io.BytesIO()
         avro.io.DatumWriter(schema).write(
             {
-                "anode": str(get_mac()).replace(':', '').decode('hex'),
+                "anode": format(get_mac(), "x").decode("hex"),
                 "source": "fronius",
                 "metric": "energy.production.grid",
                 "type": "point",
@@ -58,4 +58,5 @@ class ANodeTest(TestCase):
         print("Serialised to [{}] bytes".format(len(datum_bytes)))
         reader = avro.io.DatumReader(schema)
         datum_dict = reader.read(avro.io.BinaryDecoder(io.BytesIO(datum_bytes)))
-        print("Deserialized to [{}]".format(datum_dict))
+        print("Deserialized to [{}] bytes".format(len(str(datum_dict))))
+        print(datum_dict['anode'])
