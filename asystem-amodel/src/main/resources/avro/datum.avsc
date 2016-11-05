@@ -13,10 +13,7 @@
     "type": "enum",
     "symbols": [
       "",
-      "bom",
-      "davis",
-      "fronius",
-      "netatmo"
+      "fronius"
     ]
   },
   {
@@ -25,16 +22,19 @@
     "type": "enum",
     "symbols": [
       "",
-      "temperature.outdoor.forecast",
-      "temperature.outdoor.roof",
-      "temperature.outdoor.deck",
-      "temperature.indoor.edwin",
-      "temperature.indoor.office",
+      "power.production",
+      "power.production.grid",
+      "power.production.array",
+      "power.production.battery",
+      "power.consumption",
+      "power.consumption.grid",
+      "power.consumption.inverter",
+      "power.consumption.battery",
+      "energy.production",
+      "energy.production.array",
       "energy.production.grid",
-      "energy.production.battery",
-      "energy.consumption.grid",
-      "energy.consumption.battery",
-      "energy.consumption.solar"
+      "energy.consumption",
+      "energy.consumption.grid"
     ]
   },
   {
@@ -44,11 +44,12 @@
     "symbols": [
       "",
       "point",
-      "summation",
       "maximum",
       "minimum",
       "average",
-      "median"
+      "median",
+      "trend",
+      "integral"
     ]
   },
   {
@@ -58,8 +59,11 @@
     "symbols": [
       "",
       "s",
-      "kW",
-      "KWh"
+      "d",
+      "y",
+      "∀",
+      "W",
+      "Wh"
     ]
   },
   {
@@ -68,28 +72,53 @@
     "type": "record",
     "fields": [
       {
-        "name": "anode",
+        "name": "anode_id",
         "type": {
           "name": "mac",
           "type": "fixed",
           "size": 6
         },
-        "default": "\u0000"
+        "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
       },
       {
-        "name": "source",
+        "name": "data_source",
         "type": "source",
         "default": ""
       },
       {
-        "name": "metric",
+        "name": "data_metric",
         "type": "metric",
         "default": ""
       },
       {
-        "name": "type",
+        "name": "data_type",
         "type": "type",
         "default": ""
+      },
+      {
+        "name": "data_value",
+        "type": "long",
+        "default": 0
+      },
+      {
+        "name": "data_unit",
+        "type": "unit",
+        "default": ""
+      },
+      {
+        "name": "data_scale",
+        "type": "float",
+        "default": 1
+      },
+      {
+        "name": "data_timestamp",
+        "type": "long",
+        "default": 0
+      },
+      {
+        "name": "bin_timestamp",
+        "type": "long",
+        "default": 0
       },
       {
         "name": "bin_width",
@@ -100,26 +129,6 @@
         "name": "bin_unit",
         "type": "unit",
         "default": ""
-      },
-      {
-        "name": "bin_timestamp",
-        "type": "long",
-        "default": 0
-      },
-      {
-        "name": "data_timestamp",
-        "type": "long",
-        "default": 0
-      },
-      {
-        "name": "data_unit",
-        "type": "unit",
-        "default": ""
-      },
-      {
-        "name": "data_value",
-        "type": "long",
-        "default": 0
       }
     ]
   }

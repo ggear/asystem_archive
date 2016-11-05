@@ -27,7 +27,7 @@ setup(
     packages=['anode'],
     install_requires=['twisted', 'avro'],
     tests_require=['mock'],
-    test_suite='anode.test.test',
+    test_suite='anode.test',
     setup_requires=['setuptools_trial'],
     entry_points={'console_scripts': ['anode=anode.anode:main']},
     include_package_data=True,
