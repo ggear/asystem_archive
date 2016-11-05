@@ -10,7 +10,6 @@ from twisted.web.client import HTTPConnectionPool
 
 TEST_URL = "http://10.0.1.203/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
 TEST_URL_CODE = 200
-# noinspection PyPep8
 TEST_URL_TEXT = """{
   "Head" : {
     "RequestArguments" : {},
@@ -63,7 +62,6 @@ class ANodeTestHttp(TestCase):
         treq.get(TEST_URL).addCallback(lambda response: print(response))
 
 
-# noinspection PyPep8Naming
 class MockResponse:
     def __init__(self, url):
         self.url = url
@@ -73,5 +71,6 @@ class MockResponse:
     def __repr__(self):
         return 'Code: {}, Length: {}'.format(self.code, len(self.text))
 
+    # noinspection PyPep8Naming
     def addCallback(self, callback):
         callback(self)
