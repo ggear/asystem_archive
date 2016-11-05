@@ -54,7 +54,7 @@ class ANodeTestHttp(TestCase):
     def process_response(self, response):
         response_code = response.code
         response_text = yield text_content(response)
-        print('Code: {}, Length: {}, Text:\n{}'.format(response_code, len(response_text), response_text))
+        print('Code: {}, Length: {}'.format(response_code, len(response_text), response_text))
         reactor.stop()
 
     def test_http_mock(self):
@@ -71,7 +71,7 @@ class MockResponse:
         self.text = TEST_URL_TEXT
 
     def __repr__(self):
-        return 'Code: {}, Length: {}, Text:\n{}'.format(self.code, len(self.text), self.text)
+        return 'Code: {}, Length: {}'.format(self.code, len(self.text))
 
     def addCallback(self, callback):
         callback(self)
