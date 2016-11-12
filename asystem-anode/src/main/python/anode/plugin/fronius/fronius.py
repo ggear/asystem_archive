@@ -10,7 +10,6 @@ from decimal import Decimal
 
 import dateutil.parser
 import treq
-
 from anode.plugin.plugin import Plugin
 
 HTTP_TIMEOUT = 5

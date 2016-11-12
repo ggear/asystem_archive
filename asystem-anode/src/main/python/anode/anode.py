@@ -11,14 +11,13 @@ from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from klein import Klein
 from klein.resource import KleinResource
+from plugin import Plugin
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
-
-from plugin import Plugin
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 WEB_PORT = 8080
@@ -36,10 +35,26 @@ class ANode:
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
 
     def plugin(self, plugin_name, plugin_config):
-        plugin_deffered = LoopingCall(Plugin.get(plugin_name, plugin_config).poll)
-        plugin_deffered.clock = self.main_reactor
-        plugin_deffered.start(plugin_config["poll"])
-        return plugin_name
+        plugin_instance = Plugin.get(plugin_name, plugin_config)
+        plugin_loopingcall = LoopingCall(plugin_instance.poll)
+        plugin_loopingcall.clock = self.main_reactor
+        plugin_loopingcall.start(plugin_config["poll"])
+        return plugin_instance
+
+    def datums(self, datum_filter, datum_scope="last"):
+        datums = []
+        for plugin in self.plugins:
+            for data_metric in plugin.datums:
+                if "metrics" not in datum_filter or data_metric.startswith(tuple(datum_filter["metrics"])):
+                    for datum_type in plugin.datums[data_metric]:
+                        if "types" not in datum_filter or datum_type.startswith(tuple(datum_filter["types"])):
+                            for datum_bin in plugin.datums[data_metric][datum_type]:
+                                if "bins" not in datum_filter or datum_bin.startswith(tuple(datum_filter["bins"])):
+                                    datum = plugin.datums[data_metric][datum_type][datum_bin][datum_scope]
+                                    if datum_scope != "last":
+                                        datum = Plugin.datum_avro_to_dict(datum)
+                                    datums.append(datum)
+        return datums
 
     def start(self):
         if logging.getLogger().isEnabledFor(logging.INFO):
@@ -82,6 +97,8 @@ class WebWs(WebSocketServerProtocol):
     def onOpen(self):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.getLogger().debug("WebSocket connected")
+        for datum in self.factory.anode.datums(self.datum_filter):
+            logging.getLogger().fatal(Plugin.datum_dict_to_json(datum))
 
     def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):

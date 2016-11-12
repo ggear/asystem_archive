@@ -5,10 +5,9 @@ from __future__ import print_function
 import sys
 
 import treq
+from anode.anode import main
 from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
-
-from anode.anode import main
 
 
 # noinspection PyUnresolvedReferences
