@@ -22,18 +22,15 @@
     "type": "enum",
     "symbols": [
       "",
-      "power.production",
       "power.production.grid",
-      "power.production.array",
       "power.production.battery",
-      "power.consumption",
+      "power.production.inverter",
+      "power.production.array",
       "power.consumption.grid",
-      "power.consumption.inverter",
       "power.consumption.battery",
-      "energy.production",
+      "power.consumption.inverter",
       "energy.production.array",
       "energy.production.grid",
-      "energy.consumption",
       "energy.consumption.grid"
     ]
   },

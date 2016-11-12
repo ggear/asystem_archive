@@ -1,2 +1,4 @@
 include README.rst
-include script/*
+recursive-include script *
+recursive-include anode/web *
+recursive-include anode/model *

@@ -16,8 +16,9 @@
     </parent>
 
     <properties>
-        <sourceDirectoryPython>${project.basedir}/src/main/python</sourceDirectoryPython>
-        <outputDirectoryPython>${project.build.directory}/python</outputDirectoryPython>
+        <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
+        <dir.output.python>${project.build.directory}/python</dir.output.python>
+        <time.ms.integration-test>5000</time.ms.integration-test>
     </properties>
 
     <build>
@@ -32,7 +33,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${sourceDirectoryPython}/anode/model</outputDirectory>
+                            <outputDirectory>${dir.source.python}/anode/model</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
@@ -48,11 +49,11 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${outputDirectoryPython}</outputDirectory>
+                            <outputDirectory>${dir.output.python}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${sourceDirectoryPython}</directory>
-                                    <filtering>false</filtering>
+                                    <directory>${dir.source.python}</directory>
+                                    <filtering>true</filtering>
                                 </resource>
                             </resources>
                         </configuration>
@@ -60,57 +61,134 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <executable>python</executable>
-                    <workingDirectory>${outputDirectoryPython}</workingDirectory>
-                    <environmentVariables>
-                        <VERSION>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</VERSION>
-                    </environmentVariables>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>python-install</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
+                        <id>python-clean</id>
+                        <phase>clean</phase>
                         <configuration>
-                            <arguments>
-                                <argument>setup.py</argument>
-                                <argument>install</argument>
-                            </arguments>
-                            <skip>${maven.install.skip}</skip>
+                            <target>
+                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="clean"/>
+                                </exec>
+                            </target>
                         </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                     <execution>
                         <id>python-test</id>
                         <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
                         <configuration>
-                            <skip>${maven.test.skip}</skip>
-                            <arguments>
-                                <argument>setup.py</argument>
-                                <argument>trial</argument>
-                                <argument>--reporter=text</argument>
-                            </arguments>
+                            <target unless="${maven.test.skip}">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="trial"/>
+                                    <arg value="--reporter=text"/>
+                                </exec>
+                            </target>
                         </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>python-integration-test-pre</id>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <target unless="${maven.integration-test.skip}">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="develop"/>
+                                    <arg value="--user"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>python-integration-test</id>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <target unless="${maven.integration-test.skip}">
+                                <exec executable="anode" dir="${dir.output.python}" failifexecutionfails="true" timeout="${time.ms.integration-test}">
+                                    <arg value="-v"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>python-integration-test-post</id>
+                        <phase>post-integration-test</phase>
+                        <configuration>
+                            <target unless="${maven.integration-test.skip}">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="false">
+                                    <arg value="setup.py"/>
+                                    <arg value="develop"/>
+                                    <arg value="--user"/>
+                                    <arg value="--uninstall"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                     <execution>
                         <id>python-package</id>
                         <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
                         <configuration>
-                            <arguments>
-                                <argument>setup.py</argument>
-                                <argument>sdist</argument>
-                            </arguments>
+                            <target unless="${maven.package.skip}">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="sdist"/>
+                                </exec>
+                            </target>
                         </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>python-run</id>
+                        <configuration>
+                            <target>
+                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="develop"/>
+                                    <arg value="--user"/>
+                                </exec>
+                                <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-v"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>python-install</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <target unless="${maven.install.skip}">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="install"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
