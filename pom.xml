@@ -61,10 +61,9 @@
     <properties>
 
         <maven.test.skip>false</maven.test.skip>
-        <maven.system-test.skip>false</maven.system-test.skip>
         <maven.integration-test.skip>true</maven.integration-test.skip>
         <maven.data-download.skip>true</maven.data-download.skip>
-        <maven.assembly.skip>false</maven.assembly.skip>
+        <maven.package.skip>true</maven.package.skip>
         <maven.install.skip>true</maven.install.skip>
 
         <slf4j.version>1.7.5</slf4j.version>
@@ -90,9 +89,9 @@
             <id>CMP</id>
             <properties>
                 <maven.test.skip>true</maven.test.skip>
-                <maven.system-test.skip>true</maven.system-test.skip>
+                <maven.integration-test.skip>true</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
-                <maven.assembly.skip>true</maven.assembly.skip>
+                <maven.package.skip>true</maven.package.skip>
                 <maven.install.skip>true</maven.install.skip>
             </properties>
         </profile>
@@ -100,9 +99,9 @@
             <id>BLD</id>
             <properties>
                 <maven.test.skip>false</maven.test.skip>
-                <maven.system-test.skip>false</maven.system-test.skip>
+                <maven.integration-test.skip>true</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
-                <maven.assembly.skip>true</maven.assembly.skip>
+                <maven.package.skip>true</maven.package.skip>
                 <maven.install.skip>true</maven.install.skip>
             </properties>
             <activation>
@@ -112,20 +111,20 @@
         <profile>
             <id>PKG</id>
             <properties>
-                <maven.test.skip>true</maven.test.skip>
-                <maven.system-test.skip>true</maven.system-test.skip>
+                <maven.test.skip>false</maven.test.skip>
+                <maven.integration-test.skip>false</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
-                <maven.assembly.skip>false</maven.assembly.skip>
-                <maven.install.skip>false</maven.install.skip>
+                <maven.package.skip>false</maven.package.skip>
+                <maven.install.skip>true</maven.install.skip>
             </properties>
         </profile>
         <profile>
             <id>ALL</id>
             <properties>
                 <maven.test.skip>false</maven.test.skip>
-                <maven.system-test.skip>false</maven.system-test.skip>
+                <maven.integration-test.skip>false</maven.integration-test.skip>
                 <maven.data-download.skip>false</maven.data-download.skip>
-                <maven.assembly.skip>false</maven.assembly.skip>
+                <maven.package.skip>false</maven.package.skip>
                 <maven.install.skip>false</maven.install.skip>
             </properties>
         </profile>
@@ -177,7 +176,6 @@
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>3.0.0</version>
                 </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
@@ -249,7 +247,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.6.0</version>
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
@@ -268,20 +266,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>parse-version</id>
-                        <goals>
-                            <goal>parse-version</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
     </build>
 
 </project>
