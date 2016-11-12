@@ -84,6 +84,7 @@ class Plugin(object):
             self.datums_pushed += 1
             if logging.getLogger().isEnabledFor(logging.DEBUG):
                 logging.getLogger().debug("Pushed datum [{}]".format(self.datum_tostring(datum_dict)))
+            self.anode.datums_push([datum_dict])
         else:
             self.datums_dropped += 1
             if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -118,15 +119,17 @@ class Plugin(object):
         return 0 if numeric is None else int(numeric * factor)
 
     @staticmethod
-    def get(module, config):
-        plugin = getattr(import_module("anode.plugin") if hasattr(anode.plugin, module.title()) else import_module("anode.plugin." + module), module.title())(module, config)
+    def get(parent, module, config):
+        plugin = getattr(import_module("anode.plugin") if hasattr(anode.plugin, module.title()) else
+                         import_module("anode.plugin." + module), module.title())(parent, module, config)
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [{}] initialised".format(module))
         return plugin
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, config):
+    def __init__(self, parent, name, config):
+        self.anode = parent
         self.name = name
         self.config = config
         self.mac_address = format(get_mac(), "x").decode("hex")
