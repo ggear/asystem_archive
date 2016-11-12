@@ -98,7 +98,7 @@ class WebWs(WebSocketServerProtocol):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.getLogger().debug("WebSocket connected")
         for datum in self.factory.anode.datums(self.datum_filter):
-            logging.getLogger().fatal(Plugin.datum_dict_to_json(datum))
+            self.sendMessage(Plugin.datum_dict_to_json(datum), False)
 
     def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
