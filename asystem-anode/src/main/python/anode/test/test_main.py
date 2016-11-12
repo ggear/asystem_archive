@@ -23,30 +23,29 @@ class ANodeTest(TestCase):
         for tickTock in range(0, period * periods, period):
             self.clock.advance(period)
 
+    def assert_anode(self, callback):
+        anode = main(self.clock, callback)
+        self.assertTrue(anode is not None)
+
     def test_main_default(self):
         self.patch(sys, "argv", ["anode"])
-        anode = main(self.clock, lambda: self.tick_tock(1, 1))
-        self.assertTrue(anode is not None)
+        self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_verbose_short(self):
         self.patch(sys, "argv", ["anode", "-v"])
-        anode = main(self.clock, lambda: self.tick_tock(1, 1))
-        self.assertTrue(anode is not None)
+        self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_verbose_long(self):
         self.patch(sys, "argv", ["anode", "--verbose"])
-        anode = main(self.clock, lambda: self.tick_tock(1, 1))
-        self.assertTrue(anode is not None)
+        self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_quiet_short(self):
         self.patch(sys, "argv", ["anode", "-q"])
-        anode = main(self.clock, lambda: self.tick_tock(1, 1))
-        self.assertTrue(anode is not None)
+        self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_quiet_long(self):
         self.patch(sys, "argv", ["anode", "--quiet"])
-        anode = main(self.clock, lambda: self.tick_tock(1, 1))
-        self.assertTrue(anode is not None)
+        self.assert_anode(lambda: self.tick_tock(1, 1))
 
 
 class MockResponse:
