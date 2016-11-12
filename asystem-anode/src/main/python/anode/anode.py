@@ -35,14 +35,14 @@ class ANode:
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
 
     def plugin(self, plugin_name, plugin_config):
-        plugin_instance = Plugin.get(plugin_name, plugin_config)
+        plugin_instance = Plugin.get(self, plugin_name, plugin_config)
         plugin_loopingcall = LoopingCall(plugin_instance.poll)
         plugin_loopingcall.clock = self.main_reactor
         plugin_loopingcall.start(plugin_config["poll"])
         return plugin_instance
 
-    def datums(self, datum_filter, datum_scope="last"):
-        datums = []
+    def datums_filter_get(self, datum_filter, datum_scope="last"):
+        datums_filtered = []
         for plugin in self.plugins:
             for data_metric in plugin.datums:
                 if "metrics" not in datum_filter or data_metric.startswith(tuple(datum_filter["metrics"])):
@@ -53,8 +53,21 @@ class ANode:
                                     datum = plugin.datums[data_metric][datum_type][datum_bin][datum_scope]
                                     if datum_scope != "last":
                                         datum = Plugin.datum_avro_to_dict(datum)
-                                    datums.append(datum)
-        return datums
+                                    datums_filtered.append(datum)
+        return datums_filtered
+
+    @staticmethod
+    def datums_filter(datum_filter, datums):
+        datums_filtered = []
+        for datum in datums:
+            if "metrics" not in datum_filter or datum["data_metric"].startswith(tuple(datum_filter["metrics"])):
+                if "types" not in datum_filter or datum["data_type"].startswith(tuple(datum_filter["types"])):
+                    if "bins" not in datum_filter or (str(datum["bin_width"]) + datum["bin_unit"]).startswith(tuple(datum_filter["bins"])):
+                        datums_filtered.append(datum)
+        return datums_filtered
+
+    def datums_push(self, datums):
+        self.web_ws.push(datums)
 
     def start(self):
         if logging.getLogger().isEnabledFor(logging.INFO):
@@ -81,6 +94,23 @@ class WebWsFactory(WebSocketServerFactory):
     def __init__(self, url, anode):
         WebSocketServerFactory.__init__(self, url)
         self.anode = anode
+        self.clients = []
+
+    def register(self, client):
+        if client not in self.clients:
+            self.clients.append(client)
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.getLogger().debug("WebSocket client registered [{}]".format(client.peer))
+
+    def push(self, datums=None):
+        for client in self.clients:
+            client.push(datums)
+
+    def deregister(self, client):
+        if client in self.clients:
+            self.clients.remove(client)
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.getLogger().debug("WebSocket client deregistered [{}]".format(client.peer))
 
 
 # noinspection PyPep8Naming
@@ -92,17 +122,23 @@ class WebWs(WebSocketServerProtocol):
     def onConnect(self, request):
         self.datum_filter = request.params
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection request [{}]".format(filter))
+            logging.getLogger().debug("WebSocket connection request [{}]".format(request))
 
     def onOpen(self):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connected")
-        for datum in self.factory.anode.datums(self.datum_filter):
-            self.sendMessage(Plugin.datum_dict_to_json(datum), False)
+            logging.getLogger().debug("WebSocket connection opened")
+        self.factory.register(self)
+        self.push()
 
-    def onClose(self, wasClean, code, reason):
+    def push(self, datums=None):
+        for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(self.datum_filter):
+            self.sendMessage(Plugin.datum_dict_to_json(datums), False)
+
+    def connectionLost(self, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection closed [{0}]".format(reason))
+            logging.getLogger().debug("WebSocket connection lost")
+        WebSocketServerProtocol.connectionLost(self, reason)
+        self.factory.deregister(self)
 
 
 # noinspection PyPep8Naming

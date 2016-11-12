@@ -167,6 +167,7 @@
                                     <arg value="--user"/>
                                 </exec>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-v"/>
                                 </exec>
                             </target>
                         </configuration>
