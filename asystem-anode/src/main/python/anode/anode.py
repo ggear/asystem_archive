@@ -41,7 +41,7 @@ class ANode:
         plugin_loopingcall.start(plugin_config["poll"])
         return plugin_instance
 
-    def datums_filter_get(self, datum_filter, datum_scope="last"):
+    def datums_filter_get(self, datum_filter):
         datums_filtered = []
         for plugin in self.plugins:
             for data_metric in plugin.datums:
@@ -50,10 +50,16 @@ class ANode:
                         if "types" not in datum_filter or datum_type.startswith(tuple(datum_filter["types"])):
                             for datum_bin in plugin.datums[data_metric][datum_type]:
                                 if "bins" not in datum_filter or datum_bin.startswith(tuple(datum_filter["bins"])):
-                                    datum = plugin.datums[data_metric][datum_type][datum_bin][datum_scope]
-                                    if datum_scope != "last":
-                                        datum = Plugin.datum_avro_to_dict(datum)
-                                    datums_filtered.append(Plugin.datum_dict_to_json(datum))
+                                    datum_scopes = ["last"] if "scope" not in datum_filter else datum_filter["scope"]
+                                    for datum_scope in datum_scopes:
+                                        if datum_scope in plugin.datums[data_metric][datum_type][datum_bin]:
+                                            if datum_scope == "last":
+                                                datums_filtered.append(
+                                                    Plugin.datum_dict_to_json(plugin.datums[data_metric][datum_type][datum_bin][datum_scope]))
+                                            else:
+                                                for datum in plugin.datums[data_metric][datum_type][datum_bin][datum_scope]:
+                                                    datums_filtered.append(Plugin.datum_dict_to_json(Plugin.datum_avro_to_dict(datum)))
+
         return datums_filtered
 
     @staticmethod
