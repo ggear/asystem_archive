@@ -134,10 +134,9 @@ class WebWs(WebSocketServerProtocol):
         for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(self.datum_filter):
             self.sendMessage(Plugin.datum_dict_to_json(datums), False)
 
-    def connectionLost(self, reason):
+    def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.getLogger().debug("WebSocket connection lost")
-        WebSocketServerProtocol.connectionLost(self, reason)
         self.factory.deregister(self)
 
 
