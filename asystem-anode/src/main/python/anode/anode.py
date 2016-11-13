@@ -132,6 +132,8 @@ class WebWs(WebSocketServerProtocol):
 
     def push(self, datums=None):
         for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(self.datum_filter):
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.getLogger().debug("WebSocket push with filter [{0}] and [{0}] datums".format(self.datum_filter, len(datums)))
             self.sendMessage(Plugin.datum_dict_to_json(datums), False)
 
     def onClose(self, wasClean, code, reason):
@@ -150,8 +152,10 @@ class WebRest:
     @server.route("/")
     def onRequest(self, request):
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
+        datums = Plugin.datum_dict_to_json(self.anode.datums_filter_get(datum_filter))
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("RESTful request [{0}]".format(datum_filter))
+            logging.getLogger().debug("RESTful pull with filter [{0}] and [{0}] datums".format(datum_filter, len(datums)))
+        return datums
 
 
 def main(main_reactor=reactor, callback=None):
