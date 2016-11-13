@@ -92,7 +92,7 @@ class ANode:
 
 class WebWsFactory(WebSocketServerFactory):
     def __init__(self, url, anode):
-        WebSocketServerFactory.__init__(self, url)
+        super(WebWsFactory, self).__init__(url)
         self.anode = anode
         self.clients = []
 
