@@ -53,7 +53,7 @@ class ANode:
                                     datum = plugin.datums[data_metric][datum_type][datum_bin][datum_scope]
                                     if datum_scope != "last":
                                         datum = Plugin.datum_avro_to_dict(datum)
-                                    datums_filtered.append(datum)
+                                    datums_filtered.append(Plugin.datum_dict_to_json(datum))
         return datums_filtered
 
     @staticmethod
@@ -63,7 +63,7 @@ class ANode:
             if "metrics" not in datum_filter or datum["data_metric"].startswith(tuple(datum_filter["metrics"])):
                 if "types" not in datum_filter or datum["data_type"].startswith(tuple(datum_filter["types"])):
                     if "bins" not in datum_filter or (str(datum["bin_width"]) + datum["bin_unit"]).startswith(tuple(datum_filter["bins"])):
-                        datums_filtered.append(datum)
+                        datums_filtered.append(Plugin.datum_dict_to_json(datum))
         return datums_filtered
 
     def datums_push(self, datums):
@@ -131,10 +131,11 @@ class WebWs(WebSocketServerProtocol):
         self.push()
 
     def push(self, datums=None):
-        for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(self.datum_filter):
+        for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(
+                self.datum_filter):
             if logging.getLogger().isEnabledFor(logging.DEBUG):
                 logging.getLogger().debug("WebSocket push with filter [{0}] and [{0}] datums".format(self.datum_filter, len(datums)))
-            self.sendMessage(Plugin.datum_dict_to_json(datums), False)
+            self.sendMessage(datums, False)
 
     def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -152,7 +153,7 @@ class WebRest:
     @server.route("/")
     def onRequest(self, request):
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
-        datums = Plugin.datum_dict_to_json(self.anode.datums_filter_get(datum_filter))
+        datums = self.anode.datums_filter_get(datum_filter)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.getLogger().debug("RESTful pull with filter [{0}] and [{0}] datums".format(datum_filter, len(datums)))
         return datums

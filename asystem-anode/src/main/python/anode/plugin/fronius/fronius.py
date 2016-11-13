@@ -44,7 +44,8 @@ class Fronius(Plugin):
         self.datum_push(
             "power.production.grid",
             "point",
-            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], -100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"]) < 0 else 0,
+            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], -100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Grid"]) < 0 else 0,
             "W",
             100,
             data_timestamp,
@@ -55,7 +56,8 @@ class Fronius(Plugin):
         self.datum_push(
             "power.production.battery",
             "point",
-            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], -100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"]) < 0 else 0,
+            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], -100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Akku"]) < 0 else 0,
             "W",
             100,
             data_timestamp,
@@ -88,7 +90,8 @@ class Fronius(Plugin):
         self.datum_push(
             "power.consumption.grid",
             "point",
-            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], 100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"]) > 0 else 0,
+            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], 100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Grid"]) > 0 else 0,
             "W",
             100,
             data_timestamp,
@@ -99,7 +102,8 @@ class Fronius(Plugin):
         self.datum_push(
             "power.consumption.battery",
             "point",
-            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], 100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"]) > 0 else 0,
+            self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], 100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Akku"]) > 0 else 0,
             "W",
             100,
             data_timestamp,
@@ -111,8 +115,10 @@ class Fronius(Plugin):
             "power.consumption.inverter",
             "point",
             self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Load"], -100) -
-            (self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], 100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"]) > 0 else 0) -
-            (self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], 100) if self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"]) > 0 else 0),
+            (self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Grid"], 100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Grid"]) > 0 else 0) -
+            (self.get_int_scaled(json_content["Body"]["Data"]["Site"]["P_Akku"], 100) if self.get_int_scaled(
+                json_content["Body"]["Data"]["Site"]["P_Akku"]) > 0 else 0),
             "W",
             100,
             data_timestamp,
