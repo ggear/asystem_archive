@@ -28,6 +28,8 @@ class ANodeTest(TestCase):
         self.assertTrue(anode is not None)
         # TOOO: assert datums stored in plugins via REST, datums pushed upstream WS/MQTT
         self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?scope=some_nonexistant_scope'))))
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?metrics=some.nonexistant.metric'))))
         self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric'))))
@@ -57,6 +59,10 @@ class ANodeTest(TestCase):
             '/pull/?metrics=power'))))
         self.assertEquals(7, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?bins=1s'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?scope=last'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?scope=queue'))))
         self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?something=else'))))
         self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
