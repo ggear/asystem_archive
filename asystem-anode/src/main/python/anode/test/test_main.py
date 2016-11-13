@@ -26,7 +26,7 @@ class ANodeTest(TestCase):
     def assert_anode(self, callback):
         anode = main(self.clock, callback)
         self.assertTrue(anode is not None)
-        # TOOO: assert datums pushed upstream WS/MQTT
+        # TODO: assert datums pushed upstream WS/MQTT
         self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?scope=some_nonexistant_scope'))))
         self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(

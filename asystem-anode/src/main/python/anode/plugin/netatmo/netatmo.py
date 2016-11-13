@@ -5,5 +5,6 @@ from anode.plugin.plugin import Plugin
 
 class Netatmo(Plugin):
     def poll(self):
-        # TODO
+        # TODO: provide impl
+        # noinspection PyStatementEffect
         None
