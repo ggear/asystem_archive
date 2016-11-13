@@ -26,6 +26,45 @@ class ANodeTest(TestCase):
     def assert_anode(self, callback):
         anode = main(self.clock, callback)
         self.assertTrue(anode is not None)
+        # TOOO: assert datums stored in plugins via REST, datums pushed upstream WS/MQTT
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=some.nonexistant.metric'))))
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric'))))
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power&types=some_nonexistant_type'))))
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power&types=point&bins=some_nonexistant_bin'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&types=point'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&bins=1s'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&types=point&bins=1s'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1s'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&metrics=some.nonexistant.metric&metrics=&types=point&bins=1s'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&metrics=&types=point&types=some_nonexistant_type&bins=1s'))))
+        self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1s&bins=some_nonexistant_bin'))))
+        self.assertEquals(2, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1s'))))
+        self.assertEquals(7, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?metrics=power'))))
+        self.assertEquals(7, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?bins=1s'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?something=else'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/'))))
+        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
+            '/pull'))))
 
     def test_main_default(self):
         self.patch(sys, "argv", ["anode"])
@@ -46,6 +85,11 @@ class ANodeTest(TestCase):
     def test_main_quiet_long(self):
         self.patch(sys, "argv", ["anode", "--quiet"])
         self.assert_anode(lambda: self.tick_tock(1, 1))
+
+
+class MockRequest:
+    def __init__(self, uri):
+        self.uri = uri
 
 
 class MockResponse:

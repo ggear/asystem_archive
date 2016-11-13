@@ -75,7 +75,8 @@ class Plugin(object):
         if datum_dict["data_type"] not in self.datums[datum_dict["data_metric"]]:
             self.datums[datum_dict["data_metric"]][datum_dict["data_type"]] = {}
         if str(datum_dict["bin_width"]) + datum_dict["bin_unit"] not in self.datums[datum_dict["data_metric"]][datum_dict["data_type"]]:
-            self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {"queue": deque()}
+            self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
+                "queue": deque()}
         datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]]
         if "last" not in datums_deref or datums_deref["last"]["data_value"] != datum_dict["data_value"] or datums_deref["last"]["data_unit"] != \
                 datum_dict["data_unit"] or datums_deref["last"]["data_scale"] != datum_dict["data_scale"]:
@@ -110,6 +111,7 @@ class Plugin(object):
 
     @staticmethod
     def datum_dict_to_json(datum_dict):
+        datum_dict = datum_dict.copy()
         if "anode_id" in datum_dict:
             datum_dict["anode_id"] = base64.b64encode(datum_dict["anode_id"])
         return json.dumps(datum_dict, separators=(',', ':'))
