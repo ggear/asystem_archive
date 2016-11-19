@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import abc
-import base64
 import io
 import json
 import logging
@@ -99,6 +98,57 @@ class Plugin(object):
             datum_dict["data_unit"]
         )
 
+    def datums_filter_get(self, datum_filter, datum_format="dict"):
+        datums_filtered = []
+        for data_metric in self.datums:
+            if "metrics" not in datum_filter or data_metric.startswith(tuple(datum_filter["metrics"])):
+                for datum_type in self.datums[data_metric]:
+                    if "types" not in datum_filter or datum_type.startswith(tuple(datum_filter["types"])):
+                        for datum_bin in self.datums[data_metric][datum_type]:
+                            if "bins" not in datum_filter or datum_bin.startswith(tuple(datum_filter["bins"])):
+                                datum_scopes = ["last"] if "scope" not in datum_filter else datum_filter["scope"]
+                                for datum_scope in datum_scopes:
+                                    if datum_scope in self.datums[data_metric][datum_type][datum_bin]:
+                                        if datum_scope == "last":
+                                            datums_filtered.append(Plugin.datum_dict_to_format(
+                                                self.datums[data_metric][datum_type][datum_bin][datum_scope], datum_format))
+                                        else:
+                                            for datum in self.datums[data_metric][datum_type][datum_bin][datum_scope]:
+                                                datums_filtered.append(Plugin.datum_avro_to_format(datum, datum_format))
+        return datums_filtered
+
+    @staticmethod
+    def datums_filter(datum_filter, datums, datum_format="dict"):
+        datums_filtered = []
+        for datum in datums:
+            if "metrics" not in datum_filter or datum["data_metric"].startswith(tuple(datum_filter["metrics"])):
+                if "types" not in datum_filter or datum["data_type"].startswith(tuple(datum_filter["types"])):
+                    if "bins" not in datum_filter or (str(datum["bin_width"]) + datum["bin_unit"]).startswith(tuple(datum_filter["bins"])):
+                        datums_filtered.append(Plugin.datum_dict_to_format(datum, datum_format))
+        return datums_filtered
+
+    @staticmethod
+    def datum_avro_to_format(datum_avro, datum_format):
+        datum = datum_avro
+        if datum_format == "dict":
+            datum = Plugin.datum_avro_to_dict(datum_avro)
+        elif datum_format == "json":
+            datum = Plugin.datum_dict_to_json(Plugin.datum_avro_to_dict(datum_avro))
+        elif datum_format != "avro":
+            raise ValueError("Unkown datum format [{}]".format(datum_format))
+        return datum
+
+    @staticmethod
+    def datum_dict_to_format(datum_dict, datum_format):
+        datum = datum_dict
+        if datum_format == "json":
+            datum = Plugin.datum_dict_to_json(datum_dict)
+        elif datum_format == "avro":
+            datum = Plugin.datum_dict_to_avro(datum_dict)
+        elif datum_format != "dict":
+            raise ValueError("Unkown datum format [{}]".format(datum_format))
+        return datum
+
     @staticmethod
     def datum_dict_to_avro(datum_dict):
         avro_writer = io.BytesIO()
@@ -113,7 +163,7 @@ class Plugin(object):
     def datum_dict_to_json(datum_dict):
         datum_dict = datum_dict.copy()
         if "anode_id" in datum_dict:
-            datum_dict["anode_id"] = base64.b64encode(datum_dict["anode_id"])
+            datum_dict["anode_id"] = datum_dict["anode_id"].encode("hex")
         return json.dumps(datum_dict, separators=(',', ':'))
 
     @staticmethod
@@ -141,12 +191,6 @@ class Plugin(object):
 
 
 DATUM_SCHEMA = avro.schema.parse(open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read())
-
-
-class Publish(Plugin):
-    # noinspection PyStatementEffect
-    def poll(self):
-        None
 
 
 class Callback(Plugin):

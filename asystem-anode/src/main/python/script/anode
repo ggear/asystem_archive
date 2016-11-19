@@ -15,36 +15,63 @@
 # Description:       ANode daemon
 ### END INIT INFO
 
-ANODE=anode
 ANODE_PATH=$(which anode)
-ANODE_LOCK=/var/lock/subsys/${ANODE}
+ANODE_LOCK=/var/lock/subsys/anode
 ANODE_FUNCTIONS=/etc/init.d/functions
 
 if [ -f ${ANODE_FUNCTIONS} ]; then
   . ${ANODE_FUNCTIONS}
 else
-  echo "Unrecognised system [$(uname)], cannot start daemon"
-  exit 1
+  function initlog {
+    echo "$1" > /dev/null
+    $2
+  }
+  function success {
+    echo " $1"
+  }
+  function failure {
+    echo " $1"
+  }
+  function killproc {
+    echo "$1" > /dev/null
+    kill $(cat ${ANODE_LOCK})
+  }
 fi
+
+ANODE_OPTS=${ANODE_OPTS:-"-q"}
+ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/dev/null"}
 
 start() {
   initlog -c "echo -n Starting anode: "
   if [ ! -f ${ANODE_LOCK} ]; then
-    nohup ${ANODE_PATH} -q > /dev/null &
-    touch ${ANODE_LOCK}
-    success $"anode started"
+    if [ "${ANODE_PATH}" == "" ]; then
+      failure $"could not locate anode binary"
+      exit 2
+    fi
+    mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
+    nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} &
+    if [ $? -eq 0 ]; then
+      echo $! > ${ANODE_LOCK}
+      success $"anode started"
+    else
+      failure $"anode failed to start"
+      exit 1
+    fi
   else
-    failure $"anode started"
+    failure $"anode already started"
+    exit 1
   fi
-  echo
 }
 
 stop() {
   initlog -c "echo -n Stopping anode: "
-  killproc ${ANODE_PATH}
-  rm -f ${ANODE_LOCK}
-  success $"anode stopped"
-  echo
+  if [ -f ${ANODE_LOCK} ]; then
+    killproc ${ANODE_PATH} 2> /dev/null
+    rm -f ${ANODE_LOCK}
+    success $"anode stopped"
+  else
+    failure $"anode not started"
+  fi
 }
 
 status() {
@@ -54,7 +81,6 @@ status() {
   else
     failure $"anode stopped"
   fi
-  echo
 }
 
 case "$1" in

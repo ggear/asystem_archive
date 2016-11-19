@@ -17,4 +17,5 @@ buildNumber.properties
 *.pyc
 *.egg*
 dist/
+phantomjsdriver.log
 asystem-anode/src/main/python/anode/model/

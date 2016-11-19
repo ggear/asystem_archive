@@ -37,6 +37,8 @@ class ANodeTest(TestCase):
             '/pull/?metrics=power&types=some_nonexistant_type'))))
         self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?metrics=power&types=point&bins=some_nonexistant_bin'))))
+        self.assertEquals(0, len(anode.web_rest.onRequest(MockRequest(
+            '/pull/?scope=queue'))))
         self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?metrics=power.production.inverter'))))
         self.assertEquals(1, len(anode.web_rest.onRequest(MockRequest(
@@ -61,8 +63,6 @@ class ANodeTest(TestCase):
             '/pull/?bins=1s'))))
         self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?scope=last'))))
-        self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
-            '/pull/?scope=queue'))))
         self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
             '/pull/?something=else'))))
         self.assertEquals(12, len(anode.web_rest.onRequest(MockRequest(
