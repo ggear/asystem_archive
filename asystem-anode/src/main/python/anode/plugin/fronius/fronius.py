@@ -22,7 +22,7 @@ class Fronius(Plugin):
 
     # noinspection PyShadowingNames
     def http_get(self, url, callback):
-        connection_pool = self.config["pool"] if "poll" in self.config else None
+        connection_pool = self.config["pool"] if "pool" in self.config else None
         treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
             errback=lambda error, url=url: logging.getLogger().error(

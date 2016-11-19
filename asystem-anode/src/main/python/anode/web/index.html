@@ -1,28 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script type="text/javascript" src="js/anode.js"></script>
     <script type="text/javascript">
-        var socket = null;
-        window.onload = function () {
-
-            socket = new WebSocket("ws://127.0.0.1:8080/push/" + window.location.href.substring(window.location.href.indexOf("?"), window.location.href.length));
-
-            socket.onopen = function () {
-                console.log("WebSocket connection opened");
-            };
-
-            socket.onmessage = function (frame) {
-                if (typeof frame.data == "string") {
-                    console.log(frame.data);
-                }
-            };
-
-            socket.onclose = function () {
-                console.log("WebSocket connection closed");
-                socket = null;
-            }
-
-        };
+        new ANode(document.location.href);
     </script>
 </head>
 <body bgcolor="black">

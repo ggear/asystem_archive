@@ -7,6 +7,7 @@ import sys
 import urlparse
 from optparse import OptionParser
 
+import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from klein import Klein
@@ -20,16 +21,16 @@ from twisted.web.server import Site
 from twisted.web.static import File
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
-WEB_PORT = 8080
 
 
 class ANode:
-    def __init__(self, main_reactor, callback, options):
+    def __init__(self, main_reactor, callback, options, config):
         self.main_reactor = main_reactor
         self.callback = callback
         self.options = options
+        self.config = config
         self.plugins = []
-        self.web_ws = WebWsFactory(u"ws://127.0.0.1:" + str(WEB_PORT), self)
+        self.web_ws = WebWsFactory(u"ws://" + self.config["host"] + ":" + str(self.config["port"]), self)
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
@@ -41,35 +42,10 @@ class ANode:
         plugin_loopingcall.start(plugin_config["poll"])
         return plugin_instance
 
-    def datums_filter_get(self, datum_filter):
+    def datums_filter_get(self, datum_filter, datum_format="dict"):
         datums_filtered = []
         for plugin in self.plugins:
-            for data_metric in plugin.datums:
-                if "metrics" not in datum_filter or data_metric.startswith(tuple(datum_filter["metrics"])):
-                    for datum_type in plugin.datums[data_metric]:
-                        if "types" not in datum_filter or datum_type.startswith(tuple(datum_filter["types"])):
-                            for datum_bin in plugin.datums[data_metric][datum_type]:
-                                if "bins" not in datum_filter or datum_bin.startswith(tuple(datum_filter["bins"])):
-                                    datum_scopes = ["last"] if "scope" not in datum_filter else datum_filter["scope"]
-                                    for datum_scope in datum_scopes:
-                                        if datum_scope in plugin.datums[data_metric][datum_type][datum_bin]:
-                                            if datum_scope == "last":
-                                                datums_filtered.append(
-                                                    Plugin.datum_dict_to_json(plugin.datums[data_metric][datum_type][datum_bin][datum_scope]))
-                                            else:
-                                                for datum in plugin.datums[data_metric][datum_type][datum_bin][datum_scope]:
-                                                    datums_filtered.append(Plugin.datum_dict_to_json(Plugin.datum_avro_to_dict(datum)))
-
-        return datums_filtered
-
-    @staticmethod
-    def datums_filter(datum_filter, datums):
-        datums_filtered = []
-        for datum in datums:
-            if "metrics" not in datum_filter or datum["data_metric"].startswith(tuple(datum_filter["metrics"])):
-                if "types" not in datum_filter or datum["data_type"].startswith(tuple(datum_filter["types"])):
-                    if "bins" not in datum_filter or (str(datum["bin_width"]) + datum["bin_unit"]).startswith(tuple(datum_filter["bins"])):
-                        datums_filtered.append(Plugin.datum_dict_to_json(datum))
+            datums_filtered.extend(plugin.datums_filter_get(datum_filter, datum_format))
         return datums_filtered
 
     def datums_push(self, datums):
@@ -78,21 +54,16 @@ class ANode:
     def start(self):
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Starting service ...")
-
-        self.plugins.append(self.plugin("davis", {"poll": 1, "push": True, "pool": self.web_pool}))
-        self.plugins.append(self.plugin("fronius", {"poll": 1, "push": False, "pool": self.web_pool}))
-        self.plugins.append(self.plugin("netatmo", {"poll": 1, "push": True, "pool": self.web_pool}))
-        self.plugins.append(self.plugin("publish", {"poll": 2, "push": True, "pool": self.web_pool}))
+        for plugin in self.config["plugin"]:
+            self.config["plugin"][plugin]["pool"] = self.web_pool
+            self.plugins.append(self.plugin(plugin, self.config["plugin"][plugin]))
         self.plugins.append(self.plugin("callback", {"poll": 1, "callback": self.callback}))
-
         web_root = File(os.path.dirname(__file__) + "/web")
         web_root.putChild(b"push", WebSocketResource(self.web_ws))
         web_root.putChild(u"pull", KleinResource(self.web_rest.server))
-
         if self.main_reactor == reactor:
-            self.main_reactor.listenTCP(WEB_PORT, Site(web_root))
+            self.main_reactor.listenTCP(self.config["port"], Site(web_root))
             self.main_reactor.run()
-
         return self
 
 
@@ -137,10 +108,10 @@ class WebWs(WebSocketServerProtocol):
         self.push()
 
     def push(self, datums=None):
-        for datums in self.factory.anode.datums_filter(self.datum_filter, datums) if datums is not None else self.factory.anode.datums_filter_get(
-                self.datum_filter):
+        for datums in Plugin.datums_filter(self.datum_filter, datums, "json") if datums is not None else \
+                self.factory.anode.datums_filter_get(self.datum_filter, "json"):
             if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.getLogger().debug("WebSocket push with filter [{0}] and [{0}] datums".format(self.datum_filter, len(datums)))
+                logging.getLogger().debug("WebSocket push with filter [{}] producing [{}] datums".format(self.datum_filter, len(datums)))
             self.sendMessage(datums, False)
 
     def onClose(self, wasClean, code, reason):
@@ -159,9 +130,9 @@ class WebRest:
     @server.route("/")
     def onRequest(self, request):
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
-        datums = self.anode.datums_filter_get(datum_filter)
+        datums = self.anode.datums_filter_get(datum_filter, "json")
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("RESTful pull with filter [{0}] and [{0}] datums".format(datum_filter, len(datums)))
+            logging.getLogger().debug("RESTful pull with filter [{}] producing [{}] datums".format(datum_filter, len(datums)))
         return datums
 
 
@@ -176,4 +147,6 @@ def main(main_reactor=reactor, callback=None):
         logging.getLogger().addHandler(logging_handler)
         log.PythonLoggingObserver(loggerName=logging.getLogger().name).start()
     logging.getLogger().setLevel(logging.CRITICAL if options.quiet else (logging.DEBUG if options.verbose else logging.INFO))
-    return ANode(main_reactor, callback, options).start()
+    with open(os.path.dirname(__file__) + "/anode.yaml", 'r') as stream:
+        config = yaml.load(stream)
+    return ANode(main_reactor, callback, options, config).start()

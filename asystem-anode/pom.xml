@@ -18,7 +18,8 @@
     <properties>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
-        <time.ms.integration-test>5000</time.ms.integration-test>
+        <integration.test.anode.opts>--verbose</integration.test.anode.opts>
+        <integration.test.anode.log>${project.build.directory}/anode-runtime/anode.log</integration.test.anode.log>
     </properties>
 
     <build>
@@ -61,6 +62,58 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>com.github.klieber</groupId>
+                <artifactId>phantomjs-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>install</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <version>2.1.1</version>
+                    <skip>${maven.integration-test.skip}</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <phase>integration-test</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skipJasmineTests>${maven.integration-test.skip}</skipJasmineTests>
+                    <webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
+                    <webDriverCapabilities>
+                        <capability>
+                            <name>phantomjs.binary.path</name>
+                            <value>${phantomjs.binary}</value>
+                        </capability>
+                        <capability>
+                            <name>phantomjs.cli.args</name>
+                            <list>
+                                <value>--webdriver-logfile=none</value>
+                                <value>--webdriver-loglevel=ERROR</value>
+                            </list>
+                        </capability>
+                    </webDriverCapabilities>
+                    <jsSrcDir>${project.basedir}/src/main/python/anode/web/js</jsSrcDir>
+                    <jsTestSrcDir>${project.basedir}/src/main/python/anode/test/js</jsTestSrcDir>
+                    <!-- TODO: add depenedcies when requires -->
+                    <!--<preloadSources>-->
+                    <!--<source>${project.basedir}/src/test/resources/js/angular.min.js</source>-->
+                    <!--<source>${project.basedir}/src/test/resources/js/angular-resource.min.js</source>-->
+                    <!--<source>${project.basedir}/src/test/resources/js/angular-mocks.js</source>-->
+                    <!--</preloadSources>-->
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
@@ -68,11 +121,17 @@
                         <id>python-clean</id>
                         <phase>clean</phase>
                         <configuration>
-                            <target>
+                            <target unless="${maven.integration-test.skip}">
                                 <exec executable="python" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py"/>
                                     <arg value="clean"/>
                                 </exec>
+                                <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-c"/>
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop"/>
+                                </exec>
+                                <delete file="${project.basedir}/phantomjsdriver.log"/>
+                                <delete file="${project.basedir}/../phantomjsdriver.log"/>
                             </target>
                         </configuration>
                         <goals>
@@ -105,20 +164,16 @@
                                     <arg value="develop"/>
                                     <arg value="--user"/>
                                 </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>python-integration-test</id>
-                        <phase>integration-test</phase>
-                        <configuration>
-                            <target unless="${maven.integration-test.skip}">
-                                <exec executable="anode" dir="${dir.output.python}" failifexecutionfails="true" timeout="${time.ms.integration-test}">
-                                    <arg value="-v"/>
+                                <echo>
+
+                                </echo>
+                                <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-c"/>
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode start"/>
                                 </exec>
+                                <echo>
+
+                                </echo>
                             </target>
                         </configuration>
                         <goals>
@@ -130,11 +185,27 @@
                         <phase>post-integration-test</phase>
                         <configuration>
                             <target unless="${maven.integration-test.skip}">
+                                <echo>
+
+                                </echo>
+                                <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-c"/>
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop"/>
+                                </exec>
+                                <echo>
+
+                                </echo>
+                                <delete file="${project.basedir}/phantomjsdriver.log"/>
+                                <delete file="${project.basedir}/../phantomjsdriver.log"/>
                                 <exec executable="python" dir="${dir.output.python}" failonerror="false">
                                     <arg value="setup.py"/>
                                     <arg value="develop"/>
                                     <arg value="--user"/>
                                     <arg value="--uninstall"/>
+                                </exec>
+                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                    <arg value="setup.py"/>
+                                    <arg value="clean"/>
                                 </exec>
                             </target>
                         </configuration>
