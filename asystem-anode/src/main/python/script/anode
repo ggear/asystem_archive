@@ -1,16 +1,13 @@
-#!/bin/bash
-#
-# anode
-#
+#!/bin/sh
 # chkconfig:   <3,4,5> <start> <stop>
 # description: ANode deamon
 #
-# # BEGIN INIT INFO
+### BEGIN INIT INFO
 # Provides:          anode
-# Required-Start:
-# Required-Stop:
+# Required-Start:    $weewx
+# Required-Stop:     $weewx
 # Default-Start:     3 4 5
-# Default-Stop:      0 1 6
+# Default-Stop:      0 1 2 6
 # Short-Description: ANode
 # Description:       ANode daemon
 ### END INIT INFO
@@ -49,7 +46,7 @@ start() {
       exit 2
     fi
     mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
-    nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} &
+    nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
     if [ $? -eq 0 ]; then
       echo $! > ${ANODE_LOCK}
       success $"anode started"
