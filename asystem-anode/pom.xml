@@ -256,14 +256,34 @@
                                     <arg value="setup.py"/>
                                     <arg value="install"/>
                                 </exec>
-                                <mkdir dir="/etc/anode"/>
-                                <copy file="${dir.output.python}/config/anode.yaml" todir="/etc/anode" overwrite="false" force="false" quiet="true"/>
-                                <copy file="${dir.output.python}/script/anode" todir="/etc/init.d" overwrite="true" force="true" quiet="true"/>
-                                <chmod file="/etc/init.d/anode" perm="+x"/>
-                                <exec executable="/bin/systemctl" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/mkdir"/>
+                                    <arg value="-f"/>
+                                    <arg value="/etc/anode"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/cp"/>
+                                    <arg value="-vn"/>
+                                    <arg value="${dir.output.python}/config/anode.yaml"/>
+                                    <arg value="/etc/anode"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/cp"/>
+                                    <arg value="-vrf"/>
+                                    <arg value="${dir.output.python}/script/anode"/>
+                                    <arg value="/etc/init.d"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/chmod"/>
+                                    <arg value="+x"/>
+                                    <arg value="/etc/init.d/anode"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/systemctl"/>
                                     <arg value="daemon-reload"/>
                                 </exec>
-                                <exec executable="/bin/systemctl" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/bin/systemctl"/>
                                     <arg value="enable"/>
                                     <arg value="anode"/>
                                 </exec>
