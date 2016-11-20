@@ -34,7 +34,7 @@ log_tail_failure() {
 start() {
   log_head "Starting anode: "
   if [ ! -f ${ANODE_LOCK} ]; then
-    if [ "${ANODE_PATH}" == "" ]; then
+    if [ -z ${ANODE_PATH} ]; then
       log_tail_failure "could not locate anode binary"
     fi
     mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
