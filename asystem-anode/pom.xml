@@ -251,8 +251,8 @@
                         <phase>install</phase>
                         <configuration>
                             <target unless="${maven.install.skip}">
-                                <exec executable="/usr/bin/sudo" failonerror="true">
-                                    <arg value="python"/>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/usr/bin/python"/>
                                     <arg value="setup.py"/>
                                     <arg value="install"/>
                                 </exec>
