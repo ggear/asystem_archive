@@ -258,7 +258,7 @@
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
                                     <arg value="/bin/mkdir"/>
-                                    <arg value="-f"/>
+                                    <arg value="-p"/>
                                     <arg value="/etc/anode"/>
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
