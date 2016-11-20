@@ -251,7 +251,8 @@
                         <phase>install</phase>
                         <configuration>
                             <target unless="${maven.install.skip}">
-                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="/usr/bin/sudo" failonerror="true">
+                                    <arg value="python"/>
                                     <arg value="setup.py"/>
                                     <arg value="install"/>
                                 </exec>
@@ -259,6 +260,13 @@
                                 <copy file="${dir.output.python}/config/anode.yaml" todir="/etc/anode" overwrite="false" force="false" quiet="true"/>
                                 <copy file="${dir.output.python}/script/anode" todir="/etc/init.d" overwrite="true" force="true" quiet="true"/>
                                 <chmod file="/etc/init.d/anode" perm="+x"/>
+                                <exec executable="/bin/systemctl" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="daemon-reload"/>
+                                </exec>
+                                <exec executable="/bin/systemctl" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="enable"/>
+                                    <arg value="anode"/>
+                                </exec>
                             </target>
                         </configuration>
                         <goals>
