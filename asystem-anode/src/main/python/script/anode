@@ -14,60 +14,59 @@
 
 ANODE_PATH=$(which anode)
 ANODE_LOCK=/var/lock/subsys/anode
+ANODE_OPTS=${ANODE_OPTS:-"--verbose"}
+ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
 
-function log {
+log_head() {
   /bin/echo -n "$1"
 }
 
-function success {
+log_tail_success() {
   /bin/echo "$1"
   exit 0
 }
 
-function failure {
+log_tail_failure() {
   /bin/echo "$1"
   exit 2
 }
 
-ANODE_OPTS=${ANODE_OPTS:-"-q"}
-ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/dev/null"}
-
 start() {
-  log "Starting anode: "
+  log_head "Starting anode: "
   if [ ! -f ${ANODE_LOCK} ]; then
     if [ "${ANODE_PATH}" == "" ]; then
-      failure "could not locate anode binary"
+      log_tail_failure "could not locate anode binary"
     fi
     mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
     nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
     if [ $? -eq 0 ]; then
       echo $! > ${ANODE_LOCK}
-      success "anode started"
+      log_tail_success "anode started"
     else
-      failure "anode failed to start"
+      log_tail_failure "anode failed to start"
     fi
   else
-    failure "anode already started"
+    log_tail_failure "anode already started"
   fi
 }
 
 stop() {
-  log "Stopping anode: "
+  log_head "Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
     kill $(cat ${ANODE_LOCK}) 2> /dev/null
     rm -f ${ANODE_LOCK}
-    success "anode stopped"
+    log_tail_success "anode stopped"
   else
-    success "anode not started"
+    log_tail_success "anode not started"
   fi
 }
 
 status() {
-  log "Status anode: "
+  log_head "Status anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    success "anode started"
+    log_tail_success "anode started"
   else
-    failure "anode stopped"
+    log_tail_failure "anode stopped"
   fi
 }
 
