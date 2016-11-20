@@ -14,60 +14,69 @@
 
 ANODE_PATH=$(which anode)
 ANODE_LOCK=/var/lock/subsys/anode
+ANODE_FUNCTIONS=/etc/init.d/functions
 
-function log {
-  /bin/echo -n "$1"
-}
-
-function success {
-  /bin/echo "$1"
-  exit 0
-}
-
-function failure {
-  /bin/echo "$1"
-  exit 2
-}
+if [ -f ${ANODE_FUNCTIONS} ]; then
+  . ${ANODE_FUNCTIONS}
+else
+  function initlog {
+    echo "$1" > /dev/null
+    $2
+  }
+  function success {
+    echo " $1"
+  }
+  function failure {
+    echo " $1"
+  }
+  function killproc {
+    echo "$1" > /dev/null
+    kill $(cat ${ANODE_LOCK})
+  }
+fi
 
 ANODE_OPTS=${ANODE_OPTS:-"-q"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/dev/null"}
 
 start() {
-  log "Starting anode: "
+  initlog -c "echo -n Starting anode: "
   if [ ! -f ${ANODE_LOCK} ]; then
     if [ "${ANODE_PATH}" == "" ]; then
-      failure "could not locate anode binary"
+      failure $"could not locate anode binary"
+      exit 2
     fi
     mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
     nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
     if [ $? -eq 0 ]; then
       echo $! > ${ANODE_LOCK}
-      success "anode started"
+      success $"anode started"
     else
-      failure "anode failed to start"
+      failure $"anode failed to start"
+      exit 1
     fi
   else
-    failure "anode already started"
+    failure $"anode already started"
+    exit 1
   fi
 }
 
 stop() {
-  log "Stopping anode: "
+  initlog -c "echo -n Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    kill $(cat ${ANODE_LOCK}) 2> /dev/null
+    killproc ${ANODE_PATH} 2> /dev/null
     rm -f ${ANODE_LOCK}
-    success "anode stopped"
+    success $"anode stopped"
   else
-    success "anode not started"
+    failure $"anode not started"
   fi
 }
 
 status() {
-  log "Status anode: "
+  initlog -c "echo -n Status anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    success "anode started"
+    success $"anode started"
   else
-    failure "anode stopped"
+    failure $"anode stopped"
   fi
 }
 
@@ -86,7 +95,7 @@ case "$1" in
     status
     ;;
   *)
-    echo "Usage: $0 {start|stop|restart|status}"
+    echo $"Usage: $0 {start|stop|restart|status}"
     exit 1
 esac
 
