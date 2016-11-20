@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import os.path
 import sys
 
 import treq
@@ -73,23 +74,23 @@ class ANodeTest(TestCase):
             '/pull'))))
 
     def test_main_default(self):
-        self.patch(sys, "argv", ["anode"])
+        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG])
         self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_verbose_short(self):
-        self.patch(sys, "argv", ["anode", "-v"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-v"])
         self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_verbose_long(self):
-        self.patch(sys, "argv", ["anode", "--verbose"])
+        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--verbose"])
         self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_quiet_short(self):
-        self.patch(sys, "argv", ["anode", "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-q"])
         self.assert_anode(lambda: self.tick_tock(1, 1))
 
     def test_main_quiet_long(self):
-        self.patch(sys, "argv", ["anode", "--quiet"])
+        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--quiet"])
         self.assert_anode(lambda: self.tick_tock(1, 1))
 
 
@@ -118,6 +119,8 @@ class MockResponseContent:
     def addCallbacks(self, callback, errback=None):
         callback(self.content)
 
+
+FILE_CONFIG = os.path.dirname(__file__) + "/../../config/anode.yaml"
 
 HTTP_RESPONSES = {
     "http_404": u"""<html><body>HTTP 404</body></html>""",

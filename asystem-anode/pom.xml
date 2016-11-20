@@ -18,7 +18,7 @@
     <properties>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
-        <integration.test.anode.opts>--verbose</integration.test.anode.opts>
+        <integration.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --verbose</integration.test.anode.opts>
         <integration.test.anode.log>${project.build.directory}/anode-runtime/anode.log</integration.test.anode.log>
     </properties>
 
@@ -255,6 +255,10 @@
                                     <arg value="setup.py"/>
                                     <arg value="install"/>
                                 </exec>
+                                <mkdir dir="/etc/anode"/>
+                                <copy file="${dir.output.python}/config/anode.yaml" todir="/etc/anode" overwrite="false" force="false" quiet="true"/>
+                                <copy file="${dir.output.python}/script/anode" todir="/etc/init.d" overwrite="true" force="true" quiet="true"/>
+                                <chmod file="/etc/init.d/anode" perm="+x"/>
                             </target>
                         </configuration>
                         <goals>

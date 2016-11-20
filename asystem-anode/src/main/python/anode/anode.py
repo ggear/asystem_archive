@@ -99,7 +99,7 @@ class WebWs(WebSocketServerProtocol):
     def onConnect(self, request):
         self.datum_filter = request.params
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection request [{}]".format(request))
+            logging.getLogger().debug("WebSocket connection request")
 
     def onOpen(self):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -138,6 +138,8 @@ class WebRest:
 
 def main(main_reactor=reactor, callback=None):
     parser = OptionParser()
+    parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE",
+                      metavar="FILE")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="noisy output to stdout")
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress all output to stdout")
     (options, args) = parser.parse_args()
@@ -147,6 +149,6 @@ def main(main_reactor=reactor, callback=None):
         logging.getLogger().addHandler(logging_handler)
         log.PythonLoggingObserver(loggerName=logging.getLogger().name).start()
     logging.getLogger().setLevel(logging.CRITICAL if options.quiet else (logging.DEBUG if options.verbose else logging.INFO))
-    with open(os.path.dirname(__file__) + "/anode.yaml", 'r') as stream:
+    with open(options.config, 'r') as stream:
         config = yaml.load(stream)
     return ANode(main_reactor, callback, options, config).start()
