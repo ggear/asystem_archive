@@ -287,6 +287,11 @@
                                     <arg value="enable"/>
                                     <arg value="anode"/>
                                 </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/usr/bin/python"/>
+                                    <arg value="setup.py"/>
+                                    <arg value="clean"/>
+                                </exec>
                             </target>
                         </configuration>
                         <goals>
