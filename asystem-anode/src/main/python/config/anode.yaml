@@ -1,6 +1,24 @@
-host: 127.0.0.1
-port: 8080
+host: 0.0.0.0
+port: 8091
+callback_poll_seconds: 1
 plugin:
     fronius:
-      poll: 1
-      push: True
+      poll_seconds: 1
+      history_ticks: 10000
+      publish_ticks: -1
+      push_upstream: True
+    netatmo:
+      poll_seconds: 300
+      history_ticks: 150
+      publish_ticks: -1
+      push_upstream: True
+    davis:
+      poll_seconds: -1
+      history_ticks: 10000
+      publish_ticks: -1
+      push_upstream: True
+    wunderground:
+      poll_seconds: 900
+      history_ticks: 10
+      publish_ticks: -1
+      push_upstream: True

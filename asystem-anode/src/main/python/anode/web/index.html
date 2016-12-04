@@ -1,13 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>anode</title>
+    <link rel="apple-touch-icon" sizes="57x57" href="ico/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="ico/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="ico/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="ico/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="ico/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="ico/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="ico/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="ico/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="ico/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="ico/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="ico/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="ico/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="ico/favicon-16x16.png">
+    <link rel="manifest" href="ico/manifest.json">
+    <link rel="stylesheet" type="text/css" href="css/anode.css">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-title" content="ANode">
     <script type="text/javascript" src="js/anode.js"></script>
     <script type="text/javascript">
-        new ANode(document.location.href);
+        window.onpageshow = function (event) {
+            if (event.persisted) {
+                window.location.reload()
+            }
+        };
+        var datumDetailTimers = {};
+        new ANode(document.location.href,
+            function () {
+                document.getElementById('datums_header_value').innerHTML = "<a href=\"" + document.location.href + "\">connected</a>";
+                document.getElementById('datums_header_value').className = "datum-detail up";
+            },
+            function () {
+                document.getElementById('datums_header_value').innerHTML = "<a href=\"" + document.location.href + "\">disconnected</a>";
+                document.getElementById('datums_header_value').className = "datum-detail down";
+            },
+            function (datum) {
+                document.getElementById('datums_header_metric').innerHTML = "<a href=\"/\">anode.id." + datum.anode_id + "</a>";
+                var datumDiv = document.getElementById(datum.ui_id);
+                if (datumDiv == null) {
+                    datumDiv = document.createElement('div');
+                    datumDiv.id = datum.ui_id;
+                    datumDiv.className = "datum";
+                    var datumDetails = {
+                        "metric": (function (metric) {
+                            var i;
+                            var metricLinks = "";
+                            var metricTokens = metric.split("\.");
+                            for (i = 0; i < metricTokens.length; i++) {
+                                metricLinks += (i == 0 ? "" : ".") + "<a href=\"/?metrics=" + metricTokens[i] + "\">" + metricTokens[i] + "</a>"
+                            }
+                            return metricLinks
+                        })(datum.data_metric),
+                        "value": datum.data_type == "enumeration" ? "is" : (datum.data_type == "epoch" ? new Date(datum.data_value * 1000).getHours() + ":" + (new Date(datum.data_value * 1000).getMinutes() < 10 ? '0' : '') + new Date(datum.data_value * 1000).getMinutes() : datum.data_value / datum.data_scale),
+                        "unit": datum.data_unit == "scalor" ? null : datum.data_unit,
+                        "timeliness": "<a href=\"" + document.location.href + (document.location.href.endsWith("/") ? "?" : "&") + "types=" + datum.data_type + "\">" + datum.data_timeliness + "</a>"
+                    };
+                    for (var datumDetail in datumDetails) {
+                        (function (datumDetail) {
+                            if (datumDetails[datumDetail] != null) {
+                                var datumDetailDiv = document.createElement('div');
+                                datumDetailDiv.id = datum.ui_id + datumDetail;
+                                datumDetailDiv.className = "datum-detail";
+                                datumDetailDiv.innerHTML = datumDetails[datumDetail];
+                                datumDiv.appendChild(datumDetailDiv);
+                            }
+                        })(datumDetail);
+                    }
+                    document.getElementById('datums').appendChild(datumDiv);
+                } else {
+                    var datumDetailDiv = document.getElementById(datum.ui_id + "value");
+                    var datumDetailValue = datum.data_value / datum.data_scale;
+                    var datumDetailValueCurrent = datumDetailDiv.innerHTML;
+                    if (datumDetailValue > datumDetailValueCurrent) { //noinspection JSUndeclaredVariable
+                        datumDetailValueClass = "datum-detail up";
+                    }
+                    else if (datumDetailValue < datumDetailValueCurrent) { //noinspection JSUndeclaredVariable
+                        datumDetailValueClass = "datum-detail down";
+                    }
+                    datumDetailDiv.innerHTML = "" + datumDetailValue;
+                    datumDetailDiv.className = datumDetailValueClass;
+
+                    if (datum.ui_id in datumDetailTimers) {
+                        window.clearTimeout(datumDetailTimers[datum.ui_id]);
+                    }
+                    datumDetailTimers[datum.ui_id] = window.setTimeout(function () {
+                        datumDetailDiv.className = "datum-detail";
+                    }, 5000);
+                }
+            });
     </script>
 </head>
-<body bgcolor="black">
-<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;color:whitesmoke;font-size:100%;">power.production.grid 1234 W</div>
-<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;color:whitesmoke;font-size:100%;">power.production.battery 0 W</div>
+<body>
+<div>
+    <!-- @formatter:off --><div id="datums" class="datums"><div id="datums_header" class="datum"><div id="datums_header_metric" class="datum-detail"><a href="/">anode</a></div><div id="datums_header_value" class="datum-detail"><a href="javascript:window.location.href=window.location.href">connecting ...</a></div><div id="datums_header_unit" class="datum-detail"></div><div id="datums_header_timeliness" class="datum-detail"></div></div></div><!-- @formatter:on -->
+</div>
 </body>
 </html>
