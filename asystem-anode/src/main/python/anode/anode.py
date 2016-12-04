@@ -14,6 +14,7 @@ from klein import Klein
 from klein.resource import KleinResource
 from plugin import Plugin
 from twisted.internet import reactor
+from twisted.internet.defer import succeed
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.web.client import HTTPConnectionPool
@@ -29,38 +30,67 @@ class ANode:
         self.callback = callback
         self.options = options
         self.config = config
-        self.plugins = []
+        self.plugins = {}
         self.web_ws = WebWsFactory(u"ws://" + self.config["host"] + ":" + str(self.config["port"]), self)
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
 
-    def plugin(self, plugin_name, plugin_config):
+    def register_plugin(self, plugin_name, plugin_config):
         plugin_instance = Plugin.get(self, plugin_name, plugin_config)
-        plugin_loopingcall = LoopingCall(plugin_instance.poll)
-        plugin_loopingcall.clock = self.main_reactor
-        plugin_loopingcall.start(plugin_config["poll"])
+        if plugin_config["poll_seconds"] > 0:
+            plugin_loopingcall = LoopingCall(plugin_instance.poll)
+            plugin_loopingcall.clock = self.main_reactor
+            plugin_loopingcall.start(plugin_config["poll_seconds"])
         return plugin_instance
 
-    def datums_filter_get(self, datum_filter, datum_format="dict"):
+    def get_datums(self, datum_filter, datum_format="dict", datums=None):
         datums_filtered = []
-        for plugin in self.plugins:
-            datums_filtered.extend(plugin.datums_filter_get(datum_filter, datum_format))
-        return datums_filtered
+        for plugin_name, plugin in self.plugins.items():
+            if datums is None:
+                datums_filtered.extend(plugin.datums_filter_get(datum_filter, datum_format))
+            else:
+                datums_filtered.extend(plugin.datums_filter(datum_filter, datums, datum_format))
+            if "limit" in datum_filter and min(datum_filter["limit"]).isdigit() and int(min(datum_filter["limit"])) <= len(datums_filtered):
+                datums_filtered = datums_filtered[:int(min(datum_filter["limit"]))]
+                break
+        return sorted(datums_filtered, key=lambda datum: (datum["data_metric"],
+                                                          "aaaaa" if datum["data_type"] == "point" else
+                                                          "bbbbb" if datum["data_type"] == "average" else
+                                                          "ccccc" if datum["data_type"] == "high" else
+                                                          "ddddd" if datum["data_type"] == "low" else
+                                                          "zzzzz" if datum["data_type"] == "integral" else
+                                                          datum["data_type"],
+                                                          "aaaaa" if datum["bin_unit"] == "second" else
+                                                          "bbbbb" if datum["bin_unit"] == "minute" else
+                                                          "ccccc" if datum["bin_unit"] == "hour" else
+                                                          "ddddd" if datum["bin_unit"] == "daytime" else
+                                                          "eeeee" if datum["bin_unit"] == "nighttime" else
+                                                          "fffff" if datum["bin_unit"] == "day" else
+                                                          "ggggg" if datum["bin_unit"] == "month" else
+                                                          "hhhhh" if datum["bin_unit"] == "year" else
+                                                          "iiiii",
+                                                          datum["bin_width"]))
 
-    def datums_push(self, datums):
+    def push_datums(self, datum_filter, data):
+        if "sources" in datum_filter:
+            for source in datum_filter["sources"]:
+                if source in self.plugins:
+                    self.plugins[source].push(data)
+
+    def publish_datums(self, datums):
         self.web_ws.push(datums)
 
-    def start(self):
+    def start_server(self):
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Starting service ...")
-        for plugin in self.config["plugin"]:
-            self.config["plugin"][plugin]["pool"] = self.web_pool
-            self.plugins.append(self.plugin(plugin, self.config["plugin"][plugin]))
-        self.plugins.append(self.plugin("callback", {"poll": 1, "callback": self.callback}))
+        for plugin_name in self.config["plugin"]:
+            self.config["plugin"][plugin_name]["pool"] = self.web_pool
+            self.plugins[plugin_name] = self.register_plugin(plugin_name, self.config["plugin"][plugin_name])
+        self.plugins["callback"] = self.register_plugin("callback", {"poll_seconds": self.config["callback_poll_seconds"], "callback": self.callback})
         web_root = File(os.path.dirname(__file__) + "/web")
-        web_root.putChild(b"push", WebSocketResource(self.web_ws))
-        web_root.putChild(u"pull", KleinResource(self.web_rest.server))
+        web_root.putChild(b"ws", WebSocketResource(self.web_ws))
+        web_root.putChild(u"rest", KleinResource(self.web_rest.server))
         if self.main_reactor == reactor:
             self.main_reactor.listenTCP(self.config["port"], Site(web_root))
             self.main_reactor.run()
@@ -108,11 +138,12 @@ class WebWs(WebSocketServerProtocol):
         self.push()
 
     def push(self, datums=None):
-        for datums in Plugin.datums_filter(self.datum_filter, datums, "json") if datums is not None else \
-                self.factory.anode.datums_filter_get(self.datum_filter, "json"):
-            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.getLogger().debug("WebSocket push with filter [{}] producing [{}] datums".format(self.datum_filter, len(datums)))
-            self.sendMessage(datums, False)
+        datums = self.factory.anode.get_datums(self.datum_filter, "dict", datums)
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("WebSocket push with filter [{}] and [{}] datums".format(
+                self.datum_filter, 0 if datums is None else len(datums)))
+        for datum in datums:
+            self.sendMessage(Plugin.datum_dict_to_json(datum), False)
 
     def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -127,13 +158,21 @@ class WebRest:
     def __init__(self, anode):
         self.anode = anode
 
-    @server.route("/")
-    def onRequest(self, request):
+    @server.route("/", methods=["POST"])
+    def onPost(self, request):
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
-        datums = self.anode.datums_filter_get(datum_filter, "json")
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("RESTful pull with filter [{}] producing [{}] datums".format(datum_filter, len(datums)))
-        return datums
+            logging.getLogger().debug("RESTful push with filter [{}]".format(datum_filter))
+        self.anode.push_datums(datum_filter, request.content.read())
+        return succeed(None)
+
+    @server.route("/")
+    def onGet(self, request):
+        datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
+        datums_filtered = self.anode.get_datums(datum_filter, "dict")
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("RESTful pull with filter [{}] and [{}] datums".format(datum_filter, len(datums_filtered)))
+        return Plugin.datums_dict_to_json(datums_filtered)
 
 
 def main(main_reactor=reactor, callback=None):
@@ -148,7 +187,7 @@ def main(main_reactor=reactor, callback=None):
         logging_handler.setFormatter(logging.Formatter(LOG_FORMAT))
         logging.getLogger().addHandler(logging_handler)
         log.PythonLoggingObserver(loggerName=logging.getLogger().name).start()
-    logging.getLogger().setLevel(logging.CRITICAL if options.quiet else (logging.DEBUG if options.verbose else logging.INFO))
-    with open(options.config, 'r') as stream:
+    logging.getLogger().setLevel(logging.ERROR if options.quiet else (logging.DEBUG if options.verbose else logging.INFO))
+    with open(options.config, "r") as stream:
         config = yaml.load(stream)
-    return ANode(main_reactor, callback, options, config).start()
+    return ANode(main_reactor, callback, options, config).start_server()

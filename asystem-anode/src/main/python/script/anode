@@ -14,8 +14,11 @@
 
 ANODE_PATH=$(which anode)
 ANODE_LOCK=/var/lock/subsys/anode
-ANODE_OPTS=${ANODE_OPTS:-"--verbose"}
+ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
+ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/bash.bashrc"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
+
+[ -f ${ANODE_ENV_FILE} ] && $(grep NETATMO ${ANODE_ENV_FILE})
 
 log_head() {
   /bin/echo -n "$1"
@@ -23,12 +26,10 @@ log_head() {
 
 log_tail_success() {
   /bin/echo "$1"
-  exit 0
 }
 
 log_tail_failure() {
   /bin/echo "$1"
-  exit 2
 }
 
 start() {
@@ -36,14 +37,15 @@ start() {
   if [ ! -f ${ANODE_LOCK} ]; then
     if [ -z ${ANODE_PATH} ]; then
       log_tail_failure "could not locate anode binary"
-    fi
-    mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
-    nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
-    if [ $? -eq 0 ]; then
-      echo $! > ${ANODE_LOCK}
-      log_tail_success "anode started"
     else
-      log_tail_failure "anode failed to start"
+      mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
+      nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
+      if [ $? -eq 0 ]; then
+        echo $! > ${ANODE_LOCK}
+        log_tail_success "anode started"
+      else
+        log_tail_failure "anode failed to start"
+      fi
     fi
   else
     log_tail_failure "anode already started"
@@ -54,8 +56,13 @@ stop() {
   log_head "Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
     kill $(cat ${ANODE_LOCK}) 2> /dev/null
-    rm -f ${ANODE_LOCK}
-    log_tail_success "anode stopped"
+    kill_success=$?
+    rm -f ${ANODE_LOCK} 2> /dev/null
+    if [ ${kill_success} -eq 0 ]; then
+      log_tail_success "anode stopped"
+    else
+      log_tail_failure "failed to stop anode"
+    fi
   else
     log_tail_success "anode not started"
   fi
@@ -85,7 +92,7 @@ case "$1" in
     status
     ;;
   *)
-    echo "Usage: $0 {start|stop|restart|status}"
+    echo "Usage: $0 {start|stop|status}"
     exit 1
 esac
 

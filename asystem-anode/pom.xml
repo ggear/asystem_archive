@@ -239,6 +239,7 @@
                                 </exec>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="-v"/>
+                                    <arg value="-c${dir.source.python}/config/anode.yaml"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -263,7 +264,7 @@
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
                                     <arg value="/bin/cp"/>
-                                    <arg value="-vn"/>
+                                    <arg value="-rvf"/>
                                     <arg value="${dir.output.python}/config/anode.yaml"/>
                                     <arg value="/etc/anode"/>
                                 </exec>
@@ -291,6 +292,16 @@
                                     <arg value="/usr/bin/python"/>
                                     <arg value="setup.py"/>
                                     <arg value="clean"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/usr/sbin/service"/>
+                                    <arg value="anode"/>
+                                    <arg value="stop"/>
+                                </exec>
+                                <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
+                                    <arg value="/usr/sbin/service"/>
+                                    <arg value="anode"/>
+                                    <arg value="start"/>
                                 </exec>
                             </target>
                         </configuration>

@@ -13,7 +13,10 @@
     "type": "enum",
     "symbols": [
       "",
-      "fronius"
+      "davis",
+      "fronius",
+      "netatmo",
+      "wunderground"
     ]
   },
   {
@@ -22,16 +25,72 @@
     "type": "enum",
     "symbols": [
       "",
+      "conditions.outdoor.forecast",
+      "temperature.outdoor.forecast",
+      "rain.outdoor.forecast",
+      "wind.outdoor.forecast",
+      "humidity.outdoor.forecast",
+      "temperature.indoor.graham",
+      "temperature.indoor.living",
+      "temperature.indoor.parents",
+      "temperature.indoor.edwin",
+      "temperature.outdoor.deck",
+      "humidity.indoor.graham",
+      "humidity.indoor.living",
+      "humidity.indoor.parents",
+      "humidity.indoor.edwin",
+      "humidity.outdoor.deck",
+      "carbondioxide.indoor.graham",
+      "carbondioxide.indoor.living",
+      "carbondioxide.indoor.parents",
+      "carbondioxide.indoor.edwin",
+      "noise.indoor.graham",
+      "pressure.indoor.graham",
+      "pressureabsolute.indoor.graham",
+      "temperature.indoor.dining",
+      "dewpoint.indoor.dining",
+      "humidity.indoor.dining",
+      "sun.outdoor.azimuth",
+      "sun.outdoor.altitude",
+      "sun.outdoor.rise",
+      "sun.outdoor.set",
+      "temperature.outdoor.apparent",
+      "temperature.outdoor.roof",
+      "humidityindex.outdoor.roof",
+      "dewpoint.outdoor.roof",
+      "wind.outdoor.roof",
+      "windbearing.outdoor.roof",
+      "windgust.outdoor.roof",
+      "windgustbearing.outdoor.roof",
+      "windchill.outdoor.roof",
+      "windrun.outdoor.roof",
+      "pressure.outdoor.roof",
+      "heatindex.outdoor.roof",
+      "humidity.outdoor.roof",
+      "cloud.outdoor.base",
+      "rain.outdoor.roof",
       "power.production.grid",
       "power.production.battery",
       "power.production.inverter",
-      "power.production.array",
       "power.consumption.grid",
       "power.consumption.battery",
       "power.consumption.inverter",
-      "energy.production.array",
+      "power.utlisation.inverter",
+      "power.utlisation.grid",
+      "power.utlisation.array",
+      "energy.production.inverter",
       "energy.production.grid",
       "energy.consumption.grid"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "name": "temporal",
+    "type": "enum",
+    "symbols": [
+      "",
+      "current",
+      "forecast"
     ]
   },
   {
@@ -40,27 +99,74 @@
     "type": "enum",
     "symbols": [
       "",
+      "high",
+      "low",
       "point",
-      "maximum",
-      "minimum",
-      "average",
-      "median",
+      "epoch",
       "trend",
-      "integral"
+      "average",
+      "integral",
+      "enumeration"
     ]
   },
   {
     "namespace": "com.janeandgraham.asystem",
-    "name": "unit",
+    "name": "data_unit",
     "type": "enum",
     "symbols": [
       "",
-      "s",
-      "d",
-      "y",
-      "∀",
+      "°",
+      "%",
+      "m",
       "W",
-      "Wh"
+      "°C",
+      "Wh",
+      "mm",
+      "cm",
+      "km",
+      "dB",
+      "m/s",
+      "ppm",
+      "km/h",
+      "mbar",
+      "mm/h",
+      "scalor",
+      "chance of flurries",
+      "chance of rain",
+      "chance of sleet",
+      "chance of snow",
+      "chance of a thunderstorm",
+      "clear",
+      "cloudy",
+      "flurries",
+      "hazy",
+      "mostly cloudy",
+      "mostly sunny",
+      "partly cloudy",
+      "partly sunny",
+      "rain",
+      "sleet",
+      "snow",
+      "sunny",
+      "thunderstorm",
+      "unknown"
+    ]
+  },
+  {
+    "namespace": "com.janeandgraham.asystem",
+    "name": "bin_unit",
+    "type": "enum",
+    "symbols": [
+      "",
+      "second",
+      "minute",
+      "hour",
+      "day",
+      "daytime",
+      "nighttime",
+      "month",
+      "year",
+      "alltime"
     ]
   },
   {
@@ -88,9 +194,14 @@
         "default": ""
       },
       {
+        "name": "data_temporal",
+        "type": "temporal",
+        "default": "current"
+      },
+      {
         "name": "data_type",
         "type": "type",
-        "default": ""
+        "default": "point"
       },
       {
         "name": "data_value",
@@ -99,7 +210,7 @@
       },
       {
         "name": "data_unit",
-        "type": "unit",
+        "type": "data_unit",
         "default": ""
       },
       {
@@ -124,7 +235,7 @@
       },
       {
         "name": "bin_unit",
-        "type": "unit",
+        "type": "bin_unit",
         "default": ""
       }
     ]

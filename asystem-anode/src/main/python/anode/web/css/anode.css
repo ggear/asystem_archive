@@ -1,0 +1,35 @@
+body {
+    background-color: black;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.datums {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    color: whitesmoke;
+    font-size: 200%;
+}
+
+.datums .datum {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.datums .datum .datum-detail {
+    display: inline-block;
+    color: whitesmoke;
+    padding: 0 10px 0 0;
+}
+
+/*noinspection CssUnusedSymbol*/
+.datums .datum .datum-detail.up {
+    color: chartreuse;
+}
+
+/*noinspection CssUnusedSymbol*/
+.datums .datum .datum-detail.down {
+    color: red;
+}
