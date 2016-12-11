@@ -40,6 +40,7 @@ class Plugin(object):
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [{}] dropped [{}] datums".format(self.name, self.datums_dropped))
             logging.getLogger().info("Plugin [{}] pushed [{}] datums".format(self.name, self.datums_pushed))
+            logging.getLogger().info("Plugin [{}] stored [{}] datums".format(self.name, self.datums_history))
         if "push_upstream" in self.config and self.config["push_upstream"]:
             for datum_metric in self.datums:
                 for datum_type in self.datums[datum_metric]:
@@ -87,8 +88,7 @@ class Plugin(object):
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(
                         maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1 else self.config["publish_ticks"])),
-                    DATUM_QUEUE_HISTORY: deque(
-                        maxlen=(None if "history_ticks" not in self.config or self.config["history_ticks"] < 1 else self.config["history_ticks"]))
+                    DATUM_QUEUE_HISTORY: deque()
                 }
             datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]]
             if DATUM_QUEUE_LAST not in datums_deref or datums_deref[DATUM_QUEUE_LAST]["data_value"] != datum_dict["data_value"] or \
@@ -96,7 +96,14 @@ class Plugin(object):
                             datum_dict["data_unit"] or datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
-                datums_deref[DATUM_QUEUE_HISTORY].append(datum_avro)
+                if "history_ticks" in self.config and self.config["history_ticks"] > 0:
+                    self.datums_history += 1
+                    if self.config["history_ticks"] >= self.datums_history:
+                        if len(datums_deref[DATUM_QUEUE_HISTORY]) > 0:
+                            datums_deref[DATUM_QUEUE_HISTORY].popleft();
+                            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                                logging.getLogger().debug("Destored datum [{}]".format(self.datum_tostring(datum_dict)))
+                    datums_deref[DATUM_QUEUE_HISTORY].append(datum_avro)
                 self.datums_pushed += 1
                 if logging.getLogger().isEnabledFor(logging.DEBUG):
                     logging.getLogger().debug("Pushed datum [{}]".format(self.datum_tostring(datum_dict)))
@@ -107,8 +114,8 @@ class Plugin(object):
                     logging.getLogger().debug("Dropped datum [{}]".format(self.datum_tostring(datum_dict)))
 
     def datum_tostring(self, datum_dict):
-        return "{}.{}.{}.{}{}={}{}".format(
-            datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"],
+        return "{}.{}.{}.{}{}.{}={}{}".format(
+            datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"], datum_dict["bin_timestamp"],
             datum_dict["bin_unit"].encode('utf-8'),
             int(self.datum_avro_to_dict(self.datum_dict_to_avro(datum_dict))["data_value"]) / Decimal(datum_dict["data_scale"]),
             datum_dict["data_unit"].encode('utf-8')
@@ -245,6 +252,7 @@ class Plugin(object):
         self.datums = {}
         self.datums_pushed = 0
         self.datums_dropped = 0
+        self.datums_history = 0
 
 
 DATUM_QUEUE_LAST = "last"
