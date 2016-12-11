@@ -40,7 +40,7 @@ class Plugin(object):
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [{}] dropped [{}] datums".format(self.name, self.datums_dropped))
             logging.getLogger().info("Plugin [{}] pushed [{}] datums".format(self.name, self.datums_pushed))
-            logging.getLogger().info("Plugin [{}] stored [{}] datums".format(self.name, self.datums_history))
+            logging.getLogger().info("Plugin [{}] saved [{}] datums".format(self.name, self.datums_history))
         if "push_upstream" in self.config and self.config["push_upstream"]:
             for datum_metric in self.datums:
                 for datum_type in self.datums[datum_metric]:
@@ -97,13 +97,16 @@ class Plugin(object):
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                 if "history_ticks" in self.config and self.config["history_ticks"] > 0:
-                    self.datums_history += 1
-                    if self.config["history_ticks"] >= self.datums_history:
+                    if self.config["history_ticks"] <= self.datums_history:
                         if len(datums_deref[DATUM_QUEUE_HISTORY]) > 0:
-                            datums_deref[DATUM_QUEUE_HISTORY].popleft();
+                            datum_deleted = datums_deref[DATUM_QUEUE_HISTORY].popleft();
                             if logging.getLogger().isEnabledFor(logging.DEBUG):
-                                logging.getLogger().debug("Destored datum [{}]".format(self.datum_tostring(datum_dict)))
+                                logging.getLogger().debug("Deleted datum [{}]".format(self.datum_tostring(self.datum_avro_to_dict(datum_deleted))))
+                    else:
+                        self.datums_history += 1
                     datums_deref[DATUM_QUEUE_HISTORY].append(datum_avro)
+                    if logging.getLogger().isEnabledFor(logging.DEBUG):
+                        logging.getLogger().debug("Saved datum [{}]".format(self.datum_tostring(datum_dict)))
                 self.datums_pushed += 1
                 if logging.getLogger().isEnabledFor(logging.DEBUG):
                     logging.getLogger().debug("Pushed datum [{}]".format(self.datum_tostring(datum_dict)))
