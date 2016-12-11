@@ -141,7 +141,7 @@ class Plugin(object):
                                                     datums_filtered.append(Plugin.datum_dict_to_format(
                                                         self.datums[data_metric][datum_type][datum_bin][datum_scope], datum_format))
                                             else:
-                                                for datum in self.datums[data_metric][datum_type][datum_bin][datum_scope]:
+                                                for datum in reversed(self.datums[data_metric][datum_type][datum_bin][datum_scope]):
                                                     if not Plugin.is_fitlered_len(datum_filter, datums_filtered):
                                                         datums_filtered.append(Plugin.datum_avro_to_format(datum, datum_format))
         return datums_filtered
