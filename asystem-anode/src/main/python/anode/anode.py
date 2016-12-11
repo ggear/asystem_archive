@@ -12,7 +12,6 @@ from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from klein import Klein
 from klein.resource import KleinResource
-from plugin import Plugin
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.task import LoopingCall
@@ -20,6 +19,8 @@ from twisted.python import log
 from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
+
+from plugin import Plugin
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 

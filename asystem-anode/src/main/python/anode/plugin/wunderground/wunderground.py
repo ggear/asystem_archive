@@ -11,6 +11,7 @@ from decimal import Decimal
 
 import dateutil.parser
 import treq
+
 from anode.plugin.plugin import Plugin
 
 HTTP_TIMEOUT = 10
@@ -45,114 +46,113 @@ class Wunderground(Plugin):
             data_timestamp = int(time.mktime(dateutil.parser.parse(dict_content["forecast"]["txt_forecast"]["date"]).timetuple()))
             day_index_start = 0
             day_index_finish = 3
-            while day_index_start < 10 and datetime.datetime.today().day != \
-                    dict_content["forecast"]["simpleforecast"]["forecastday"][day_index_start]["date"]["day"]:
+            while day_index_start <= 10 and datetime.datetime.today().strftime('%A') != \
+                    dict_content["forecast"]["simpleforecast"]["forecastday"][day_index_start]["date"]["weekday"]:
                 day_index_start += 1
-            if (day_index_start + day_index_finish) < 10:
-                for forecast_index in range(day_index_start, day_index_start + day_index_finish):
-                    self.datum_push(
-                        "conditions.outdoor.forecast",
-                        "forecast", "enumeration",
-                        0,
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "temperature.outdoor.forecast",
-                        "forecast", "high",
-                        None if self.datum_value(dict_content,
-                                                 ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
-                            self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
-                        u"°C",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "temperature.outdoor.forecast",
-                        "forecast", "low",
-                        None if self.datum_value(dict_content,
-                                                 ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"]) is None else int(
-                            self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"])),
-                        u"°C",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "rain.outdoor.forecast",
-                        "forecast", "integral",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                        "mm",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "rain.outdoor.forecast",
-                        "forecast", "integral",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                        "mm",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "daytime"
-                    )
-                    self.datum_push(
-                        "rain.outdoor.forecast",
-                        "forecast", "integral",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
-                        "mm",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "nighttime"
-                    )
-                    self.datum_push(
-                        "wind.outdoor.forecast",
-                        "forecast", "high",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "maxwind", "kph"]),
-                        "km/h",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "wind.outdoor.forecast",
-                        "forecast", "average",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
-                        "km/h",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
-                    self.datum_push(
-                        "humidity.outdoor.forecast",
-                        "forecast", "average",
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                        "%",
-                        1,
-                        data_timestamp,
-                        bin_timestamp,
-                        forecast_index - day_index_start + 1,
-                        "day"
-                    )
+            for forecast_index in range(day_index_start, day_index_start + day_index_finish):
+                self.datum_push(
+                    "conditions.outdoor.forecast",
+                    "forecast", "enumeration",
+                    0,
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "temperature.outdoor.forecast",
+                    "forecast", "high",
+                    None if self.datum_value(dict_content,
+                                             ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
+                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
+                    u"°C",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "temperature.outdoor.forecast",
+                    "forecast", "low",
+                    None if self.datum_value(dict_content,
+                                             ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"]) is None else int(
+                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"])),
+                    u"°C",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "rain.outdoor.forecast",
+                    "forecast", "integral",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "rain.outdoor.forecast",
+                    "forecast", "integral",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "daytime"
+                )
+                self.datum_push(
+                    "rain.outdoor.forecast",
+                    "forecast", "integral",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "nighttime"
+                )
+                self.datum_push(
+                    "wind.outdoor.forecast",
+                    "forecast", "high",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "maxwind", "kph"]),
+                    "km/h",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "wind.outdoor.forecast",
+                    "forecast", "average",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
+                    "km/h",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "humidity.outdoor.forecast",
+                    "forecast", "average",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
+                    "%",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
             self.datum_pop()
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):

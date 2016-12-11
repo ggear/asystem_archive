@@ -7,9 +7,10 @@ import os.path
 import sys
 
 import treq
-from anode.anode import main
 from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
+
+from anode.anode import main
 
 METRICS_TOTAL = 112
 
@@ -39,7 +40,6 @@ class ANodeTest(TestCase):
         anode = main(self.clock, callback)
         self.clock_tock(anode)
         self.assertTrue(anode is not None)
-        # TODO: assert datums pushed upstream WS/MQTT
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?sources=some_nonexistant_plugin')))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
