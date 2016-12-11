@@ -1,4 +1,4 @@
-METRICS_TOTAL = 112;
+METRICS_TOTAL = 137;
 WEBSOCKET_PORT = 8091;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 
@@ -14,10 +14,6 @@ describe('ANode', function () {
 
     it('message limit limit', function (done) {
         messageTest(done, connectionUri("limit=some_nonnumeric_limit&limit=1"), 1)
-    });
-
-    it('message metrics', function (done) {
-        messageTest(done, connectionUri("metrics=power.production.inverter"), 1)
     });
 
     it('message metrics bins', function (done) {
@@ -57,15 +53,19 @@ describe('ANode', function () {
     });
 
     it('message metrics', function (done) {
-        messageTest(done, connectionUri("metrics=power"), 9)
+        messageTest(done, connectionUri("metrics=power.production.inverter"), 3)
     });
 
     it('message bins', function (done) {
         messageTest(done, connectionUri("bins=1second"), 9)
     });
 
+    it('message metrics', function (done) {
+        messageTest(done, connectionUri("metrics=power"), 27)
+    });
+
     it('message sources', function (done) {
-        messageTest(done, connectionUri("sources=fronius"), 14)
+        messageTest(done, connectionUri("sources=fronius"), 32)
     });
 
     it('message limit', function (done) {
