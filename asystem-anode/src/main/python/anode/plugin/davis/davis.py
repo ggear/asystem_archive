@@ -31,7 +31,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "dewpoint.indoor.dining",
@@ -54,7 +56,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_upper=100,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "sun.outdoor.azimuth",
@@ -133,7 +137,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "dewpoint.outdoor.roof",
@@ -157,7 +162,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     10,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "wind.outdoor.roof",
@@ -169,7 +175,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windbearing.outdoor.roof",
@@ -180,7 +187,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windgust.outdoor.roof",
@@ -192,7 +200,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windgustbearing.outdoor.roof",
@@ -203,7 +212,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windchill.outdoor.roof",
@@ -227,7 +237,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "heatindex.outdoor.roof",
@@ -238,7 +249,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "humidity.outdoor.roof",
@@ -249,7 +261,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_upper=100,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "cloud.outdoor.base",
@@ -273,7 +287,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     1,
-                    "month"
+                    "month",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
@@ -285,47 +300,13 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     1,
-                    "year"
+                    "year",
+                    data_bound_lower=0
                 )
             if "record" in dict_content:
                 bin_unit = "minute"
                 bin_width = dict_content["record"]["interval"]
                 data_timestamp = dict_content["record"]["dateTime"]
-                self.datum_push(
-                    "temperature.indoor.dining",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["inTemp"]) is None else self.datum_value(
-                        (dict_content["record"]["inTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "dewpoint.indoor.dining",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["inDewpoint"]) is None else self.datum_value(
-                        (dict_content["record"]["inDewpoint"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "humidity.indoor.dining",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["inHumidity"]),
-                    "%",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
                 self.datum_push(
                     "temperature.outdoor.apparent",
                     "current", "average",
@@ -383,7 +364,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_upper=100,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "dewpoint.outdoor.roof",
@@ -407,7 +390,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "wind.outdoor.roof",
@@ -430,7 +414,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windgust.outdoor.roof",
@@ -442,7 +427,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windgustbearing.outdoor.roof",
@@ -453,7 +439,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "windchill.outdoor.roof",
@@ -477,7 +464,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "heatindex.outdoor.roof",
@@ -488,7 +476,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "humidity.outdoor.roof",
@@ -499,7 +488,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_upper=100,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "cloud.outdoor.base",
@@ -523,7 +514,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
@@ -535,7 +527,8 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_bound_lower=0
                 )
             self.datum_pop()
         except Exception:

@@ -60,7 +60,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.production.battery",
@@ -72,7 +75,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.production.inverter",
@@ -83,7 +89,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.consumption.grid",
@@ -95,7 +104,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.consumption.battery",
@@ -107,7 +119,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.consumption.inverter",
@@ -122,7 +137,10 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.utlisation.inverter",
@@ -133,7 +151,11 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_upper=100,
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.utlisation.grid",
@@ -144,7 +166,11 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_upper=100,
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "power.utlisation.array",
@@ -157,7 +183,11 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 self.config["poll_seconds"],
-                "second"
+                "second",
+                data_bound_upper=100,
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
             )
             self.datum_push(
                 "energy.production.inverter",
@@ -168,7 +198,8 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 1,
-                "day"
+                "day",
+                data_bound_lower=0
             )
             self.datum_push(
                 "energy.production.inverter",
@@ -179,7 +210,8 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 1,
-                "year"
+                "year",
+                data_bound_lower=0
             )
             self.datum_push(
                 "energy.production.inverter",
@@ -190,7 +222,8 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 1,
-                "alltime"
+                "alltime",
+                data_bound_lower=0
             )
             self.datum_pop()
         except Exception:
@@ -212,7 +245,8 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 1,
-                "alltime"
+                "alltime",
+                data_bound_lower=0
             )
             self.datum_push(
                 "energy.consumption.grid",
@@ -223,7 +257,8 @@ class Fronius(Plugin):
                 data_timestamp,
                 bin_timestamp,
                 1,
-                "alltime"
+                "alltime",
+                data_bound_lower=0
             )
             self.datum_pop()
         except Exception:

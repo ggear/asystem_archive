@@ -12,7 +12,7 @@ from twisted.trial.unittest import TestCase
 
 from anode.anode import main
 
-METRICS_TOTAL = 112
+METRICS_TOTAL = 137
 
 
 # noinspection PyUnresolvedReferences
@@ -59,8 +59,6 @@ class ANodeTest(TestCase):
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?limit=some_nonnumeric_limit&limit=1')))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter')))))
-        self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?metrics=power.production.inverter&bins=1second')))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?metrics=power.production.inverter&types=point')))))
@@ -80,11 +78,13 @@ class ANodeTest(TestCase):
             '/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second')))))
         self.assertEquals(2, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second&sources=fronius')))))
-        self.assertEquals(9, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power')))))
+        self.assertEquals(3, len(json.loads(anode.web_rest.onGet(MockRequest(
+            '/pull/?metrics=power.production.inverter')))))
         self.assertEquals(9, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?bins=1second')))))
-        self.assertEquals(14, len(json.loads(anode.web_rest.onGet(MockRequest(
+        self.assertEquals(27, len(json.loads(anode.web_rest.onGet(MockRequest(
+            '/pull/?metrics=power')))))
+        self.assertEquals(32, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?sources=fronius')))))
         self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
             '/pull/?limit=' + str(METRICS_TOTAL))))))

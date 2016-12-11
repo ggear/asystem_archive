@@ -96,7 +96,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "rain.outdoor.forecast",
@@ -107,7 +108,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "daytime"
+                    "daytime",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "rain.outdoor.forecast",
@@ -118,7 +120,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "nighttime"
+                    "nighttime",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "wind.outdoor.forecast",
@@ -129,7 +132,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "wind.outdoor.forecast",
@@ -140,7 +144,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "humidity.outdoor.forecast",
@@ -151,7 +156,9 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_bound_upper=100,
+                    data_bound_lower=0
                 )
             self.datum_pop()
         except Exception:

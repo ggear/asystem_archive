@@ -58,7 +58,8 @@ class Plugin(object):
             logging.getLogger().info("Plugin [{}] popped [{}] datums".format(self.name, datums_popped))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
-                   bin_unit):
+                   bin_unit, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
+                   data_derived_period_sec=86400, data_derived_period=1, data_derived_unit="day"):
         if data_value is not None:
             datum_dict = {
                 "anode_id": self.mac_address,
@@ -74,6 +75,10 @@ class Plugin(object):
                 "bin_width": bin_width,
                 "bin_unit": bin_unit
             }
+            if (data_bound_upper is not None and data_value > data_bound_upper) or (data_bound_lower is not None and data_value < data_bound_lower):
+                if logging.getLogger().isEnabledFor(logging.WARNING):
+                    logging.getLogger().debug("Dropped datum [{}], value not within [{}-{}] bounds".format(
+                        self.datum_tostring(datum_dict), data_bound_lower, data_bound_upper))
             try:
                 datum_avro = self.datum_dict_to_avro(datum_dict)
             except AvroTypeException as error:
@@ -96,6 +101,28 @@ class Plugin(object):
                             datum_dict["data_unit"] or datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
+                if data_derived_max:
+                    data_derived_bin_timestamp = datum_dict["bin_timestamp"] - datum_dict["bin_timestamp"] % data_derived_period_sec
+                    if DATUM_QUEUE_MAX not in datums_deref or datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] != data_derived_bin_timestamp or \
+                                    datums_deref[DATUM_QUEUE_MAX]["data_value"] < datum_dict["data_value"]:
+                        datums_deref[DATUM_QUEUE_MAX] = datum_dict.copy()
+                        datums_deref[DATUM_QUEUE_MAX]["bin_type"] = "high"
+                        datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] = data_derived_bin_timestamp
+                        datums_deref[DATUM_QUEUE_MAX]["bin_width"] = data_derived_period
+                        datums_deref[DATUM_QUEUE_MAX]["bin_unit"] = data_derived_unit
+                        self.datum_push(data_metric, data_temporal, "high", data_value, data_unit, data_scale, data_timestamp,
+                                        data_derived_bin_timestamp, data_derived_period, data_derived_unit)
+                if data_derived_min:
+                    data_derived_bin_timestamp = datum_dict["bin_timestamp"] - datum_dict["bin_timestamp"] % data_derived_period_sec
+                    if DATUM_QUEUE_MIN not in datums_deref or datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] != data_derived_bin_timestamp or \
+                                    datums_deref[DATUM_QUEUE_MIN]["data_value"] > datum_dict["data_value"]:
+                        datums_deref[DATUM_QUEUE_MIN] = datum_dict.copy()
+                        datums_deref[DATUM_QUEUE_MIN]["bin_type"] = "low"
+                        datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] = data_derived_bin_timestamp
+                        datums_deref[DATUM_QUEUE_MIN]["bin_width"] = data_derived_period
+                        datums_deref[DATUM_QUEUE_MIN]["bin_unit"] = data_derived_unit
+                        self.datum_push(data_metric, data_temporal, "low", data_value, data_unit, data_scale, data_timestamp,
+                                        data_derived_bin_timestamp, data_derived_period, data_derived_unit)
                 if "history_ticks" in self.config and self.config["history_ticks"] > 0:
                     if self.config["history_ticks"] <= self.datums_history:
                         if len(datums_deref[DATUM_QUEUE_HISTORY]) > 0:
@@ -114,7 +141,8 @@ class Plugin(object):
             else:
                 self.datums_dropped += 1
                 if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.getLogger().debug("Dropped datum [{}]".format(self.datum_tostring(datum_dict)))
+                    logging.getLogger().debug(
+                        "Dropped datum [{}], value [{}] unchanged".format(self.datum_tostring(datum_dict), datum_dict["data_value"]))
 
     def datum_tostring(self, datum_dict):
         return "{}.{}.{}.{}{}.{}={}{}".format(
@@ -258,6 +286,8 @@ class Plugin(object):
         self.datums_history = 0
 
 
+DATUM_QUEUE_MIN = "min"
+DATUM_QUEUE_MAX = "max"
 DATUM_QUEUE_LAST = "last"
 DATUM_QUEUE_PUBLISH = "publish"
 DATUM_QUEUE_HISTORY = "history"
