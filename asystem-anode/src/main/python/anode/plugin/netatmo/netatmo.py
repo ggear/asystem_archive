@@ -10,6 +10,7 @@ import time
 from decimal import Decimal
 
 import treq
+
 from anode.plugin.plugin import Plugin
 
 HTTP_TIMEOUT = 10

@@ -13,12 +13,13 @@ from functools import reduce
 from importlib import import_module
 from uuid import getnode as get_mac
 
-import anode.plugin
 import avro
 import avro.io
 import avro.schema
 import avro.schema
 from avro.io import AvroTypeException
+
+import anode.plugin
 
 
 class Plugin(object):
@@ -55,7 +56,8 @@ class Plugin(object):
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [{}] popped [{}] datums".format(self.name, datums_popped))
 
-    def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width, bin_unit):
+    def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
+                   bin_unit):
         if data_value is not None:
             datum_dict = {
                 "anode_id": self.mac_address,

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.janeandgraham.asystem</groupId>
@@ -105,12 +103,6 @@
                     </webDriverCapabilities>
                     <jsSrcDir>${project.basedir}/src/main/python/anode/web/js</jsSrcDir>
                     <jsTestSrcDir>${project.basedir}/src/main/python/anode/test/js</jsTestSrcDir>
-                    <!-- TODO: add depenedcies when requires -->
-                    <!--<preloadSources>-->
-                    <!--<source>${project.basedir}/src/test/resources/js/angular.min.js</source>-->
-                    <!--<source>${project.basedir}/src/test/resources/js/angular-resource.min.js</source>-->
-                    <!--<source>${project.basedir}/src/test/resources/js/angular-mocks.js</source>-->
-                    <!--</preloadSources>-->
                 </configuration>
             </plugin>
             <plugin>
@@ -123,15 +115,15 @@
                         <configuration>
                             <target unless="${maven.integration-test.skip}">
                                 <exec executable="python" dir="${dir.source.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="clean"/>
+                                    <arg value="setup.py" />
+                                    <arg value="clean" />
                                 </exec>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
-                                    <arg value="-c"/>
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop"/>
+                                    <arg value="-c" />
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
-                                <delete file="${project.basedir}/phantomjsdriver.log"/>
-                                <delete file="${project.basedir}/../phantomjsdriver.log"/>
+                                <delete file="${project.basedir}/phantomjsdriver.log" />
+                                <delete file="${project.basedir}/../phantomjsdriver.log" />
                             </target>
                         </configuration>
                         <goals>
@@ -144,9 +136,9 @@
                         <configuration>
                             <target unless="${maven.test.skip}">
                                 <exec executable="python" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="trial"/>
-                                    <arg value="--reporter=text"/>
+                                    <arg value="setup.py" />
+                                    <arg value="trial" />
+                                    <arg value="--reporter=text" />
                                 </exec>
                             </target>
                         </configuration>
@@ -160,16 +152,16 @@
                         <configuration>
                             <target unless="${maven.integration-test.skip}">
                                 <exec executable="python" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="develop"/>
-                                    <arg value="--user"/>
+                                    <arg value="setup.py" />
+                                    <arg value="develop" />
+                                    <arg value="--user" />
                                 </exec>
                                 <echo>
 
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
-                                    <arg value="-c"/>
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode start"/>
+                                    <arg value="-c" />
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode start" />
                                 </exec>
                                 <echo>
 
@@ -189,23 +181,23 @@
 
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
-                                    <arg value="-c"/>
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop"/>
+                                    <arg value="-c" />
+                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
                                 <echo>
 
                                 </echo>
-                                <delete file="${project.basedir}/phantomjsdriver.log"/>
-                                <delete file="${project.basedir}/../phantomjsdriver.log"/>
+                                <delete file="${project.basedir}/phantomjsdriver.log" />
+                                <delete file="${project.basedir}/../phantomjsdriver.log" />
                                 <exec executable="python" dir="${dir.output.python}" failonerror="false">
-                                    <arg value="setup.py"/>
-                                    <arg value="develop"/>
-                                    <arg value="--user"/>
-                                    <arg value="--uninstall"/>
+                                    <arg value="setup.py" />
+                                    <arg value="develop" />
+                                    <arg value="--user" />
+                                    <arg value="--uninstall" />
                                 </exec>
                                 <exec executable="python" dir="${dir.source.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="clean"/>
+                                    <arg value="setup.py" />
+                                    <arg value="clean" />
                                 </exec>
                             </target>
                         </configuration>
@@ -219,8 +211,8 @@
                         <configuration>
                             <target unless="${maven.package.skip}">
                                 <exec executable="python" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="sdist"/>
+                                    <arg value="setup.py" />
+                                    <arg value="sdist" />
                                 </exec>
                             </target>
                         </configuration>
@@ -233,13 +225,13 @@
                         <configuration>
                             <target>
                                 <exec executable="python" dir="${dir.source.python}" failonerror="true">
-                                    <arg value="setup.py"/>
-                                    <arg value="develop"/>
-                                    <arg value="--user"/>
+                                    <arg value="setup.py" />
+                                    <arg value="develop" />
+                                    <arg value="--user" />
                                 </exec>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
-                                    <arg value="-v"/>
-                                    <arg value="-c${dir.source.python}/config/anode.yaml"/>
+                                    <arg value="-v" />
+                                    <arg value="-c${dir.source.python}/config/anode.yaml" />
                                 </exec>
                             </target>
                         </configuration>
@@ -253,55 +245,55 @@
                         <configuration>
                             <target unless="${maven.install.skip}">
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/bin/python"/>
-                                    <arg value="setup.py"/>
-                                    <arg value="install"/>
+                                    <arg value="/usr/bin/python" />
+                                    <arg value="setup.py" />
+                                    <arg value="install" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/mkdir"/>
-                                    <arg value="-p"/>
-                                    <arg value="/etc/anode"/>
+                                    <arg value="/bin/mkdir" />
+                                    <arg value="-p" />
+                                    <arg value="/etc/anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/cp"/>
-                                    <arg value="-rvf"/>
-                                    <arg value="${dir.output.python}/config/anode.yaml"/>
-                                    <arg value="/etc/anode"/>
+                                    <arg value="/bin/cp" />
+                                    <arg value="-rvf" />
+                                    <arg value="${dir.output.python}/config/anode.yaml" />
+                                    <arg value="/etc/anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/cp"/>
-                                    <arg value="-vrf"/>
-                                    <arg value="${dir.output.python}/script/anode"/>
-                                    <arg value="/etc/init.d"/>
+                                    <arg value="/bin/cp" />
+                                    <arg value="-vrf" />
+                                    <arg value="${dir.output.python}/script/anode" />
+                                    <arg value="/etc/init.d" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/chmod"/>
-                                    <arg value="+x"/>
-                                    <arg value="/etc/init.d/anode"/>
+                                    <arg value="/bin/chmod" />
+                                    <arg value="+x" />
+                                    <arg value="/etc/init.d/anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/systemctl"/>
-                                    <arg value="daemon-reload"/>
+                                    <arg value="/bin/systemctl" />
+                                    <arg value="daemon-reload" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/bin/systemctl"/>
-                                    <arg value="enable"/>
-                                    <arg value="anode"/>
+                                    <arg value="/bin/systemctl" />
+                                    <arg value="enable" />
+                                    <arg value="anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/bin/python"/>
-                                    <arg value="setup.py"/>
-                                    <arg value="clean"/>
+                                    <arg value="/usr/bin/python" />
+                                    <arg value="setup.py" />
+                                    <arg value="clean" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/sbin/service"/>
-                                    <arg value="anode"/>
-                                    <arg value="stop"/>
+                                    <arg value="/usr/sbin/service" />
+                                    <arg value="anode" />
+                                    <arg value="stop" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/sbin/service"/>
-                                    <arg value="anode"/>
-                                    <arg value="start"/>
+                                    <arg value="/usr/sbin/service" />
+                                    <arg value="anode" />
+                                    <arg value="start" />
                                 </exec>
                             </target>
                         </configuration>
