@@ -45,7 +45,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "humidity.indoor.dining",
@@ -58,7 +60,9 @@ class Davis(Plugin):
                     bin_width,
                     bin_unit,
                     data_bound_upper=100,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "sun.outdoor.azimuth",
@@ -69,7 +73,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "sun.outdoor.altitude",
@@ -80,7 +86,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "sun.outdoor.rise",
@@ -114,7 +122,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "temperature.outdoor.roof",
@@ -126,19 +136,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "humidityindex.outdoor.roof",
-                    "current", "point",
-                    self.datum_value(dict_content["packet"], ["humidex"]),
-                    "scalor",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "dewpoint.outdoor.roof",
@@ -150,11 +150,13 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "wind.outdoor.roof",
-                    "current", "average",
+                    "current", "mean",
                     None if self.datum_value(dict_content["packet"], ["windSpeed10"]) is None else self.datum_value(
                         dict_content["packet"]["windSpeed10"] * Decimal(Decimal(1.60934))),
                     "km/h",
@@ -163,7 +165,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     10,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "wind.outdoor.roof",
@@ -176,7 +180,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "windbearing.outdoor.roof",
@@ -188,7 +194,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "windgust.outdoor.roof",
@@ -201,7 +209,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "windgustbearing.outdoor.roof",
@@ -213,7 +223,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "windchill.outdoor.roof",
@@ -225,7 +237,9 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "pressure.outdoor.roof",
@@ -238,7 +252,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "heatindex.outdoor.roof",
@@ -250,7 +266,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "humidity.outdoor.roof",
@@ -263,7 +281,9 @@ class Davis(Plugin):
                     bin_width,
                     bin_unit,
                     data_bound_upper=100,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "cloud.outdoor.base",
@@ -275,15 +295,17 @@ class Davis(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     bin_width,
-                    bin_unit
+                    bin_unit,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
                     "current", "integral",
                     None if self.datum_value(dict_content["packet"], ["monthRain"]) is None else self.datum_value(
-                        dict_content["packet"]["monthRain"] * Decimal(0.254)),
+                        dict_content["packet"]["monthRain"] * Decimal(2.54), factor=100),
                     "cm",
-                    1,
+                    100,
                     data_timestamp,
                     bin_timestamp,
                     1,
@@ -294,9 +316,9 @@ class Davis(Plugin):
                     "rain.outdoor.roof",
                     "current", "integral",
                     None if self.datum_value(dict_content["packet"], ["yearRain"]) is None else self.datum_value(
-                        dict_content["packet"]["yearRain"] * Decimal(0.254)),
+                        dict_content["packet"]["yearRain"] * Decimal(2.54), factor=100),
                     "cm",
-                    1,
+                    100,
                     data_timestamp,
                     bin_timestamp,
                     1,
@@ -308,205 +330,8 @@ class Davis(Plugin):
                 bin_width = dict_content["record"]["interval"]
                 data_timestamp = dict_content["record"]["dateTime"]
                 self.datum_push(
-                    "temperature.outdoor.apparent",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["appTemp"]) is None else self.datum_value(
-                        (dict_content["record"]["appTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "temperature.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["outTemp"]) is None else self.datum_value(
-                        (dict_content["record"]["outTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "temperature.outdoor.roof",
-                    "current", "high",
-                    None if self.datum_value(dict_content["record"], ["highOutTemp"]) is None else self.datum_value(
-                        (dict_content["record"]["highOutTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "temperature.outdoor.roof",
-                    "current", "low",
-                    None if self.datum_value(dict_content["record"], ["lowOutTemp"]) is None else self.datum_value(
-                        (dict_content["record"]["lowOutTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "humidityindex.outdoor.roof",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["humidex"]),
-                    "scalor",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_upper=100,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "dewpoint.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["dewpoint"]) is None else self.datum_value(
-                        (dict_content["record"]["dewpoint"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "windrun.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["windrun"]) is None else self.datum_value(
-                        dict_content["record"]["windrun"] * Decimal(Decimal(1.60934))),
-                    "km",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "wind.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["windSpeed"]) is None else self.datum_value(
-                        dict_content["record"]["windSpeed"] * Decimal(1.60934)),
-                    "km/h",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "windbearing.outdoor.roof",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["windDir"], 0),
-                    u"°",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "windgust.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["windGust"]) is None else self.datum_value(
-                        dict_content["record"]["windGust"] * Decimal(1.60934)),
-                    "km/h",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "windgustbearing.outdoor.roof",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["windGustDir"]),
-                    u"°",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "windchill.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["windchill"]) is None else self.datum_value(
-                        (dict_content["record"]["windchill"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "pressure.outdoor.roof",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["barometer"]) is None else self.datum_value(
-                        dict_content["record"]["barometer"] * Decimal(33.8639)),
-                    "mbar",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "heatindex.outdoor.roof",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["heatindex"]),
-                    "scalor",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "humidity.outdoor.roof",
-                    "current", "average",
-                    self.datum_value(dict_content["record"], ["outHumidity"]),
-                    "%",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_upper=100,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "cloud.outdoor.base",
-                    "current", "average",
-                    None if self.datum_value(dict_content["record"], ["cloudbase"]) is None else self.datum_value(
-                        dict_content["record"]["cloudbase"] * Decimal(0.3048)),
-                    "m",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit
-                )
-                self.datum_push(
-                    "rain.outdoor.roof",
-                    "current", "average",
+                    "rainrate.outdoor.roof",
+                    "current", "mean",
                     None if self.datum_value(dict_content["record"], ["rainRate"]) is None else self.datum_value(
                         dict_content["record"]["rainRate"] * Decimal(25.4), factor=10),
                     "mm/h",
@@ -515,7 +340,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
@@ -528,7 +355,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
             self.datum_pop()
         except Exception:

@@ -47,26 +47,25 @@ class ANode:
 
     def get_datums(self, datum_filter, datum_format="dict", datums=None):
         datums_filtered = []
-        for plugin_name, plugin in self.plugins.items():
-            if datums is None:
+        if datums is None:
+            for plugin_name, plugin in self.plugins.items():
                 datums_filtered.extend(plugin.datums_filter_get(datum_filter, datum_format))
-            else:
-                datums_filtered.extend(plugin.datums_filter(datum_filter, datums, datum_format))
-            if "limit" in datum_filter and min(datum_filter["limit"]).isdigit() and int(min(datum_filter["limit"])) <= len(datums_filtered):
-                datums_filtered = datums_filtered[:int(min(datum_filter["limit"]))]
-                break
+        else:
+            datums_filtered.extend(Plugin.datums_filter(datum_filter, datums, datum_format))
+        if "limit" in datum_filter and min(datum_filter["limit"]).isdigit() and int(min(datum_filter["limit"])) <= len(datums_filtered):
+            datums_filtered = datums_filtered[:int(min(datum_filter["limit"]))]
         return sorted(datums_filtered, key=lambda datum: (datum["data_metric"],
                                                           "aaaaa" if datum["data_type"] == "point" else
-                                                          "bbbbb" if datum["data_type"] == "average" else
-                                                          "ccccc" if datum["data_type"] == "high" else
-                                                          "ddddd" if datum["data_type"] == "low" else
+                                                          "bbbbb" if datum["data_type"] == "mean" else
+                                                          "ccccc" if datum["data_type"] == "low" else
+                                                          "ddddd" if datum["data_type"] == "high" else
                                                           "zzzzz" if datum["data_type"] == "integral" else
                                                           datum["data_type"],
                                                           "aaaaa" if datum["bin_unit"] == "second" else
                                                           "bbbbb" if datum["bin_unit"] == "minute" else
                                                           "ccccc" if datum["bin_unit"] == "hour" else
-                                                          "ddddd" if datum["bin_unit"] == "daytime" else
-                                                          "eeeee" if datum["bin_unit"] == "nighttime" else
+                                                          "ddddd" if datum["bin_unit"] == "lighthours" else
+                                                          "eeeee" if datum["bin_unit"] == "darkhours" else
                                                           "fffff" if datum["bin_unit"] == "day" else
                                                           "ggggg" if datum["bin_unit"] == "month" else
                                                           "hhhhh" if datum["bin_unit"] == "year" else

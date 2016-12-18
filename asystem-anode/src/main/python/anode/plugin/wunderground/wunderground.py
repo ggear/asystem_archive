@@ -43,7 +43,7 @@ class Wunderground(Plugin):
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = calendar.timegm(time.gmtime())
-            data_timestamp = int(time.mktime(dateutil.parser.parse(dict_content["forecast"]["txt_forecast"]["date"]).timetuple()))
+            data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["forecast"]["txt_forecast"]["date"]).timetuple()))
             day_index_start = 0
             day_index_finish = 3
             while day_index_start <= 10 and datetime.datetime.today().strftime('%A') != \
@@ -51,7 +51,7 @@ class Wunderground(Plugin):
                 day_index_start += 1
             for forecast_index in range(day_index_start, day_index_start + day_index_finish):
                 self.datum_push(
-                    "conditions.outdoor.forecast",
+                    "conditions.hills.forecast",
                     "forecast", "enumeration",
                     0,
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
@@ -62,7 +62,20 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "temperature.outdoor.forecast",
+                    "temperature.hills.forecast",
+                    "forecast", "point",
+                    None if self.datum_value(dict_content,
+                                             ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
+                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
+                    u"°C",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day"
+                )
+                self.datum_push(
+                    "temperature.hills.forecast",
                     "forecast", "high",
                     None if self.datum_value(dict_content,
                                              ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
@@ -75,7 +88,7 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "temperature.outdoor.forecast",
+                    "temperature.hills.forecast",
                     "forecast", "low",
                     None if self.datum_value(dict_content,
                                              ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"]) is None else int(
@@ -88,7 +101,7 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "rain.outdoor.forecast",
+                    "rain.hills.forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
                     "mm",
@@ -100,7 +113,7 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.outdoor.forecast",
+                    "rain.hills.forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
@@ -108,11 +121,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "daytime",
+                    "lighthours",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.outdoor.forecast",
+                    "rain.hills.forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
                     "mm",
@@ -120,11 +133,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "nighttime",
+                    "darkhours",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind.outdoor.forecast",
+                    "wind.hills.forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "maxwind", "kph"]),
                     "km/h",
@@ -136,8 +149,8 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind.outdoor.forecast",
-                    "forecast", "average",
+                    "wind.hills.forecast",
+                    "forecast", "mean",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
                     "km/h",
                     1,
@@ -148,8 +161,8 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "humidity.outdoor.forecast",
-                    "forecast", "average",
+                    "humidity.hills.forecast",
+                    "forecast", "mean",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
                     "%",
                     1,

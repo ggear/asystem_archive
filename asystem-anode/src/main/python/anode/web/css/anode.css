@@ -7,10 +7,23 @@ a {
     text-decoration: none;
 }
 
+hr {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    height: 1px;
+    border-top: 1px solid #696969;
+}
+
+div {
+    border: 0;
+    padding: 0;
+}
+
 .datums {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 230%;
     color: whitesmoke;
-    font-size: 200%;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .datums .datum {
@@ -18,7 +31,7 @@ a {
     white-space: nowrap;
 }
 
-.datums .datum .datum-detail {
+.datum-detail {
     display: inline-block;
     color: whitesmoke;
     padding: 0 10px 0 0;

@@ -1,8 +1,28 @@
-METRICS_TOTAL = 137;
-WEBSOCKET_PORT = 8091;
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
+WEB_PORT = 8091;
+ANODE_WARMUP_PERIOD = 5000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 
 describe('ANode', function () {
+
+    var metrics;
+    var metrics_anode;
+
+    beforeAll(function (done) {
+        metrics = 0;
+        metrics_anode = 0;
+        setTimeout(function () {
+            new ANode(connectionUri("")).restfulRequest("metrics=anode", function (datums) {
+                for (var i = 0; i < datums.length; i++) {
+                    metrics++;
+                    if (datums[i].data_metric.indexOf("metrics", this.length - "metrics".length) !== -1) {
+                        metrics_anode += datums[i].data_value;
+                    }
+                }
+                done();
+            });
+        }, ANODE_WARMUP_PERIOD);
+    });
 
     it('connection', function (done) {
         connectionTest(done, connectionUri(""))
@@ -48,59 +68,52 @@ describe('ANode', function () {
         messageTest(done, connectionUri("metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"), 2)
     });
 
-    it('message metrics metrics types bins sources', function (done) {
-        messageTest(done, connectionUri("metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second&sources=fronius"), 2)
-    });
-
     it('message metrics', function (done) {
         messageTest(done, connectionUri("metrics=power.production.inverter"), 3)
     });
 
     it('message bins', function (done) {
-        messageTest(done, connectionUri("bins=1second"), 9)
+        messageTest(done, connectionUri("bins=1second"), 12)
     });
 
     it('message metrics', function (done) {
-        messageTest(done, connectionUri("metrics=power"), 27)
-    });
-
-    it('message sources', function (done) {
-        messageTest(done, connectionUri("sources=fronius"), 32)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=" + METRICS_TOTAL), METRICS_TOTAL)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=" + (METRICS_TOTAL * 2)), METRICS_TOTAL)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=some_nonnumeric_limit"), METRICS_TOTAL)
-    });
-
-    it('message scope last', function (done) {
-        messageTest(done, connectionUri("scope=last"), METRICS_TOTAL)
+        messageTest(done, connectionUri("metrics=power"), 30)
     });
 
     it('message scope history', function (done) {
-        messageTest(done, connectionUri("scope=history"), METRICS_TOTAL)
+        messageTest(done, connectionUri("scope=history"), metrics - metrics_anode)
+    });
+
+    it('message limit', function (done) {
+        messageTest(done, connectionUri("limit=" + metrics), metrics)
+    });
+
+    it('message limit', function (done) {
+        messageTest(done, connectionUri("limit=" + (metrics * 2)), metrics)
+    });
+
+    it('message limit', function (done) {
+        messageTest(done, connectionUri("limit=some_nonnumeric_limit"), metrics)
+    });
+
+    it('message scope last', function (done) {
+        messageTest(done, connectionUri("scope=last"), metrics)
     });
 
     it('message something ', function (done) {
-        messageTest(done, connectionUri("something=else"), METRICS_TOTAL)
+        messageTest(done, connectionUri("something=else"), metrics)
     });
 
     it('message', function (done) {
-        messageTest(done, connectionUri(""), METRICS_TOTAL)
+        messageTest(done, connectionUri(""), metrics)
     });
 
 });
 
 connectionUri = function (parameters) {
-    return "http://localhost:" + WEBSOCKET_PORT + "/" + (parameters ? ("?" + parameters) : "");
+    return "http://localhost:" + WEB_PORT + "/" + (parameters ? ("?" + parameters) : "");
 };
+
 
 connectionTest = function (done, url) {
     var anode = new ANode(url,
