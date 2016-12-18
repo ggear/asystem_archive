@@ -49,7 +49,7 @@ class Fronius(Plugin):
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = calendar.timegm(time.gmtime())
-            data_timestamp = int(time.mktime(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
+            data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             self.datum_push(
                 "power.production.grid",
                 "current", "point",
@@ -158,6 +158,21 @@ class Fronius(Plugin):
                 data_derived_min=True
             )
             self.datum_push(
+                "power.utlisation.battery",
+                "current", "point",
+                self.datum_value(0),
+                "%",
+                1,
+                data_timestamp,
+                bin_timestamp,
+                self.config["poll_seconds"],
+                "second",
+                data_bound_upper=100,
+                data_bound_lower=0,
+                data_derived_max=True,
+                data_derived_min=True
+            )
+            self.datum_push(
                 "power.utlisation.grid",
                 "current", "point",
                 self.datum_value(100 - self.datum_value(dict_content, ["Body", "Data", "Site", "rel_Autonomy"], 0)),
@@ -235,7 +250,7 @@ class Fronius(Plugin):
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = calendar.timegm(time.gmtime())
-            data_timestamp = int(time.mktime(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
+            data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             self.datum_push(
                 "energy.production.grid",
                 "current", "integral",

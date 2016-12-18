@@ -12,8 +12,6 @@ from twisted.trial.unittest import TestCase
 
 from anode.anode import main
 
-METRICS_TOTAL = 137
-
 
 # noinspection PyUnresolvedReferences
 class ANodeTest(TestCase):
@@ -40,90 +38,90 @@ class ANodeTest(TestCase):
         anode = main(self.clock, callback)
         self.clock_tock(anode)
         self.assertTrue(anode is not None)
+        metrics = 0
+        metrics_anode = 0
+        for metric in json.loads(anode.web_rest.onGet(MockRequest("/rest/?metrics=anode"))):
+            metrics_anode += 1
+            if metric["data_metric"].endswith("metrics"):
+                metrics += metric["data_value"]
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?sources=some_nonexistant_plugin')))))
+            "/pull/?scope=some_nonexistant_scope")))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?scope=some_nonexistant_scope')))))
+            "/pull/?metrics=some.nonexistant.metric")))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=some.nonexistant.metric')))))
+            "/pull/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric")))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric')))))
+            "/pull/?metrics=power&types=some_nonexistant_type")))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power&types=some_nonexistant_type')))))
+            "/pull/?metrics=power&types=point&bins=some_nonexistant_bin")))))
         self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power&types=point&bins=some_nonexistant_bin')))))
-        self.assertEquals(0, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?scope=publish')))))
+            "/pull/?scope=publish")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=1')))))
+            "/pull/?limit=1")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=some_nonnumeric_limit&limit=1')))))
+            "/pull/?limit=some_nonnumeric_limit&limit=1")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&bins=1second')))))
+            "/pull/?metrics=power.production.inverter&bins=1second")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&types=point')))))
+            "/pull/?metrics=power.production.inverter&types=point")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&types=point&bins=1second')))))
+            "/pull/?metrics=power.production.inverter&types=point&bins=1second")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1second')))))
+            "/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1second")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=some.nonexistant.metric&metrics=&types=point&bins=1second')))))
+            "/pull/?metrics=power.production.inverter&metrics=some.nonexistant.metric&metrics=&types=point&bins=1second")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=&types=point&types=some_nonexistant_type&bins=1second')))))
+            "/pull/?metrics=power.production.inverter&metrics=&types=point&types=some_nonexistant_type&bins=1second")))))
         self.assertEquals(1, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin')))))
+            "/pull/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin")))))
         self.assertEquals(2, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=2')))))
+            "/pull/?limit=2")))))
         self.assertEquals(2, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second')))))
-        self.assertEquals(2, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second&sources=fronius')))))
+            "/pull/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second")))))
         self.assertEquals(3, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power.production.inverter')))))
-        self.assertEquals(9, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?bins=1second')))))
-        self.assertEquals(27, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?metrics=power')))))
-        self.assertEquals(32, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?sources=fronius')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=' + str(METRICS_TOTAL))))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=' + str(METRICS_TOTAL * 2))))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?limit=some_nonnumeric_limit')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?scope=last')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?scope=history')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?something=else')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/?')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull/')))))
-        self.assertEquals(METRICS_TOTAL, len(json.loads(anode.web_rest.onGet(MockRequest(
-            '/pull')))))
+            "/pull/?metrics=power.production.inverter")))))
+        self.assertEquals(12, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?bins=1second")))))
+        self.assertEquals(30, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?metrics=power")))))
+        self.assertEquals(metrics - metrics_anode, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?scope=history")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?limit=" + str(metrics))))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?limit=" + str(metrics * 2))))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?limit=some_nonnumeric_limit")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?scope=last")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?something=else")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/?")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull/")))))
+        self.assertEquals(metrics, len(json.loads(anode.web_rest.onGet(MockRequest(
+            "/pull")))))
 
     def test_main_default(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG])
-        self.assert_anode(lambda: self.clock_tick(1, 1))
+        self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
 
     def test_main_verbose_short(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-v"])
-        self.assert_anode(lambda: self.clock_tick(1, 1))
+        self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
 
     def test_main_verbose_long(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--verbose"])
-        self.assert_anode(lambda: self.clock_tick(1, 1))
+        self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
 
     def test_main_quiet_short(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-q"])
-        self.assert_anode(lambda: self.clock_tick(1, 1))
+        self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
 
     def test_main_quiet_long(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--quiet"])
-        self.assert_anode(lambda: self.clock_tick(1, 1))
+        self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
 
 
 class MockRequest:

@@ -26,13 +26,29 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-model</id>
+                        <id>copy-model-python</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
                             <outputDirectory>${dir.source.python}/anode/model</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-model-web</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${dir.source.python}/anode/web/js/model</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
@@ -96,6 +112,7 @@
                         <capability>
                             <name>phantomjs.cli.args</name>
                             <list>
+                                <value>--web-security=false</value>
                                 <value>--webdriver-logfile=none</value>
                                 <value>--webdriver-loglevel=ERROR</value>
                             </list>

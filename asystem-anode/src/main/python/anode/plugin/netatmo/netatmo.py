@@ -114,7 +114,9 @@ class Netatmo(Plugin):
                     self.config["poll_seconds"],
                     "second",
                     data_bound_upper=100,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "pressure" + module_name,
@@ -126,7 +128,9 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "pressureabsolute" + module_name,
@@ -138,7 +142,9 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "carbondioxide" + module_name,
@@ -164,7 +170,9 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
             for module in dict_content["body"]["modules"]:
                 module_name = (".indoor." if module["type"] == "NAModule4" else ".outdoor.") + module["module_name"].lower()
@@ -213,7 +221,9 @@ class Netatmo(Plugin):
                     self.config["poll_seconds"],
                     "second",
                     data_bound_upper=100,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 if module["type"] == "NAModule4":
                     self.datum_push(
