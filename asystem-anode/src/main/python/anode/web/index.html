@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>anode</title>
+    <meta charset="UTF-8">
     <link rel="apple-touch-icon" sizes="57x57" href="ico/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="ico/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="ico/apple-icon-72x72.png">
@@ -29,24 +30,34 @@
                 window.location.reload()
             }
         };
-        var datumsLast = []
+        var datumsLast = [];
         var datumsTimer = {};
+        var datumsLinks = {
+            "all": "/",
+            "temp": "/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s",
+            "power": "/?metrics=power.consumption.grid&metrics=power.consumption.inverter&metrics=power.production.grid&metrics=power.production.inverter&metrics=power.utlisation.grid&metrics=power.utlisation.inverter&&metrics=power.utlisation.array",
+            "energy": "/?metrics=energy&bins=1day"
+
+        };
         var anode = new ANode(document.location.href,
             function () {
-                document.getElementById('datums_header_timeliness').innerHTML = "<a href=\"" + document.location.href + "\">connected</a>";
-                document.getElementById('datums_header_timeliness').className = "datum-detail up";
+                var anodeMetric = "<a href=\"/?metrics=anode&metrics=_system\">anode" + "</a>";
+                for (var datumsLinksName in datumsLinks) {
+                    anodeMetric += (".<a href=\"" + datumsLinks[datumsLinksName] + "\">" + datumsLinksName + "</a>");
+                }
+                document.getElementById("datums_header_metric").innerHTML = anodeMetric;
+                document.getElementById("datums_header_timeliness").innerHTML = "<a href=\"" + document.location.href + "\">connected</a>";
+                styleTick(document.getElementById("datums_header_timeliness"), 1);
             },
             function () {
-                document.getElementById('datums_header_timeliness').innerHTML = "<a href=\"" + document.location.href + "\">disconnected</a>";
-                document.getElementById('datums_header_timeliness').className = "datum-detail down";
+                document.getElementById("datums_header_timeliness").innerHTML = "<a href=\"" + document.location.href + "\">disconnected</a>";
+                styleTick(document.getElementById("datums_header_timeliness"), -1);
             },
             function (datum) {
-                if (document.location.href.indexOf("anode", this.length - "anode".length) > 0 ||
-                    datum.data_metric.indexOf("anode", this.length - "anode".length) == -1) {
-                    document.getElementById('datums_header_metric').innerHTML = "<a href=\"/?metrics=anode\">anode" + "</a>.<a href=\"/\">" + datum.anode_id + "</a>";
+                if (document.location.href.indexOf("metrics=_system") > 0 || datum.data_metric.indexOf("anode") == -1) {
                     var datumDiv = document.getElementById(datum.ui_id);
                     if (datumDiv == null && datum.data_type !== "high" && datum.data_type !== "low") {
-                        datumDiv = document.createElement('div');
+                        datumDiv = document.createElement("div");
                         datumDiv.id = datum.ui_id;
                         datumDiv.className = "datum";
                         var datumGroupsFields = {
@@ -56,7 +67,8 @@
                                     var metricLinks = "";
                                     var metricTokens = metric.split("\.");
                                     for (i = 0; i < metricTokens.length; i++) {
-                                        metricLinks += (i == 0 ? "" : ".") + "<a href=\"/?metrics=" + metricTokens[i] + "\">" + metricTokens[i] + "</a>"
+                                        metricLinks += (i == 0 ? "" : ".") + "<a href=\"/?metrics=" + metricTokens[i] +
+                                            ((datum.data_metric.indexOf("anode") == 0) ? "&metrics=_system" : "") + "\">" + metricTokens[i] + "</a>"
                                     }
                                     return metricLinks
                                 })(datum.data_metric),
@@ -67,122 +79,112 @@
                                 "unit": (datum.data_unit == "scalor" || datum.data_type == "enumeration") ? null : datum.data_unit,
                                 "trend": "",
                                 "low": "",
-                                "high": "",
+                                "high": ""
                             }
                         };
                         for (var datumGroup in datumGroupsFields) {
-                            var datumGroupDiv = document.createElement('div');
+                            var datumGroupDiv = document.createElement("div");
                             datumGroupDiv.className = "datum";
+                            if (datumGroup == "detail") {
+                                datumGroupDiv.appendChild(datumGroupDiv = document.createElement("a"));
+                                datumGroupDiv.href = "/rest/?metrics=" + datum.data_metric + "&bins=" + datum.bin_width + datum.bin_unit + "&scope=history&format=csv"
+                            }
                             for (var datumField in datumGroupsFields[datumGroup]) {
                                 (function (datumField) {
                                     if (datumGroupsFields[datumGroup][datumField] != null) {
-                                        var datumFieldDiv = document.createElement('div');
-                                        datumFieldDiv.id = ((datumField == "low" || datumField == "high") ?
-                                                (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" ?
+                                        var datumFieldSpan = document.createElement("span");
+                                        datumFieldSpan.id = ((datumField == "low" || datumField == "high") ?
+                                                (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" || datum.data_type == "integral" ?
                                                     (datum.bin_width + "_" + datum.bin_unit) : "1_day")) : datum.ui_id) + "_" + datumField;
-                                        datumFieldDiv.className = "datum-detail";
-                                        datumFieldDiv.innerHTML = datumGroupsFields[datumGroup][datumField];
-                                        datumGroupDiv.appendChild(datumFieldDiv);
+                                        datumFieldSpan.className = "datum-detail-" + datumField;
+                                        datumFieldSpan.innerHTML = datumGroupsFields[datumGroup][datumField];
+                                        datumGroupDiv.appendChild(datumFieldSpan);
                                     }
                                 })(datumField);
                             }
                             datumDiv.appendChild(datumGroupDiv);
                         }
-                        datumDiv.appendChild(document.createElement('hr'));
-                        var index = 0;
+                        datumDiv.appendChild(document.createElement("hr"));
+                        var index;
                         for (index = 0; index < datumsLast.length; index++) {
                             if (datumsLast[index].order_index > datum.order_index) {
                                 break;
                             }
                         }
                         datumsLast.splice(index, 0, datum);
-                        document.getElementById('datums').insertBefore(datumDiv, document.getElementById('datums').childNodes[index]);
+                        document.getElementById("datums").insertBefore(datumDiv, document.getElementById("datums").childNodes[index]);
                     }
                     var datumValueId = datum.ui_id + "_" + ((datum.data_type == "high" || datum.data_type == "low") ? datum.data_type : "value");
                     if (document.getElementById(datumValueId) != null) {
-                        var datumValueDelta = parseFloat(
-                            document.getElementById(datumValueId).innerHTML.trim().length == 0 ? 0 :
-                                (datum.data_type == "high" ? 1 : (datum.data_type == "low" ? -1 :
-                                        (datum.data_value / datum.data_scale - document.getElementById(datumValueId).innerHTML))).toFixed(2));
+                        var datumValueDelta = datum.data_type == "enumeration" ? 0 : parseFloat(
+                                document.getElementById(datumValueId).innerHTML.trim().length == 0 ? 0 :
+                                    (datum.data_type == "high" ? 1 : (datum.data_type == "low" ? -1 :
+                                            (datum.data_value / datum.data_scale - document.getElementById(datumValueId).innerHTML))).toFixed(2));
                         var datumGroupsValues = {
                             "value": {
                                 "id": datumValueId,
                                 "value": datum.data_type == "enumeration" ? datum.data_unit : (datum.data_type == "epoch" ?
-                                        moment(new Date(datum.data_value * 1000)).format('HH:mm:ss MMMM Do YYYY').toLowerCase() : datum.data_value / datum.data_scale),
+                                        moment(new Date(datum.data_value * 1000)).format("HH:mm:ss").toLowerCase() : (datum.data_value / datum.data_scale)),
                                 "value_delta": datumValueDelta,
                                 "value_prefix": (datum.data_type == "high" ? "&#8613;" : (datum.data_type == "low" ? "&#8615;" : ""))
                             },
                             "unit": {
                                 "id": datum.ui_id + "_unit",
-                                "value": ((datum.data_type == "high" || datum.data_type == "low" || datum.data_type == "enumeration") ? null : datum["data_unit"]),
+                                "value": ((datum.data_type == "high" || datum.data_type == "low" || datum.data_type == "enumeration") ? null : datum.data_unit),
                                 "value_delta": datumValueDelta,
                                 "value_prefix": ""
                             },
                             "trend": {
                                 "id": datum.ui_id + "_trend",
-                                "value": (
-                                    (datum.data_type == "high" || datum.data_type == "low" || datum.data_type == "epoch" || datum.data_type == "enumeration") ?
-                                        null : datumValueDelta),
+                                "value": ((datum.data_type == "high" || datum.data_type == "low") ? null : datum.data_type == "enumeration" ? datum.data_unit :
+                                        (datum.data_type == "epoch" ? moment(new Date(datum.data_value * 1000)).format("MMM Do YYYY").toLowerCase() : datumValueDelta)),
                                 "value_delta": datumValueDelta,
-                                "value_prefix": datumValueDelta >= 0 ? "+" : ""
+                                "value_prefix": datum.data_type == "epoch" ? "" : (datum.data_type == "enumeration" ? "was " : (datumValueDelta >= 0 ? "+" : ""))
                             }
                         };
                         for (var datumGroup in datumGroupsValues) {
-                            for (var datumValue in datumGroupsValues[datumGroup]) {
-                                (function (datumDetailId, datumDetailValue, datumDetailValueDelta, datumDetailValuePrefix) {
-                                    if (datumDetailValue !== null) {
-                                        var datumDetailDiv = document.getElementById(datumDetailId);
-                                        if (datumDetailDiv !== null) {
-                                            var datumDetailValueClass = datumDetailDiv.className;
-                                            if (datumDetailValueDelta > 0) {
-                                                datumDetailValueClass = "datum-detail up";
-                                            }
-                                            else if (datumDetailValueDelta < 0) {
-                                                datumDetailValueClass = "datum-detail down";
-                                            }
-                                            datumDetailDiv.innerHTML = datumDetailValuePrefix + datumDetailValue;
-                                            datumDetailDiv.className = datumDetailValueClass;
-                                            if (datumDetailId in datumsTimer) {
-                                                window.clearTimeout(datumsTimer[datumDetailId]);
-                                            }
-                                            datumsTimer[datumDetailId] = window.setTimeout(function () {
-                                                datumDetailDiv.className = "datum-detail";
-                                            }, 5000);
+                            (function (datumGroup) {
+                                if (datumGroupsValues[datumGroup]["value"] !== null) {
+                                    var datumDetailDiv = document.getElementById(datumGroupsValues[datumGroup]["id"]);
+                                    if (datumDetailDiv !== null) {
+                                        styleTick(datumDetailDiv, datumGroupsValues[datumGroup]["value_delta"]);
+                                        datumDetailDiv.innerHTML = datumGroupsValues[datumGroup]["value_prefix"] + datumGroupsValues[datumGroup]["value"];
+                                        if (datumGroupsValues[datumGroup]["id"] in datumsTimer) {
+                                            window.clearTimeout(datumsTimer[datumGroupsValues[datumGroup]["id"]]);
                                         }
+                                        datumsTimer[datumGroupsValues[datumGroup]["id"]] = window.setTimeout(function () {
+                                            styleTick(datumDetailDiv, 0);
+                                        }, 5000);
                                     }
-                                })(datumGroupsValues[datumGroup]["id"], datumGroupsValues[datumGroup]["value"],
-                                    datumGroupsValues[datumGroup]["value_delta"], datumGroupsValues[datumGroup]["value_prefix"])
-                            }
+                                }
+                            })(datumGroup)
                         }
                     }
                 }
             });
+        function styleTick(element, delta) {
+            element.classList.remove("datum-detail-up");
+            element.classList.remove("datum-detail-down");
+            if (delta > 0) {
+                element.classList.add("datum-detail-up");
+            }
+            else if (delta < 0) {
+                element.classList.add("datum-detail-down");
+            }
+        }
     </script>
 </head>
 <body>
 <div>
-    <!-- @formatter:off --><!-- @formatter:on -->
-
     <div class="datums">
         <div class="datum">
-            <div class="datum">
-                <div id="datums_header_metric" class="datum-detail">anode</div>
-                <div id="datums_header_timeliness" class="datum-detail">
-                    <a href="javascript:window.location.href=window.location.href">connecting ...</a>
-                </div>
-                <div class="datum-detail">
-                    <a href="/?metrics=power.consumption.grid&metrics=power.consumption.inverter&metrics=power.production.grid&metrics=power.production.inverter&metrics=power.utlisation.grid&metrics=power.utlisation.inverter&&metrics=power.utlisation.array">power</a>
-                </div>
-                <div class="datum-detail">
-                    <a href="/?metrics=temperature&bins=1day&bins=50s&bins=2s">temperature</a>
-                </div>
-            </div>
+            <div class="datum"><span id="datums_header_metric" class="datum-detail">anode</span><span
+                    id="datums_header_timeliness" class="datum-detail"><a
+                    href="javascript:window.location.href=window.location.href">connecting ...</a></span></div>
             <hr/>
         </div>
     </div>
-    <div id="datums" class="datums">
-    </div>
-
+    <div id="datums" class="datums"></div>
 </div>
 </body>
 </html>

@@ -17,7 +17,7 @@ HTTP_TIMEOUT = 10
 
 
 class Netatmo(Plugin):
-    def poll(self):
+    def _poll(self):
         if not self.disabled:
             if self.token_access is None:
                 self.http_post("https://api.netatmo.com/oauth2/token", {'grant_type': 'password',
@@ -52,17 +52,23 @@ class Netatmo(Plugin):
                 logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
 
     def cache_tokens(self, text_content):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         dict_content = json.loads(text_content)
         self.token_access = dict_content["access_token"]
         self.token_refresh = dict_content["refresh_token"]
         self.token_expiry = calendar.timegm(time.gmtime()) + dict_content["expires_in"] - 10 * self.config["poll_seconds"]
         if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Netatmo access tokens cached, requiring refresh at [{}]"
+            logging.getLogger().info("Plugin [netatmo] access tokens cached, refresh [{}]"
                                      .format(time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(self.token_expiry))))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Plugin [{}] cache_tokens on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
         self.poll()
 
     # noinspection PyBroadException
     def push_devicelist(self, text_content):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -245,6 +251,8 @@ class Netatmo(Plugin):
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
                     "Unexpected error processing response [{}]".format(text_content))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Plugin [{}] push_devicelist on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def __init__(self, parent, name, config):
         super(Netatmo, self).__init__(parent, name, config)

@@ -14,7 +14,7 @@
 
 ANODE_PATH=$(which anode)
 ANODE_LOCK=/var/lock/subsys/anode
-ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
+ANODE_OPTS=${ANODE_OPTS:-"--verbose"}
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/bash.bashrc"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
 

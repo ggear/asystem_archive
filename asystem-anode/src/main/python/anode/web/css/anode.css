@@ -20,29 +20,38 @@ div {
     padding: 0;
 }
 
+span {
+    border: 0;
+    padding: 0 10px 0 0;
+}
+
 .datums {
     font-size: 230%;
     color: whitesmoke;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.datums .datum {
-    overflow-x: auto;
-    white-space: nowrap;
+.datum {
 }
 
 .datum-detail {
-    display: inline-block;
-    color: whitesmoke;
-    padding: 0 10px 0 0;
 }
 
 /*noinspection CssUnusedSymbol*/
-.datums .datum .datum-detail.up {
+.datum-detail-metric .datum-detail-timeliness .datum-detail-value .datum-detail-unit .datum-detail-trend .datum-detail-low .datum-detail-high {
+}
+
+/*noinspection ALL,CssUnusedSymbol*/
+.datum-detail-value {
+    font-size: 150%;
+}
+
+/*noinspection CssUnusedSymbol*/
+.datum-detail-up {
     color: chartreuse;
 }
 
 /*noinspection CssUnusedSymbol*/
-.datums .datum .datum-detail.down {
+.datum-detail-down {
     color: red;
 }

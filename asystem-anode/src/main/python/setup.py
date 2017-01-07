@@ -47,7 +47,7 @@ setup(
         "clean": CleanCommand,
     },
     packages=find_packages(),
-    install_requires=["twisted", "treq", "avro", "autobahn[twisted]", "klein", 'pyyaml'],
+    install_requires=["twisted", "treq", "avro", "autobahn[twisted]", "klein", "pyyaml", "bs4"],
     tests_require=["mock"],
     test_suite="anode.test",
     setup_requires=["setuptools_trial"],

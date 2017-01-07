@@ -5,25 +5,25 @@ plugin:
     fronius:
       poll_seconds: 1
       history_seconds: 259200
-      history_ticks: 100000
-      publish_ticks: -1
-      push_upstream: True
-    netatmo:
-      poll_seconds: 50
-      history_seconds: 259200
-      history_ticks: 1250
+      history_ticks: 750000
       publish_ticks: -1
       push_upstream: True
     davis:
       poll_seconds: -1
       history_seconds: 259200
-      history_ticks: 60000
+      history_ticks: 201000
+      publish_ticks: -1
+      push_upstream: True
+    netatmo:
+      poll_seconds: 50
+      history_seconds: 259200
+      history_ticks: 7500
       publish_ticks: -1
       push_upstream: True
     wunderground:
       poll_seconds: 300
       history_seconds: 259200
-      history_ticks: 200
+      history_ticks: 3000
       publish_ticks: -1
       push_upstream: True
 

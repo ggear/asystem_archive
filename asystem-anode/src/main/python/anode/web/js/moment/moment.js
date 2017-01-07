@@ -702,6 +702,7 @@
     var regexes = {};
 
     function addRegexToken(token, regex, strictRegex) {
+        //noinspection JSUnusedLocalSymbols
         regexes[token] = isFunction(regex) ? regex : function (isStrict, localeData) {
                 return (isStrict && strictRegex) ? strictRegex : regex;
             };
@@ -1672,6 +1673,7 @@
 
 // PARSING
 
+    //noinspection JSUnusedLocalSymbols
     function matchMeridiem(isStrict, locale) {
         return locale._meridiemParse;
     }
@@ -1711,11 +1713,13 @@
         array[SECOND] = toInt(input.substr(pos2));
         getParsingFlags(config).bigHour = true;
     });
+    //noinspection JSUnusedLocalSymbols
     addParseToken('Hmm', function (input, array, config) {
         var pos = input.length - 2;
         array[HOUR] = toInt(input.substr(0, pos));
         array[MINUTE] = toInt(input.substr(pos));
     });
+    //noinspection JSUnusedLocalSymbols
     addParseToken('Hmmss', function (input, array, config) {
         var pos1 = input.length - 4;
         var pos2 = input.length - 2;
@@ -1734,6 +1738,7 @@
 
     var defaultLocaleMeridiemParse = /[ap]\.?m?\.?/i;
 
+    //noinspection JSUnusedLocalSymbols
     function localeMeridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? 'pm' : 'PM';
@@ -4273,6 +4278,7 @@
     addRegexToken('x', matchSigned);
     addRegexToken('X', matchTimestamp);
     addParseToken('X', function (input, array, config) {
+        //noinspection JSCheckFunctionSignatures
         config._d = new Date(parseFloat(input, 10) * 1000);
     });
     addParseToken('x', function (input, array, config) {

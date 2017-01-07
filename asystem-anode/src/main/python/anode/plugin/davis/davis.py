@@ -12,7 +12,7 @@ from anode.plugin.plugin import Plugin
 
 
 class Davis(Plugin):
-    def push(self, text_content):
+    def _push(self, text_content):
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -151,21 +151,6 @@ class Davis(Plugin):
                     bin_timestamp,
                     bin_width,
                     bin_unit,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "wind.outdoor.roof",
-                    "current", "mean",
-                    None if self.datum_value(dict_content["packet"], ["windSpeed10"]) is None else self.datum_value(
-                        dict_content["packet"]["windSpeed10"] * Decimal(Decimal(1.60934))),
-                    "km/h",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    10,
-                    bin_unit,
-                    data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
                 )
@@ -310,7 +295,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     1,
                     "month",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
@@ -323,7 +310,9 @@ class Davis(Plugin):
                     bin_timestamp,
                     1,
                     "year",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
             if "record" in dict_content:
                 bin_unit = "minute"
