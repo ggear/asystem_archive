@@ -4,6 +4,7 @@ import logging
 import logging.config
 import os
 import sys
+import time
 import urlparse
 from optparse import OptionParser
 
@@ -13,6 +14,7 @@ from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerPr
 from klein import Klein
 from klein.resource import KleinResource
 from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.defer import succeed
 from twisted.internet.task import LoopingCall
 from twisted.python import log
@@ -54,23 +56,7 @@ class ANode:
             datums_filtered.extend(Plugin.datums_filter(datum_filter, datums, datum_format))
         if "limit" in datum_filter and min(datum_filter["limit"]).isdigit() and int(min(datum_filter["limit"])) <= len(datums_filtered):
             datums_filtered = datums_filtered[:int(min(datum_filter["limit"]))]
-        return sorted(datums_filtered, key=lambda datum: (datum["data_metric"],
-                                                          "aaaaa" if datum["data_type"] == "point" else
-                                                          "bbbbb" if datum["data_type"] == "mean" else
-                                                          "ccccc" if datum["data_type"] == "low" else
-                                                          "ddddd" if datum["data_type"] == "high" else
-                                                          "zzzzz" if datum["data_type"] == "integral" else
-                                                          datum["data_type"],
-                                                          "aaaaa" if datum["bin_unit"] == "second" else
-                                                          "bbbbb" if datum["bin_unit"] == "minute" else
-                                                          "ccccc" if datum["bin_unit"] == "hour" else
-                                                          "ddddd" if datum["bin_unit"] == "lighthours" else
-                                                          "eeeee" if datum["bin_unit"] == "darkhours" else
-                                                          "fffff" if datum["bin_unit"] == "day" else
-                                                          "ggggg" if datum["bin_unit"] == "month" else
-                                                          "hhhhh" if datum["bin_unit"] == "year" else
-                                                          "iiiii",
-                                                          datum["bin_width"]))
+        return Plugin.datums_sort(datums_filtered)
 
     def push_datums(self, datum_filter, data):
         if "sources" in datum_filter:
@@ -83,7 +69,7 @@ class ANode:
 
     def start_server(self):
         if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Starting service ...")
+            logging.getLogger().info("ANode starting ... ")
         for plugin_name in self.config["plugin"]:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.plugins[plugin_name] = self.register_plugin(plugin_name, self.config["plugin"][plugin_name])
@@ -107,17 +93,21 @@ class WebWsFactory(WebSocketServerFactory):
         if client not in self.clients:
             self.clients.append(client)
             if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.getLogger().debug("WebSocket client registered [{}]".format(client.peer))
+                logging.getLogger().debug("Interface [ws] client registered [{}]".format(client.peer))
 
     def push(self, datums=None):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         for client in self.clients:
             client.push(datums)
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Interface [ws] push on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
 
     def deregister(self, client):
         if client in self.clients:
             self.clients.remove(client)
             if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.getLogger().debug("WebSocket client deregistered [{}]".format(client.peer))
+                logging.getLogger().debug("Interface [ws] client deregistered [{}]".format(client.peer))
 
 
 # noinspection PyPep8Naming
@@ -129,25 +119,25 @@ class WebWs(WebSocketServerProtocol):
     def onConnect(self, request):
         self.datum_filter = request.params
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection request")
+            logging.getLogger().debug("Interface [ws] connection request")
 
     def onOpen(self):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection opened")
+            logging.getLogger().debug("Interface [ws] connection opened")
         self.factory.register(self)
         self.push()
 
     def push(self, datums=None):
         datums = self.factory.anode.get_datums(self.datum_filter, "dict", datums)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket push with filter [{}] and [{}] datums".format(
+            logging.getLogger().debug("Interface [ws] push with filter [{}] and [{}] datums".format(
                 self.datum_filter, 0 if datums is None else len(datums)))
         for datum in datums:
             self.sendMessage(Plugin.datum_dict_to_json(datum), False)
 
     def onClose(self, wasClean, code, reason):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("WebSocket connection lost")
+            logging.getLogger().debug("Interface [ws] connection lost")
         self.factory.deregister(self)
 
 
@@ -158,21 +148,40 @@ class WebRest:
     def __init__(self, anode):
         self.anode = anode
 
+    # @server.handle_errors(Exception)
+    # def error(self, request, failure):
+    #     request.setResponseCode(500)
+    #     request.setHeader("Content-Type", "text/html")
+    #     return "<html>Server Error</html>"
+
     @server.route("/", methods=["POST"])
-    def onPost(self, request):
+    def post(self, request):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("RESTful push with filter [{}]".format(datum_filter))
+            logging.getLogger().debug("Interface [rest] push with filter [{}]".format(datum_filter))
         self.anode.push_datums(datum_filter, request.content.read())
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Interface [rest] post on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
         return succeed(None)
 
     @server.route("/")
-    def onGet(self, request):
+    @inlineCallbacks
+    def get(self, request):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
         datums_filtered = self.anode.get_datums(datum_filter, "dict")
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("RESTful pull with filter [{}] and [{}] datums".format(datum_filter, len(datums_filtered)))
-        return Plugin.datums_dict_to_json(datums_filtered)
+            logging.getLogger().debug("Interface [rest] pull with filter [{}] and [{}] datums".format(datum_filter, len(datums_filtered)))
+        datum_format = "json" if "format" not in datum_filter else datum_filter["format"][0]
+        datums_format = yield Plugin.datums_dict_to_format(datums_filtered, datum_format)
+        request.setHeader("Content-Disposition", "attachment; filename=anode." + datum_format)
+        request.setHeader("Content-Type", ("application/" if datum_format != "csv" else "text/") + datum_format)
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Interface [rest] get on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+        returnValue(datums_format)
 
 
 def main(main_reactor=reactor, callback=None):

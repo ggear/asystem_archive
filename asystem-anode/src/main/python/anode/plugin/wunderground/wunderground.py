@@ -18,7 +18,7 @@ HTTP_TIMEOUT = 10
 
 
 class Wunderground(Plugin):
-    def poll(self):
+    def _poll(self):
         self.http_get("http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json", self.push_forecast)
 
     # noinspection PyShadowingNames
@@ -39,6 +39,8 @@ class Wunderground(Plugin):
                 logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
 
     def push_forecast(self, text_content):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -114,7 +116,55 @@ class Wunderground(Plugin):
                 )
                 self.datum_push(
                     "rain.hills.forecast",
+                    "forecast", "high",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "rain.hills.forecast",
+                    "forecast", "low",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "rain.hills.forecast",
                     "forecast", "integral",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "lighthours",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "rain.hills.forecast",
+                    "forecast", "high",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "lighthours",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "rain.hills.forecast",
+                    "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
                     1,
@@ -137,6 +187,42 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
+                    "rain.hills.forecast",
+                    "forecast", "high",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "darkhours",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "rain.hills.forecast",
+                    "forecast", "low",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
+                    "mm",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "darkhours",
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "wind.hills.forecast",
+                    "forecast", "mean",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
+                    "km/h",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day",
+                    data_bound_lower=0
+                )
+                self.datum_push(
                     "wind.hills.forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "maxwind", "kph"]),
@@ -150,7 +236,7 @@ class Wunderground(Plugin):
                 )
                 self.datum_push(
                     "wind.hills.forecast",
-                    "forecast", "mean",
+                    "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
                     "km/h",
                     1,
@@ -173,8 +259,36 @@ class Wunderground(Plugin):
                     data_bound_upper=100,
                     data_bound_lower=0
                 )
+                self.datum_push(
+                    "humidity.hills.forecast",
+                    "forecast", "high",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
+                    "%",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day",
+                    data_bound_upper=100,
+                    data_bound_lower=0
+                )
+                self.datum_push(
+                    "humidity.hills.forecast",
+                    "forecast", "low",
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
+                    "%",
+                    1,
+                    data_timestamp,
+                    bin_timestamp,
+                    forecast_index - day_index_start + 1,
+                    "day",
+                    data_bound_upper=100,
+                    data_bound_lower=0
+                )
             self.datum_pop()
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
                     "Unexpected error processing response [{}]".format(text_content))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug("Plugin [{}] push_forecast on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))

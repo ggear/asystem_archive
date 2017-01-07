@@ -14,18 +14,18 @@ function ANode(uri, onopen, onclose, onmessage) {
     this.webSocketUri = "ws://" + uriHostPort + "/ws/" + uriParameters;
 
     this.metadata = this.metadataRequest();
-    this.orderingIndexes = {}
-    this.orderingIndexes["data_metric"] = {}
+    this.orderingIndexes = {};
+    this.orderingIndexes["data_metric"] = {};
     var data_metric = this.metadata[2]["symbols"];
     for (var i = 1; i < data_metric.length; i++) {
         this.orderingIndexes["data_metric"][data_metric[i]] = i * 100000;
     }
-    this.orderingIndexes["data_type"] = {}
+    this.orderingIndexes["data_type"] = {};
     var data_type = this.metadata[4]["symbols"];
     for (var i = 1; i < data_type.length; i++) {
         this.orderingIndexes["data_type"][data_type[i]] = i * 10000;
     }
-    this.orderingIndexes["bin_unit"] = {}
+    this.orderingIndexes["bin_unit"] = {};
     var bin_unit = this.metadata[6]["symbols"];
     for (var i = 1; i < bin_unit.length; i++) {
         this.orderingIndexes["bin_unit"][bin_unit[i]] = i * 1000;
@@ -125,14 +125,14 @@ function ANode(uri, onopen, onclose, onmessage) {
         return datum;
     }
 
-};
+}
 
 ANode.prototype.isConnected = function () {
     return this.connected;
 };
 
 ANode.prototype.metadataRequest = function () {
-    var metadata;
+    var metadata = null;
     var metadataHttpRequest = new XMLHttpRequest();
     metadataHttpRequest.open("GET", this.metadataUri, false);
     metadataHttpRequest.onreadystatechange = function () {
