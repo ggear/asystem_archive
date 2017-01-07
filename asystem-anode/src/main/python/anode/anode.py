@@ -148,12 +148,6 @@ class WebRest:
     def __init__(self, anode):
         self.anode = anode
 
-    # @server.handle_errors(Exception)
-    # def error(self, request, failure):
-    #     request.setResponseCode(500)
-    #     request.setHeader("Content-Type", "text/html")
-    #     return "<html>Server Error</html>"
-
     @server.route("/", methods=["POST"])
     def post(self, request):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
