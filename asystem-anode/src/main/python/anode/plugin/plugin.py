@@ -394,12 +394,20 @@ class Plugin(object):
 
     @staticmethod
     def datums_dict_to_json(datums_dict):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         for datum_dict in datums_dict:
             datum_dict["anode_id"] = ID_HEX
-        return json.dumps(datums_dict, separators=(',', ':'))
+        datums_json = json.dumps(datums_dict, separators=(',', ':'))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug(
+                "Plugin [*] datums_dict_to_json off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+        return datums_json
 
     @staticmethod
     def datums_dict_to_csv(datums_dict):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         datums_unit = {}
         for datum_dict in datums_dict:
             datum_dict["anode_id"] = ID_BASE64
@@ -409,11 +417,18 @@ class Plugin(object):
             if datum_dict["bin_unit"] not in datums_unit:
                 datums_unit[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
             datum_dict["bin_unit"] = datums_unit[datum_dict["bin_unit"]]
-        return (','.join(str(datum_dict_key) for datum_dict_key in datums_dict[0].iterkeys()) + "\n" if len(datums_dict) > 0 else "") + \
-               ("\n".join([",".join(str(datum_dict_value) for datum_dict_value in datum_dict.itervalues()) for datum_dict in datums_dict])) + "\n"
+        datums_csv = (','.join(str(datum_dict_key) for datum_dict_key in datums_dict[0].iterkeys()) + "\n" if len(datums_dict) > 0 else "") + \
+                     ("\n".join([",".join(str(datum_dict_value) for datum_dict_value in datum_dict.itervalues()) for datum_dict in datums_dict])) \
+                     + "\n"
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug(
+                "Plugin [*] datums_dict_to_csv off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+        return datums_csv
 
     @staticmethod
     def datums_dict_to_format(datums_dict, datum_format):
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            time_start = time.time()
         if datum_format == "dict":
             return datums_dict
         datums_copy = []
@@ -425,6 +440,9 @@ class Plugin(object):
             datums_dict_to_format = Plugin.datums_dict_to_csv
         else:
             raise ValueError("Unkown datum format [{}]".format(datum_format))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.getLogger().debug(
+                "Plugin [*] datums_dict_to_format on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
         return threads.deferToThread(datums_dict_to_format, datums_copy)
 
     def datum_value(self, data, keys=None, default=None, factor=1):
