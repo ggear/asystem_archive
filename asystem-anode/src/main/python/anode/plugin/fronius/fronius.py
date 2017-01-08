@@ -36,7 +36,7 @@ class Fronius(Plugin):
         treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
             errback=lambda error, url=url: logging.getLogger().error(
-                "state\t\tError processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
+                "Error processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
             if logging.getLogger().isEnabledFor(logging.ERROR) else None)
 
     @staticmethod
@@ -45,10 +45,10 @@ class Fronius(Plugin):
             treq.text_content(response).addCallbacks(callback)
         else:
             if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("state\t\tError processing HTTP response [{}] with [{}]".format(url, response.code))
+                logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
 
     def push_flow(self, text_content):
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
+        if logging.getLogger().isEnabledFor(logging.INFO):
             time_start = time.time()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -69,21 +69,22 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            self.datum_push(
-                "power.production.battery",
-                "current", "point",
-                self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, -1) if self.datum_value(
-                    dict_content, ["Body", "Data", "Site", "P_Akku"], 0) <= 0 else 0,
-                "W",
-                1,
-                data_timestamp,
-                bin_timestamp,
-                self.config["poll_seconds"],
-                "second",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
+            # TODO: Do not include until batteries installed
+            # self.datum_push(
+            #     "power.production.battery",
+            #     "current", "point",
+            #     self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, -1) if self.datum_value(
+            #         dict_content, ["Body", "Data", "Site", "P_Akku"], 0) <= 0 else 0,
+            #     "W",
+            #     1,
+            #     data_timestamp,
+            #     bin_timestamp,
+            #     self.config["poll_seconds"],
+            #     "second",
+            #     data_bound_lower=0,
+            #     data_derived_max=True,
+            #     data_derived_min=True
+            # )
             self.datum_push(
                 "power.production.inverter",
                 "current", "point",
@@ -113,29 +114,46 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            self.datum_push(
-                "power.consumption.battery",
-                "current", "point",
-                self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, 1) if self.datum_value(
-                    dict_content, ["Body", "Data", "Site", "P_Akku"], 0) >= 0 else 0,
-                "W",
-                1,
-                data_timestamp,
-                bin_timestamp,
-                self.config["poll_seconds"],
-                "second",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
+            # TODO: Do not include until batteries installed
+            # self.datum_push(
+            #     "power.consumption.battery",
+            #     "current", "point",
+            #     self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, 1) if self.datum_value(
+            #         dict_content, ["Body", "Data", "Site", "P_Akku"], 0) >= 0 else 0,
+            #     "W",
+            #     1,
+            #     data_timestamp,
+            #     bin_timestamp,
+            #     self.config["poll_seconds"],
+            #     "second",
+            #     data_bound_lower=0,
+            #     data_derived_max=True,
+            #     data_derived_min=True
+            # )
+            # self.datum_push(
+            #     "power.consumption.inverter",
+            #     "current", "point",
+            #     self.datum_value(dict_content, ["Body", "Data", "Site", "P_Load"], 0, -1) -
+            #     (self.datum_value(dict_content, ["Body", "Data", "Site", "P_Grid"], 0, 1) if self.datum_value(
+            #         dict_content, ["Body", "Data", "Site", "P_Grid"], 0) >= 0 else 0) -
+            #     (self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, 1) if self.datum_value(
+            #         dict_content, ["Body", "Data", "Site", "P_Akku"], 0) >= 0 else 0),
+            #     "W",
+            #     1,
+            #     data_timestamp,
+            #     bin_timestamp,
+            #     self.config["poll_seconds"],
+            #     "second",
+            #     data_bound_lower=0,
+            #     data_derived_max=True,
+            #     data_derived_min=True
+            # )
             self.datum_push(
                 "power.consumption.inverter",
                 "current", "point",
                 self.datum_value(dict_content, ["Body", "Data", "Site", "P_Load"], 0, -1) -
                 (self.datum_value(dict_content, ["Body", "Data", "Site", "P_Grid"], 0, 1) if self.datum_value(
-                    dict_content, ["Body", "Data", "Site", "P_Grid"], 0) >= 0 else 0) -
-                (self.datum_value(dict_content, ["Body", "Data", "Site", "P_Akku"], 0, 1) if self.datum_value(
-                    dict_content, ["Body", "Data", "Site", "P_Akku"], 0) >= 0 else 0),
+                    dict_content, ["Body", "Data", "Site", "P_Grid"], 0) >= 0 else 0),
                 "W",
                 1,
                 data_timestamp,
@@ -161,21 +179,22 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            self.datum_push(
-                "power.utlisation.battery",
-                "current", "point",
-                self.datum_value(0),
-                "%",
-                1,
-                data_timestamp,
-                bin_timestamp,
-                self.config["poll_seconds"],
-                "second",
-                data_bound_upper=100,
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
+            # TODO: Do not include until batteries installed
+            # self.datum_push(
+            #     "power.utlisation.battery",
+            #     "current", "point",
+            #     self.datum_value(0),
+            #     "%",
+            #     1,
+            #     data_timestamp,
+            #     bin_timestamp,
+            #     self.config["poll_seconds"],
+            #     "second",
+            #     data_bound_upper=100,
+            #     data_bound_lower=0,
+            #     data_derived_max=True,
+            #     data_derived_min=True
+            # )
             self.datum_push(
                 "power.utlisation.grid",
                 "current", "point",
@@ -254,12 +273,13 @@ class Fronius(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "state\t\tUnexpected error processing response [{}]".format(text_content))
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("perf\t\tPlugin [{}] push_flow on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+                    "Unexpected error processing response [{}]".format(text_content))
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            logging.getLogger().info(
+                "Plugin [{}] push_flow on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def push_meter(self, text_content):
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
+        if logging.getLogger().isEnabledFor(logging.INFO):
             time_start = time.time()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -376,9 +396,10 @@ class Fronius(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "state\t\tUnexpected error processing response [{}]".format(text_content))
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("perf\t\tPlugin [{}] push_meter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+                    "Unexpected error processing response [{}]".format(text_content))
+        if logging.getLogger().isEnabledFor(logging.INFO):
+            logging.getLogger().info(
+                "Plugin [{}] push_meter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def __init__(self, parent, name, config):
         super(Fronius, self).__init__(parent, name, config)

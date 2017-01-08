@@ -352,7 +352,7 @@ class Davis(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "state\t\tUnexpected error processing response [{}]".format(text_content))
+                    "Unexpected error processing response [{}]".format(text_content))
 
     def __init__(self, parent, name, config):
         super(Davis, self).__init__(parent, name, config)
