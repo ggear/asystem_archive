@@ -40,7 +40,7 @@ class Netatmo(Plugin):
         treq.post(url, data, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
             errback=lambda error, url=url: logging.getLogger().error(
-                "Error processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
+                "state\t\tError processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
             if logging.getLogger().isEnabledFor(logging.ERROR) else None)
 
     @staticmethod
@@ -49,7 +49,7 @@ class Netatmo(Plugin):
             treq.text_content(response).addCallbacks(callback)
         else:
             if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
+                logging.getLogger().error("state\t\tError processing HTTP response [{}] with [{}]".format(url, response.code))
 
     def cache_tokens(self, text_content):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -59,10 +59,10 @@ class Netatmo(Plugin):
         self.token_refresh = dict_content["refresh_token"]
         self.token_expiry = calendar.timegm(time.gmtime()) + dict_content["expires_in"] - 10 * self.config["poll_seconds"]
         if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [netatmo] access tokens cached, refresh [{}]"
+            logging.getLogger().info("state\t\tPlugin [netatmo] access tokens cached, refresh [{}]"
                                      .format(time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(self.token_expiry))))
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("Plugin [{}] cache_tokens on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            logging.getLogger().debug("perf\t\tPlugin [{}] cache_tokens on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
         self.poll()
 
     # noinspection PyBroadException
@@ -250,9 +250,9 @@ class Netatmo(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
+                    "state\t\tUnexpected error processing response [{}]".format(text_content))
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("Plugin [{}] push_devicelist on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            logging.getLogger().debug("perf\t\tPlugin [{}] push_devicelist on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def __init__(self, parent, name, config):
         super(Netatmo, self).__init__(parent, name, config)
@@ -268,4 +268,4 @@ class Netatmo(Plugin):
         except KeyError, key_error:
             self.disabled = True
             if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("Error getting Netatmo connection key [{}] from environment, disabling plugin".format(key_error))
+                logging.getLogger().error("state\t\tError getting Netatmo connection key [{}] from environment, disabling plugin".format(key_error))

@@ -36,7 +36,7 @@ class Fronius(Plugin):
         treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
             errback=lambda error, url=url: logging.getLogger().error(
-                "Error processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
+                "state\t\tError processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
             if logging.getLogger().isEnabledFor(logging.ERROR) else None)
 
     @staticmethod
@@ -45,7 +45,7 @@ class Fronius(Plugin):
             treq.text_content(response).addCallbacks(callback)
         else:
             if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
+                logging.getLogger().error("state\t\tError processing HTTP response [{}] with [{}]".format(url, response.code))
 
     def push_flow(self, text_content):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -254,9 +254,9 @@ class Fronius(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
+                    "state\t\tUnexpected error processing response [{}]".format(text_content))
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("Plugin [{}] push_flow on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            logging.getLogger().debug("perf\t\tPlugin [{}] push_flow on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def push_meter(self, text_content):
         if logging.getLogger().isEnabledFor(logging.DEBUG):
@@ -376,9 +376,9 @@ class Fronius(Plugin):
         except Exception:
             if logging.getLogger().isEnabledFor(logging.ERROR):
                 logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
+                    "state\t\tUnexpected error processing response [{}]".format(text_content))
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.getLogger().debug("Plugin [{}] push_meter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            logging.getLogger().debug("perf\t\tPlugin [{}] push_meter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
 
     def __init__(self, parent, name, config):
         super(Fronius, self).__init__(parent, name, config)
