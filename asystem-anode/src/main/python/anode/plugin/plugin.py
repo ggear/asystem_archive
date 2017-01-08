@@ -324,7 +324,7 @@ class Plugin(object):
                             return datums_filtered
                         datums_filtered.append(Plugin.datum_dict_to_format(datum, datum_format))
         if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] datums_filter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            logging.getLogger().info("Plugin [*] datums_filter on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
         return datums_filtered
 
     @staticmethod
