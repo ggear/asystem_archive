@@ -87,9 +87,9 @@ class ANodeTest(TestCase):
             "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"))))))
         self.assertEquals(3, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter"))))))
-        self.assertEquals(12, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
+        self.assertEquals(9, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?bins=1second"))))))
-        self.assertEquals(30, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
+        self.assertEquals(21, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power"))))))
         self.assertEquals(metrics - metrics_anode, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?scope=history"))))))

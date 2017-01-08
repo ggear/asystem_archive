@@ -39,7 +39,7 @@ class Plugin(object):
     def push(self, text_content):
         if self.has_push:
             if logging.getLogger().isEnabledFor(logging.INFO):
-                start_time = time.time()
+                time_start = time.time()
             self._push(text_content)
             if logging.getLogger().isEnabledFor(logging.INFO):
                 logging.getLogger().info("Plugin [{}] push on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
@@ -403,9 +403,12 @@ class Plugin(object):
     def datums_dict_to_json(datums_dict):
         if logging.getLogger().isEnabledFor(logging.INFO):
             time_start = time.time()
+
+        # TODO: Update for bacthes like csv below
         for datum_dict in datums_dict:
             datum_dict["anode_id"] = ID_HEX
         datums_json = json.dumps(datums_dict, separators=(',', ':'))
+
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [*] datums_dict_to_json off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
         return datums_json
@@ -415,6 +418,8 @@ class Plugin(object):
         if logging.getLogger().isEnabledFor(logging.INFO):
             time_start = time.time()
         datums_unit = {}
+        count = 0
+        datums_csv_fragments = [','.join(str(datum_dict_key) for datum_dict_key in datums_dict[0].iterkeys()) if len(datums_dict) > 0 else ""]
         for datum_dict in datums_dict:
             datum_dict["anode_id"] = ID_BASE64
             if datum_dict["data_unit"] not in datums_unit:
@@ -423,9 +428,13 @@ class Plugin(object):
             if datum_dict["bin_unit"] not in datums_unit:
                 datums_unit[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
             datum_dict["bin_unit"] = datums_unit[datum_dict["bin_unit"]]
-        datums_csv = (','.join(str(datum_dict_key) for datum_dict_key in datums_dict[0].iterkeys()) + "\n" if len(datums_dict) > 0 else "") + \
-                     ("\n".join([",".join(str(datum_dict_value) for datum_dict_value in datum_dict.itervalues()) for datum_dict in datums_dict])) \
-                     + "\n"
+            datums_csv_fragments.append(",".join(str(datum_dict_value) for datum_dict_value in datum_dict.itervalues()))
+            count += 1
+            if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
+                datums_csv_fragments = ["\n".join(datums_csv_fragments)]
+                if count < len(datums_dict):
+                    time.sleep(SERIALISATION_BATCH_SLEEP)
+        datums_csv = "".join([datums_csv_fragments[0], "\n"])
         if logging.getLogger().isEnabledFor(logging.INFO):
             logging.getLogger().info("Plugin [*] datums_dict_to_csv off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
         return datums_csv
@@ -507,6 +516,9 @@ class Plugin(object):
         time_local = time.localtime()
         self.time_tmz_offset = calendar.timegm(time_local) - calendar.timegm(time.gmtime(time.mktime(time_local)))
 
+
+SERIALISATION_BATCH = 1000
+SERIALISATION_BATCH_SLEEP = 0.5
 
 DATUM_QUEUE_MIN = "min"
 DATUM_QUEUE_MAX = "max"

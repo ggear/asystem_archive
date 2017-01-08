@@ -73,11 +73,11 @@ describe('ANode', function () {
     });
 
     it('message bins', function (done) {
-        messageTest(done, connectionUri("bins=1second"), 12)
+        messageTest(done, connectionUri("bins=1second"), 9)
     });
 
     it('message metrics', function (done) {
-        messageTest(done, connectionUri("metrics=power"), 30)
+        messageTest(done, connectionUri("metrics=power"), 21)
     });
 
     it('message scope history', function (done) {
