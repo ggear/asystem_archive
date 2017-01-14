@@ -28,14 +28,6 @@ describe('ANode', function () {
         connectionTest(done, connectionUri(""))
     });
 
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=1"), 1)
-    });
-
-    it('message limit limit', function (done) {
-        messageTest(done, connectionUri("limit=some_nonnumeric_limit&limit=1"), 1)
-    });
-
     it('message metrics bins', function (done) {
         messageTest(done, connectionUri("metrics=power.production.inverter&bins=1second"), 1)
     });
@@ -60,10 +52,6 @@ describe('ANode', function () {
         messageTest(done, connectionUri("metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin"), 1)
     });
 
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=2"), 2)
-    });
-
     it('message metrics metrics types bins', function (done) {
         messageTest(done, connectionUri("metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"), 2)
     });
@@ -78,26 +66,6 @@ describe('ANode', function () {
 
     it('message metrics', function (done) {
         messageTest(done, connectionUri("metrics=power"), 21)
-    });
-
-    it('message scope history', function (done) {
-        messageTest(done, connectionUri("scope=history"), metrics - metrics_anode)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=" + metrics), metrics)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=" + (metrics * 2)), metrics)
-    });
-
-    it('message limit', function (done) {
-        messageTest(done, connectionUri("limit=some_nonnumeric_limit"), metrics)
-    });
-
-    it('message scope last', function (done) {
-        messageTest(done, connectionUri("scope=last"), metrics)
     });
 
     it('message something ', function (done) {

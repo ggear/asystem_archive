@@ -12,6 +12,7 @@ from decimal import Decimal
 import dateutil.parser
 import treq
 
+import anode
 from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
@@ -35,21 +36,18 @@ class Fronius(Plugin):
         connection_pool = self.config["pool"] if "pool" in self.config else None
         treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
-            errback=lambda error, url=url: logging.getLogger().error(
-                "Error processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
-            if logging.getLogger().isEnabledFor(logging.ERROR) else None)
+            errback=lambda error, url=url: anode.Log(logging.ERROR)
+                .log("Plugin", "error", lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(self.name, url, error.getErrorMessage())))
 
-    @staticmethod
-    def http_response(response, url, callback):
+    def http_response(self, response, url, callback):
         if response.code == 200:
             treq.text_content(response).addCallbacks(callback)
         else:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
+            anode.Log(logging.ERROR).log("Plugin", "error",
+                                         lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
     def push_flow(self, text_content):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
+        log_timer = anode.Log(logging.DEBUG).start()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = calendar.timegm(time.gmtime())
@@ -270,17 +268,13 @@ class Fronius(Plugin):
                 data_derived_min=True
             )
             self.datum_pop()
-        except Exception:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info(
-                "Plugin [{}] push_flow on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+                                         .format(self.name, exception, text_content), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_flow)
 
     def push_meter(self, text_content):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
+        log_timer = anode.Log(logging.DEBUG).start()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = calendar.timegm(time.gmtime())
@@ -300,53 +294,56 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            energy_production_grid_day = energy_production_grid_alltime - \
-                                         self.datum_get(DATUM_QUEUE_MIN, "energy.production.grid", "integral", "1", "alltime")["data_value"]
-            self.datum_push(
-                "energy.production.grid",
-                "current", "integral",
-                energy_production_grid_day,
-                "Wh",
-                10,
-                data_timestamp,
-                bin_timestamp,
-                1,
-                "day",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
-            self.datum_push(
-                "energy.production.yield",
-                "current", "integral",
-                self.datum_value(energy_production_grid_day * Decimal(0.000007135), factor=100),
-                "$",
-                100,
-                data_timestamp,
-                bin_timestamp,
-                1,
-                "day",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
-            energy_production_inverter_day = self.datum_get(DATUM_QUEUE_LAST, "energy.production.inverter", "integral", "1", "alltime")[
-                                                 "data_value"] - \
-                                             self.datum_get(DATUM_QUEUE_MIN, "energy.production.inverter", "integral", "1", "alltime")["data_value"]
-            self.datum_push(
-                "energy.consumption.savings",
-                "current", "integral",
-                self.datum_value((energy_production_inverter_day - energy_production_grid_day) * Decimal(0.0000240673), factor=100),
-                "$",
-                100,
-                data_timestamp,
-                bin_timestamp,
-                1,
-                "day",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
+            energy_production_grid_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.grid", "integral", "1", "alltime")
+            if energy_production_grid_alltime_min is not None:
+                energy_production_grid_day = energy_production_grid_alltime - energy_production_grid_alltime_min["data_value"]
+                self.datum_push(
+                    "energy.production.grid",
+                    "current", "integral",
+                    energy_production_grid_day,
+                    "Wh",
+                    10,
+                    data_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
+                )
+                self.datum_push(
+                    "energy.production.yield",
+                    "current", "integral",
+                    self.datum_value(energy_production_grid_day * Decimal(0.000007135), factor=100),
+                    "$",
+                    100,
+                    data_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
+                )
+                energy_production_inverter_alltime_last = self.datum_get(DATUM_QUEUE_LAST, "energy.production.inverter", "integral", "1", "alltime")
+                energy_production_inverter_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.inverter", "integral", "1", "alltime")
+                if energy_production_inverter_alltime_last is not None and energy_production_inverter_alltime_min is not None:
+                    energy_production_inverter_day = energy_production_inverter_alltime_last["data_value"] - \
+                                                     energy_production_inverter_alltime_min["data_value"]
+                    self.datum_push(
+                        "energy.consumption.savings",
+                        "current", "integral",
+                        self.datum_value((energy_production_inverter_day - energy_production_grid_day) * Decimal(0.0000240673), factor=100),
+                        "$",
+                        100,
+                        data_timestamp,
+                        bin_timestamp,
+                        1,
+                        "day",
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
             energy_consumption_grid_alltime = self.datum_value(dict_content, ["Body", "Data", "0", "EnergyReal_WAC_Plus_Absolute"], factor=10)
             self.datum_push(
                 "energy.consumption.grid",
@@ -362,44 +359,42 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            energy_consumption_grid_day = energy_consumption_grid_alltime - \
-                                          self.datum_get(DATUM_QUEUE_MIN, "energy.consumption.grid", "integral", "1", "alltime")["data_value"]
-            self.datum_push(
-                "energy.consumption.grid",
-                "current", "integral",
-                energy_consumption_grid_day,
-                "Wh",
-                10,
-                data_timestamp,
-                bin_timestamp,
-                1,
-                "day",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
-            self.datum_push(
-                "energy.consumption.cost",
-                "current", "integral",
-                self.datum_value(Decimal(0.485989) + energy_consumption_grid_day * Decimal(0.0000240673), factor=100),
-                "$",
-                100,
-                data_timestamp,
-                bin_timestamp,
-                1,
-                "day",
-                data_bound_lower=0,
-                data_derived_max=True,
-                data_derived_min=True
-            )
+            energy_consumption_grid_min = self.datum_get(DATUM_QUEUE_MIN, "energy.consumption.grid", "integral", "1", "alltime")
+            if energy_consumption_grid_min is not None:
+                energy_consumption_grid_day = energy_consumption_grid_alltime - energy_consumption_grid_min["data_value"]
+                self.datum_push(
+                    "energy.consumption.grid",
+                    "current", "integral",
+                    energy_consumption_grid_day,
+                    "Wh",
+                    10,
+                    data_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
+                )
+                self.datum_push(
+                    "energy.consumption.cost",
+                    "current", "integral",
+                    self.datum_value(Decimal(0.485989) + energy_consumption_grid_day * Decimal(0.0000240673), factor=100),
+                    "$",
+                    100,
+                    data_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0,
+                    data_derived_max=True,
+                    data_derived_min=True
+                )
             self.datum_pop()
-        except Exception:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info(
-                "Plugin [{}] push_meter on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+                                         .format(self.name, exception, text_content), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_meter)
 
     def __init__(self, parent, name, config):
         super(Fronius, self).__init__(parent, name, config)

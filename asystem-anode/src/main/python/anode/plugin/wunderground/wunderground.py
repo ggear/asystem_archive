@@ -12,6 +12,7 @@ from decimal import Decimal
 import dateutil.parser
 import treq
 
+import anode
 from anode.plugin.plugin import Plugin
 
 HTTP_TIMEOUT = 10
@@ -26,21 +27,18 @@ class Wunderground(Plugin):
         connection_pool = self.config["pool"] if "pool" in self.config else None
         treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
-            errback=lambda error, url=url: logging.getLogger().error(
-                "Error processing HTTP GET [{}] with [{}]".format(url, error.getErrorMessage()))
-            if logging.getLogger().isEnabledFor(logging.ERROR) else None)
+            errback=lambda error, url=url: anode.Log(logging.ERROR)
+                .log("Plugin", "error", lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(self.name, url, error.getErrorMessage())))
 
-    @staticmethod
-    def http_response(response, url, callback):
+    def http_response(self, response, url, callback):
         if response.code == 200:
             treq.text_content(response).addCallbacks(callback)
         else:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.getLogger().error("Error processing HTTP response [{}] with [{}]".format(url, response.code))
+            anode.Log(logging.ERROR).log("Plugin", "error",
+                                         lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
     def push_forecast(self, text_content):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
+        log_timer = anode.Log(logging.DEBUG).start()
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
@@ -286,9 +284,7 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
             self.datum_pop()
-        except Exception:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] push_forecast on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+                                         .format(self.name, exception, text_content), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_forecast)
