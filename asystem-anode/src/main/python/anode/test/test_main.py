@@ -23,7 +23,7 @@ class ANodeTest(TestCase):
         self.patch(treq, "get", lambda url, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "post", lambda url, data, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "text_content", lambda response: MockHttpResponseContent(response))
-        self.patch(threads, "deferToThread", lambda function, argument: function(argument))
+        self.patch(threads, "deferToThread", lambda function, *arguments, **keyword_arguments: function(*arguments, **keyword_arguments))
         print("")
 
     def clock_tick(self, period, periods):
@@ -34,7 +34,7 @@ class ANodeTest(TestCase):
     def clock_tock(self, anode):
         for i in range(self.ticks):
             for source in HTTP_POSTS:
-                anode.push_datums({"sources": [source]}, HTTP_POSTS[source])
+                anode.put_datums({"sources": [source]}, HTTP_POSTS[source])
 
     @staticmethod
     def unwrap_defered(defered):
@@ -64,10 +64,6 @@ class ANodeTest(TestCase):
         self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?scope=publish"))))))
         self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=1"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=some_nonnumeric_limit&limit=1"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter&bins=1second"))))))
         self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter&types=point"))))))
@@ -82,8 +78,6 @@ class ANodeTest(TestCase):
         self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin"))))))
         self.assertEquals(2, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=2"))))))
-        self.assertEquals(2, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"))))))
         self.assertEquals(3, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter"))))))
@@ -95,12 +89,6 @@ class ANodeTest(TestCase):
             "/rest/?scope=history"))))))
         self.assertEquals(metrics - metrics_anode + 1, self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?scope=history&format=csv"))).count("\n"))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=" + str(metrics)))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=" + str(metrics * 2)))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?limit=some_nonnumeric_limit"))))))
         self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?scope=last"))))))
         self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
@@ -137,7 +125,9 @@ class MockRequest:
     def __init__(self, uri):
         self.uri = uri
 
-    def setHeader(self, name, value):
+    # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
+    @staticmethod
+    def setHeader(name, value):
         None
 
 

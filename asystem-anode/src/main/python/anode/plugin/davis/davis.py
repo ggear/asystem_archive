@@ -8,6 +8,7 @@ import logging
 import time
 from decimal import Decimal
 
+import anode
 from anode.plugin.plugin import Plugin
 
 
@@ -349,10 +350,9 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
             self.datum_pop()
-        except Exception:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.exception(
-                    "Unexpected error processing response [{}]".format(text_content))
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+                                         .format(self.name, exception, text_content), exception)
 
     def __init__(self, parent, name, config):
         super(Davis, self).__init__(parent, name, config)

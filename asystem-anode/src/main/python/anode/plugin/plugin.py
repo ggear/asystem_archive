@@ -22,7 +22,6 @@ import avro.schema
 import avro.schema
 from avro.io import AvroTypeException
 from bs4.dammit import EntitySubstitution
-from twisted.internet import threads
 
 import anode.plugin
 
@@ -30,19 +29,15 @@ import anode.plugin
 class Plugin(object):
     def poll(self):
         if self.has_poll:
-            if logging.getLogger().isEnabledFor(logging.INFO):
-                time_start = time.time()
+            log_timer = anode.Log(logging.DEBUG).start()
             self._poll()
-            if logging.getLogger().isEnabledFor(logging.INFO):
-                logging.getLogger().info("Plugin [{}] poll on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.poll)
 
     def push(self, text_content):
         if self.has_push:
-            if logging.getLogger().isEnabledFor(logging.INFO):
-                time_start = time.time()
+            log_timer = anode.Log(logging.DEBUG).start()
             self._push(text_content)
-            if logging.getLogger().isEnabledFor(logging.INFO):
-                logging.getLogger().info("Plugin [{}] push on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+            log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push)
 
     def datum_pop(self):
         datums_popped = 0
@@ -110,10 +105,9 @@ class Plugin(object):
             data_derived_min=True,
             data_transient=True
         )
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] dropped [{}] datums".format(self.name, self.datums_dropped))
-            logging.getLogger().info("Plugin [{}] pushed [{}] datums".format(self.name, self.datums_pushed))
-            logging.getLogger().info("Plugin [{}] saved [{}] datums".format(self.name, self.datums_history))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] dropped [{}] datums".format(self.name, self.datums_dropped))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] pushed datums".format(self.name, self.datums_pushed))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] saved datums".format(self.name, self.datums_history))
         if "push_upstream" in self.config and self.config["push_upstream"]:
             for datum_metric in self.datums:
                 for datum_type in self.datums[datum_metric]:
@@ -121,9 +115,8 @@ class Plugin(object):
                         # noinspection PyCompatibility
                         for i in xrange(len(self.datums[datum_metric][datum_type][datum_bin][DATUM_QUEUE_PUBLISH])):
                             datum_avro = self.datums[datum_metric][datum_type][datum_bin][DATUM_QUEUE_PUBLISH].popleft()
-                            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                                logging.getLogger().debug("Plugin [{}] popped datum [{}]".format(
-                                    self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro))))
+                            anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] popped datum [{}]".format(
+                                self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro))))
                             # TDOD: push to QMTT broker, returning datums to left of deque if push fails
                             datums_popped += 1
         self.datum_push(
@@ -143,8 +136,7 @@ class Plugin(object):
         )
         self.datums_pushed = 0
         self.datums_dropped = 0
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] popped [{}] datums".format(self.name, datums_popped))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] popped [{}] datums".format(self.name, datums_popped))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
                    bin_unit, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
@@ -166,19 +158,17 @@ class Plugin(object):
             }
             if data_bound_upper is not None and data_value > Decimal(data_bound_upper * data_scale):
                 datum_dict["data_value"] = data_bound_upper * data_scale
-                if logging.getLogger().isEnabledFor(logging.WARNING):
-                    logging.getLogger().debug("Plugin [{}] upperbounded datum [{}]".format(
-                        self.name, self.datum_tostring(datum_dict)))
+                anode.Log(logging.DEBUG).log("Plugin", "state",
+                                             lambda: "[{}] upperbounded datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
             if data_bound_lower is not None and data_value < Decimal(data_bound_lower * data_scale):
                 datum_dict["data_value"] = data_bound_lower * data_scale
-                if logging.getLogger().isEnabledFor(logging.WARNING):
-                    logging.getLogger().debug("Plugin [{}] lowerbounded datum [{}]".format(
-                        self.name, self.datum_tostring(datum_dict)))
+                anode.Log(logging.DEBUG).log("Plugin", "state",
+                                             lambda: "[{}] lowerbounded datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
             try:
                 datum_avro = self.datum_dict_to_avro(datum_dict)
-            except AvroTypeException as error:
-                if logging.getLogger().isEnabledFor(logging.ERROR):
-                    logging.getLogger().error("Error serialising Avro object [{}]".format(error))
+            except AvroTypeException as exception:
+                anode.Log(logging.ERROR).log("Plugin", "error",
+                                             lambda: "[{}] error serialising Avro object [{}]".format(self.name, exception), exception)
                 return
             if datum_dict["data_metric"] not in self.datums:
                 self.datums[datum_dict["data_metric"]] = {}
@@ -211,9 +201,9 @@ class Plugin(object):
                                 calendar.timegm(time.gmtime())
                             datums_deref[DATUM_QUEUE_MAX]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MAX]["bin_unit"] = data_derived_unit
-                            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                                logging.getLogger().debug(
-                                    "Plugin [{}] seleted high [{}]".format(self.name, self.datum_tostring(datums_deref[DATUM_QUEUE_MAX])))
+                            anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                         lambda: "[{}] seleted high [{}]".format(self.name,
+                                                                                                 self.datum_tostring(datums_deref[DATUM_QUEUE_MAX])))
                             self.datum_push(data_metric, data_temporal, "high", datum_dict["data_value"], data_unit, data_scale,
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
@@ -229,9 +219,9 @@ class Plugin(object):
                                 calendar.timegm(time.gmtime())
                             datums_deref[DATUM_QUEUE_MIN]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MIN]["bin_unit"] = data_derived_unit
-                            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                                logging.getLogger().debug(
-                                    "Plugin [{}] deleted low [{}]".format(self.name, self.datum_tostring(datums_deref[DATUM_QUEUE_MIN])))
+                            anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                         lambda: "[{}] deleted low [{}]".format(self.name,
+                                                                                                self.datum_tostring(datums_deref[DATUM_QUEUE_MIN])))
                             self.datum_push(data_metric, data_temporal, "low", datum_dict["data_value"], data_unit, data_scale,
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
@@ -248,22 +238,20 @@ class Plugin(object):
                             if self.config["history_ticks"] <= self.datums_history or \
                                     ((calendar.timegm(time.gmtime()) - self.datum_avro_to_dict(datum_history_peek)[
                                         "bin_timestamp"]) >= self.config["history_seconds"]):
-                                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                                    logging.getLogger().debug("Plugin [{}] seleted datum [{}]".format(self.name, self.datum_tostring(
-                                        self.datum_avro_to_dict(datum_history_peek))))
+                                anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                             lambda: "[{}] seleted datum [{}]".format(self.name, self.datum_tostring(
+                                                                 self.datum_avro_to_dict(datum_history_peek))))
                             else:
                                 datums_deref[DATUM_QUEUE_HISTORY].appendleft(datum_history_peek)
                                 self.datums_history += 1
                         datums_deref[DATUM_QUEUE_HISTORY].append(datum_avro)
-                        if logging.getLogger().isEnabledFor(logging.DEBUG):
-                            logging.getLogger().debug("Plugin [{}] saved datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
-                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.getLogger().debug("Plugin [{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
-                self.anode.publish_datums([datum_dict])
+                        anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                     lambda: "[{}] saved datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
+                anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
+                self.anode.push_datums({"dict": [datum_dict]})
             else:
                 self.datums_dropped += 1
-                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.getLogger().debug("Plugin [{}] dropped datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
+                anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] dropped datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
 
     def datum_tostring(self, datum_dict):
         return "{}.{}.{}.{}{}.{}={}{}".format(
@@ -286,10 +274,8 @@ class Plugin(object):
             else:
                 return None
 
-    def datums_filter_get(self, datum_filter, datum_format="dict"):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
-        datums_filtered = []
+    def datums_filter_get(self, datums_filtered, datum_filter):
+        log_timer = anode.Log(logging.DEBUG).start()
         for data_metric in self.datums:
             if Plugin.is_fitlered(datum_filter, "metrics", data_metric):
                 for datum_type in self.datums[data_metric]:
@@ -299,37 +285,36 @@ class Plugin(object):
                                 datum_scopes = [DATUM_QUEUE_LAST] if "scope" not in datum_filter else datum_filter["scope"]
                                 for datum_scope in datum_scopes:
                                     if datum_scope in self.datums[data_metric][datum_type][datum_bin]:
-                                        if datum_scope == DATUM_QUEUE_LAST:
-                                            if not Plugin.is_fitlered_len(datum_filter, datums_filtered):
-                                                datums_filtered.append(Plugin.datum_dict_to_format(
-                                                    self.datums[data_metric][datum_type][datum_bin][datum_scope], datum_format))
-                                        else:
-                                            for datum in self.datums[data_metric][datum_type][datum_bin][datum_scope]:
-                                                if not Plugin.is_fitlered_len(datum_filter, datums_filtered):
-                                                    datums_filtered.append(Plugin.datum_avro_to_format(datum, datum_format))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] datums_filter_get on-thread [{}] ms".format(self.name, str(int((time.time() - time_start) * 1000))))
+                                        datums = [self.datums[data_metric][datum_type][datum_bin][datum_scope]] \
+                                            if datum_scope == DATUM_QUEUE_LAST else self.datums[data_metric][datum_type][datum_bin][datum_scope]
+                                        datums_format = "dict" if datum_scope == DATUM_QUEUE_LAST else "avro"
+                                        if datums_format not in datums_filtered:
+                                            datums_filtered[datums_format] = []
+                                        datums_filtered[datums_format].extend(datums)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datums_filter_get)
         return datums_filtered
 
     @staticmethod
-    def datums_filter(datum_filter, datums, datum_format="dict"):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
-        datums_filtered = []
-        for datum in datums:
+    def datums_filter(datums_filtered, datum_filter, datums):
+        log_timer = anode.Log(logging.DEBUG).start()
+        for datum in Plugin.datum_to_format(datums, "dict")["dict"]:
             if Plugin.is_fitlered(datum_filter, "metrics", datum["data_metric"]):
                 if Plugin.is_fitlered(datum_filter, "types", datum["data_type"]):
                     if Plugin.is_fitlered(datum_filter, "bins", str(datum["bin_width"]) + datum["bin_unit"]):
-                        if Plugin.is_fitlered_len(datum_filter, datums_filtered):
-                            return datums_filtered
-                        datums_filtered.append(Plugin.datum_dict_to_format(datum, datum_format))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [*] datums_filter on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+                        if "dict" not in datums_filtered:
+                            datums_filtered["dict"] = []
+                        datums_filtered["dict"].append(datum)
+        log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_filter)
         return datums_filtered
 
     @staticmethod
-    def is_fitlered_len(datum_filters, datums_filtered):
-        return "limit" in datum_filters and min(datum_filters["limit"]).isdigit() and int(min(datum_filters["limit"])) <= len(datums_filtered)
+    def is_fitlered(datum_filter, datum_filter_field, datum_field):
+        if datum_filter_field not in datum_filter:
+            return True
+        for datum_filter_field_value in datum_filter[datum_filter_field]:
+            if datum_field.lower().find(datum_filter_field_value.lower()) != -1:
+                return True
+        return False
 
     @staticmethod
     def datums_sort(datums):
@@ -350,15 +335,6 @@ class Plugin(object):
                                                  "hhhhh" if datum["bin_unit"] == "year" else
                                                  "iiiii",
                                                  datum["bin_width"]))
-
-    @staticmethod
-    def is_fitlered(datum_filters, datum_parameter, datum_attribute):
-        if datum_parameter not in datum_filters:
-            return True
-        for datum_filter in datum_filters[datum_parameter]:
-            if datum_attribute.lower().find(datum_filter.lower()) != -1:
-                return True
-        return False
 
     @staticmethod
     def datum_avro_to_format(datum_avro, datum_format):
@@ -400,64 +376,118 @@ class Plugin(object):
         return json.dumps(datum_dict, separators=(',', ':'))
 
     @staticmethod
-    def datums_dict_to_json(datums_dict):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
+    def datum_dict_to_csv(datum_dict):
+        datum_dict = datum_dict.copy()
+        if "anode_id" in datum_dict:
+            datum_dict["anode_id"] = ID_BASE64
+            if datum_dict["data_unit"] not in DATUM_SCHEMA_HTML:
+                DATUM_SCHEMA_HTML[datum_dict["data_unit"]] = EntitySubstitution().substitute_html(datum_dict["data_unit"])
+            datum_dict["data_unit"] = DATUM_SCHEMA_HTML[datum_dict["data_unit"]]
+            if datum_dict["bin_unit"] not in DATUM_SCHEMA_HTML:
+                DATUM_SCHEMA_HTML[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
+            datum_dict["bin_unit"] = DATUM_SCHEMA_HTML[datum_dict["bin_unit"]]
+        return ','.join(str(datum_dict[datum_field["name"]]) for datum_field in DATUM_SCHEMA_JSON[7]["fields"])
 
-        # TODO: Update for bacthes like csv below
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def datum_to_format(datums, datum_format, off_thread=False):
+        log_timer = anode.Log(logging.DEBUG).start()
+        count = 0
+        count_sum = sum(len(datums_values) for datums_values in datums.values())
+        if "dict" in datums and len(datums["dict"]) > 0:
+            datums["dict"] = Plugin.datums_sort(datums["dict"])
+        log_timer.log("Plugin", "timer", lambda: "[*] count and sort", context=Plugin.datum_to_format, off_thread=off_thread)
+        log_timer = anode.Log(logging.DEBUG).start()
+        datums_formatted = {datum_format: []}
+        datum_to_format_iterate = False
+        for datums_format, datums_value in datums.iteritems():
+            datums_format_function = None
+            if datums_format == "dict":
+                if datum_format == "avro":
+                    datums_format_function = Plugin.datum_dict_to_avro
+                elif datum_format == "json":
+                    datums_format_function = Plugin.datum_dict_to_json
+                elif datum_format == "csv":
+                    datums_format_function = Plugin.datum_dict_to_csv
+                elif datum_format != "dict":
+                    raise ValueError("Unkown datum format conversion [{}] to [{}]".format(datums_format, datum_format))
+            elif datums_format != datum_format:
+                datum_to_format_iterate = datum_format != "dict"
+                if datums_format == "avro":
+                    datums_format_function = Plugin.datum_avro_to_dict
+                else:
+                    raise ValueError("Unkown datum format conversion [{}] to [{}]".format(datums_format, datum_format))
+            if "dict" if datum_to_format_iterate else datum_format not in datums_formatted:
+                datums_formatted["dict" if datum_to_format_iterate else datum_format] = []
+            if datums_format_function is None:
+                datums_formatted["dict" if datum_to_format_iterate else datum_format].extend(datums_value)
+                if off_thread:
+                    count += len(datums_value)
+            else:
+                for datum in datums_value:
+                    datums_formatted["dict" if datum_to_format_iterate else datum_format].append(datums_format_function(datum))
+                    if off_thread:
+                        count += 1
+                        if count % SERIALISATION_BATCH == 0 or count == count_sum:
+                            if count < count_sum:
+                                log_timer.pause()
+                                time.sleep(SERIALISATION_BATCH_SLEEP)
+                                log_timer.start()
+        log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums.keys()), datum_format, count),
+                      context=Plugin.datum_to_format, off_thread=off_thread)
+        return datums_formatted if not datum_to_format_iterate else Plugin.datum_to_format(datums_formatted, datum_format, off_thread)
+
+    @staticmethod
+    def datums_dict_to_json(datums_dict, off_thread=False):
+        log_timer = anode.Log(logging.DEBUG).start()
+        count = 0
+        datums_json_fragments = []
         for datum_dict in datums_dict:
-            datum_dict["anode_id"] = ID_HEX
-        datums_json = json.dumps(datums_dict, separators=(',', ':'))
-
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [*] datums_dict_to_json off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+            datums_json_fragments.append(Plugin.datum_dict_to_json(datum_dict))
+            if off_thread:
+                count += 1
+                if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
+                    datums_json_fragments = [",".join(datums_json_fragments)]
+                    if count < len(datums_dict):
+                        log_timer.pause()
+                        time.sleep(SERIALISATION_BATCH_SLEEP)
+                        log_timer.start()
+        datums_json = "".join(["[", "" if len(datums_json_fragments) == 0 else datums_json_fragments[0], "]"])
+        log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_dict_to_json, off_thread=off_thread)
         return datums_json
 
     @staticmethod
-    def datums_dict_to_csv(datums_dict):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
-        datums_unit = {}
+    def datums_dict_to_csv(datums_dict, off_thread=False):
+        log_timer = anode.Log(logging.DEBUG).start()
         count = 0
-        datums_csv_fragments = [','.join(str(datum_dict_key) for datum_dict_key in datums_dict[0].iterkeys()) if len(datums_dict) > 0 else ""]
+        datums_csv_fragments = [','.join(str(datum_field["name"]) for datum_field in DATUM_SCHEMA_JSON[7]["fields"]) if len(datums_dict) > 0 else ""]
         for datum_dict in datums_dict:
-            datum_dict["anode_id"] = ID_BASE64
-            if datum_dict["data_unit"] not in datums_unit:
-                datums_unit[datum_dict["data_unit"]] = EntitySubstitution().substitute_html(datum_dict["data_unit"])
-            datum_dict["data_unit"] = datums_unit[datum_dict["data_unit"]]
-            if datum_dict["bin_unit"] not in datums_unit:
-                datums_unit[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
-            datum_dict["bin_unit"] = datums_unit[datum_dict["bin_unit"]]
-            datums_csv_fragments.append(",".join(str(datum_dict_value) for datum_dict_value in datum_dict.itervalues()))
-            count += 1
-            if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
-                datums_csv_fragments = ["\n".join(datums_csv_fragments)]
-                if count < len(datums_dict):
-                    time.sleep(SERIALISATION_BATCH_SLEEP)
+            datums_csv_fragments.append(Plugin.datum_dict_to_csv(datum_dict))
+            if off_thread:
+                count += 1
+                if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
+                    datums_csv_fragments = ["\n".join(datums_csv_fragments)]
+                    if count < len(datums_dict):
+                        log_timer.pause()
+                        time.sleep(SERIALISATION_BATCH_SLEEP)
+                        log_timer.start()
         datums_csv = "".join([datums_csv_fragments[0], "\n"])
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [*] datums_dict_to_csv off-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
+        log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_dict_to_csv, off_thread=off_thread)
         return datums_csv
 
     @staticmethod
-    def datums_dict_to_format(datums_dict, datum_format):
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            time_start = time.time()
-        if datum_format == "dict":
-            return datums_dict
-        datums_copy = []
-        for datum_dict in datums_dict:
-            datums_copy.append(datum_dict.copy())
+    def datums_to_format(datums_dict, datum_format, off_thread=False):
+        log_timer = anode.Log(logging.DEBUG).start()
+        datums_formatted = Plugin.datum_to_format(datums_dict, "dict", off_thread)["dict"]
         if datum_format == "json":
-            datums_dict_to_format = Plugin.datums_dict_to_json
+            datums_formatted = Plugin.datums_dict_to_json(datums_formatted, off_thread)
         elif datum_format == "csv":
-            datums_dict_to_format = Plugin.datums_dict_to_csv
-        else:
+            datums_formatted = Plugin.datums_dict_to_csv(datums_formatted, off_thread)
+        elif datum_format != "dict":
             raise ValueError("Unkown datum format [{}]".format(datum_format))
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info(
-                "Plugin [*] datums_dict_to_format on-thread [{}] ms".format(str(int((time.time() - time_start) * 1000))))
-        return threads.deferToThread(datums_dict_to_format, datums_copy)
+        log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums_dict.keys()), datum_format, sum(
+            len(datums_values) for datums_values in datums_dict.values())), context=Plugin.datums_to_format, off_thread=off_thread)
+        return datums_formatted
 
     def datum_value(self, data, keys=None, default=None, factor=1):
         # noinspection PyBroadException
@@ -465,13 +495,13 @@ class Plugin(object):
             value = data if keys is None else reduce(operator.getitem, keys, data)
             if value is None:
                 value = default
-                if logging.getLogger().isEnabledFor(logging.WARNING):
-                    logging.getLogger().warning(
-                        "Plugin [{}] setting value {} to default [{}] from response [{}]".format(self.name, keys, default, data))
+                anode.Log(logging.WARN).log("Plugin", "state",
+                                            lambda: "[{}] setting value {} to default [{}] from response [{}]".format(self.name, keys, default, data))
             return value if not isinstance(value, numbers.Number) else int(value * factor)
-        except ValueError:
-            if logging.getLogger().isEnabledFor(logging.ERROR):
-                logging.exception("Unexpected error processing value {} from response [{}]".format(keys, data))
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error",
+                                         lambda: "[{}] setting value {} to default [{}] from response [{}] due to error [{}]".format(
+                                             self.name, keys, default, data, exception), exception)
             return None if default is None else int(default * factor)
 
     @staticmethod
@@ -495,8 +525,7 @@ class Plugin(object):
     def get(parent, module, config):
         plugin = getattr(import_module("anode.plugin") if hasattr(anode.plugin, module.title()) else
                          import_module("anode.plugin." + module), module.title())(parent, module, config)
-        if logging.getLogger().isEnabledFor(logging.INFO):
-            logging.getLogger().info("Plugin [{}] initialised".format(module))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] initialised".format(module))
         return plugin
 
     __metaclass__ = abc.ABCMeta
@@ -518,7 +547,7 @@ class Plugin(object):
 
 
 SERIALISATION_BATCH = 1000
-SERIALISATION_BATCH_SLEEP = 0.5
+SERIALISATION_BATCH_SLEEP = 0.3
 
 DATUM_QUEUE_MIN = "min"
 DATUM_QUEUE_MAX = "max"
@@ -526,6 +555,7 @@ DATUM_QUEUE_LAST = "last"
 DATUM_QUEUE_PUBLISH = "publish"
 DATUM_QUEUE_HISTORY = "history"
 
+DATUM_SCHEMA_HTML = {}
 DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
 DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
