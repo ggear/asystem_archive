@@ -6,8 +6,8 @@ import pandas
 from twisted.trial.unittest import TestCase
 
 
-# noinspection PyUnresolvedReferences
 class TestPandas(TestCase):
+    # noinspection PyShadowingBuiltins,PyUnusedLocal
     def test_main_default(self):
         metric1 = pandas.DataFrame({"timestamp": [1, 4], "a": [4, 6]})
         metric1.set_index("timestamp", inplace=True)

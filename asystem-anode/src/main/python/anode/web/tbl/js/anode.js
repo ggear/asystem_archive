@@ -47,7 +47,7 @@
     };
 
     anodeConnector.getData = function (table, doneCallback) {
-        var uri = document.location.href
+        var uri = document.location.href;
         var uriBase = uri.substring(uri.indexOf("//") + 2, uri.length);
         var uriHostPort = uriBase.substring(0, uriBase.indexOf("/"));
         $.getJSON("http://" + uriHostPort + "/rest/?types=point&scope=history&format=json", function (anodeTable) {

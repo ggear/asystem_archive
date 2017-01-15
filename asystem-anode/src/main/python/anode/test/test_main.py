@@ -2,16 +2,23 @@
 
 from __future__ import print_function
 
+import csv
+import gzip
 import json
 import os.path
 import sys
+import tempfile
 
 import treq
+from tabulate import tabulate
 from twisted.internet import threads
 from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
 
+from anode import anode
 from anode.anode import main
+from anode.plugin.plugin import DATUM_SCHEMA_JSON
+from anode.plugin.plugin import Plugin
 
 
 # noinspection PyUnresolvedReferences
@@ -31,6 +38,7 @@ class ANodeTest(TestCase):
             self.clock.advance(period)
             self.ticks += 1
 
+    # noinspection PyShadowingNames
     def clock_tock(self, anode):
         for i in range(self.ticks):
             for source in HTTP_POSTS:
@@ -40,6 +48,7 @@ class ANodeTest(TestCase):
     def unwrap_defered(defered):
         return getattr(defered, 'result', "")
 
+    # noinspection PyShadowingNames
     def assert_anode(self, callback):
         anode = main(self.clock, callback)
         self.clock_tock(anode)
@@ -119,6 +128,50 @@ class ANodeTest(TestCase):
     def test_main_quiet_long(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--quiet"])
         self.assert_anode(lambda: self.clock_tick(60 * 60, 2))
+
+
+class ANodeModelTest(TestCase):
+    def __init__(self, *args, **kwargs):
+        super(ANodeModelTest, self).__init__(*args, **kwargs)
+        anode.Log().configure(True, False)
+        self.file_data = os.path.dirname(__file__) + "/data/"
+        self.file_data_source = "datums_power_production_point"
+        with gzip.open(self.file_data + self.file_data_source + ".csv.gz", 'rt') as file_csv:
+            self.datums = Plugin.datums_csv_to_dict(csv.DictReader(file_csv))
+
+    def test_size(self):
+        datum_sizes_tmp = [["format", "container", "memory", "disk", "size"]]
+
+        def datum_sizes_add(datums, datums_count, datums_format, datums_container="none"):
+            size_disk = None
+            if datums_format == "dict":
+                datums = {datums_format: datums} if datums_container != "none" else datums
+                size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_format]) + \
+                              sum(sum(map(sys.getsizeof, datum.itervalues())) for datum in datums[datums_format]) + \
+                              8 * len(datums[datums_format]) * len(DATUM_SCHEMA_JSON[7]["fields"]) + \
+                              (0 if datums_container == "none" else sys.getsizeof(datums[datums_format]))
+            else:
+                datums = {datums_format: [datums]} if datums_container != "none" else datums
+                size_memory = sum(
+                    sys.getsizeof(datum) for datum in datums[datums_format])
+                with tempfile.NamedTemporaryFile() as datums_file:
+                    for datum in datums[datums_format]:
+                        datums_file.write(datum)
+                    datums_file.flush()
+                    size_disk = os.path.getsize(datums_file.name)
+
+            if datums_container == "none" and len(datums[datums_format]) != datums_count:
+                raise Expcetion("Formated datum count [{}] does not match input [{}]".format(len(datums[datums_format]), datums_count))
+            datum_sizes_tmp.append([datums_format, datums_container, size_memory / datums_count,
+                                    size_disk / datums_count if size_disk is not None else None,
+                                    "variable" if (size_memory if size_disk is None else size_disk) %
+                                                  ((size_memory if size_disk is None else size_disk) / datums_count) != 0 else "constant"])
+
+        for datum_format in ["dict", "avro", "csv", "json"]:
+            datum_sizes_add(Plugin.datum_to_format(self.datums, datum_format), len(self.datums["dict"]), datum_format)
+        for datum_format in ["dict", "csv", "json"]:
+            datum_sizes_add(Plugin.datums_to_format(self.datums, datum_format), len(self.datums["dict"]), datum_format, "list")
+        anode.Log().log("ANodeModelTest", "test", lambda: "Datum sizes:\n" + tabulate(datum_sizes_tmp, tablefmt='grid'))
 
 
 class MockRequest:
