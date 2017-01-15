@@ -68,7 +68,29 @@
                             <resources>
                                 <resource>
                                     <directory>${dir.source.python}</directory>
+                                    <excludes>
+                                        <exclude>anode/test/data/*</exclude>
+                                    </excludes>
                                     <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-test-data</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${dir.output.python}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${dir.source.python}</directory>
+                                    <includes>
+                                        <include>anode/test/data/*</include>
+                                    </includes>
+                                    <filtering>false</filtering>
                                 </resource>
                             </resources>
                         </configuration>

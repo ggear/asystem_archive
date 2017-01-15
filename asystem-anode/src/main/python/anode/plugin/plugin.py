@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import HTMLParser
 import abc
 import base64
 import calendar
@@ -337,36 +338,10 @@ class Plugin(object):
                                                  datum["bin_width"]))
 
     @staticmethod
-    def datum_avro_to_format(datum_avro, datum_format):
-        datum = datum_avro
-        if datum_format == "dict":
-            datum = Plugin.datum_avro_to_dict(datum_avro)
-        elif datum_format == "json":
-            datum = Plugin.datum_dict_to_json(Plugin.datum_avro_to_dict(datum_avro))
-        elif datum_format != "avro":
-            raise ValueError("Unkown datum format [{}]".format(datum_format))
-        return datum
-
-    @staticmethod
-    def datum_dict_to_format(datum_dict, datum_format):
-        datum = datum_dict
-        if datum_format == "json":
-            datum = Plugin.datum_dict_to_json(datum_dict)
-        elif datum_format == "avro":
-            datum = Plugin.datum_dict_to_avro(datum_dict)
-        elif datum_format != "dict":
-            raise ValueError("Unkown datum format [{}]".format(datum_format))
-        return datum
-
-    @staticmethod
     def datum_dict_to_avro(datum_dict):
         avro_writer = io.BytesIO()
         avro.io.DatumWriter(DATUM_SCHEMA_AVRO).write(datum_dict, avro.io.BinaryEncoder(avro_writer))
         return avro_writer.getvalue()
-
-    @staticmethod
-    def datum_avro_to_dict(datum_avro):
-        return avro.io.DatumReader(DATUM_SCHEMA_AVRO).read(avro.io.BinaryDecoder(io.BytesIO(datum_avro)))
 
     @staticmethod
     def datum_dict_to_json(datum_dict):
@@ -380,13 +355,17 @@ class Plugin(object):
         datum_dict = datum_dict.copy()
         if "anode_id" in datum_dict:
             datum_dict["anode_id"] = ID_BASE64
-            if datum_dict["data_unit"] not in DATUM_SCHEMA_HTML:
-                DATUM_SCHEMA_HTML[datum_dict["data_unit"]] = EntitySubstitution().substitute_html(datum_dict["data_unit"])
-            datum_dict["data_unit"] = DATUM_SCHEMA_HTML[datum_dict["data_unit"]]
-            if datum_dict["bin_unit"] not in DATUM_SCHEMA_HTML:
-                DATUM_SCHEMA_HTML[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
-            datum_dict["bin_unit"] = DATUM_SCHEMA_HTML[datum_dict["bin_unit"]]
+            if datum_dict["data_unit"] not in DATUM_SCHEMA_TO_HTML:
+                DATUM_SCHEMA_TO_HTML[datum_dict["data_unit"]] = EntitySubstitution().substitute_html(datum_dict["data_unit"])
+            datum_dict["data_unit"] = DATUM_SCHEMA_TO_HTML[datum_dict["data_unit"]]
+            if datum_dict["bin_unit"] not in DATUM_SCHEMA_TO_HTML:
+                DATUM_SCHEMA_TO_HTML[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
+            datum_dict["bin_unit"] = DATUM_SCHEMA_TO_HTML[datum_dict["bin_unit"]]
         return ','.join(str(datum_dict[datum_field["name"]]) for datum_field in DATUM_SCHEMA_JSON[7]["fields"])
+
+    @staticmethod
+    def datum_avro_to_dict(datum_avro):
+        return avro.io.DatumReader(DATUM_SCHEMA_AVRO).read(avro.io.BinaryDecoder(io.BytesIO(datum_avro)))
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -396,7 +375,8 @@ class Plugin(object):
         count_sum = sum(len(datums_values) for datums_values in datums.values())
         if "dict" in datums and len(datums["dict"]) > 0:
             datums["dict"] = Plugin.datums_sort(datums["dict"])
-        log_timer.log("Plugin", "timer", lambda: "[*] count and sort", context=Plugin.datum_to_format, off_thread=off_thread)
+        log_timer.log("Plugin", "timer", lambda: "[*] count and sort for [{}] dict datums".format(len(datums["dict"])) if "dict" in datums else 0,
+                      context=Plugin.datum_to_format, off_thread=off_thread)
         log_timer = anode.Log(logging.DEBUG).start()
         datums_formatted = {datum_format: []}
         datum_to_format_iterate = False
@@ -421,18 +401,16 @@ class Plugin(object):
                 datums_formatted["dict" if datum_to_format_iterate else datum_format] = []
             if datums_format_function is None:
                 datums_formatted["dict" if datum_to_format_iterate else datum_format].extend(datums_value)
-                if off_thread:
-                    count += len(datums_value)
+                count += len(datums_value)
             else:
                 for datum in datums_value:
                     datums_formatted["dict" if datum_to_format_iterate else datum_format].append(datums_format_function(datum))
-                    if off_thread:
-                        count += 1
-                        if count % SERIALISATION_BATCH == 0 or count == count_sum:
-                            if count < count_sum:
-                                log_timer.pause()
-                                time.sleep(SERIALISATION_BATCH_SLEEP)
-                                log_timer.start()
+                    count += 1
+                    if count % SERIALISATION_BATCH == 0 or count == count_sum:
+                        if off_thread and count < count_sum:
+                            log_timer.pause()
+                            time.sleep(SERIALISATION_BATCH_SLEEP)
+                            log_timer.start()
         log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums.keys()), datum_format, count),
                       context=Plugin.datum_to_format, off_thread=off_thread)
         return datums_formatted if not datum_to_format_iterate else Plugin.datum_to_format(datums_formatted, datum_format, off_thread)
@@ -444,14 +422,13 @@ class Plugin(object):
         datums_json_fragments = []
         for datum_dict in datums_dict:
             datums_json_fragments.append(Plugin.datum_dict_to_json(datum_dict))
-            if off_thread:
-                count += 1
-                if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
-                    datums_json_fragments = [",".join(datums_json_fragments)]
-                    if count < len(datums_dict):
-                        log_timer.pause()
-                        time.sleep(SERIALISATION_BATCH_SLEEP)
-                        log_timer.start()
+            count += 1
+            if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
+                datums_json_fragments = [",".join(datums_json_fragments)]
+                if off_thread and count < len(datums_dict):
+                    log_timer.pause()
+                    time.sleep(SERIALISATION_BATCH_SLEEP)
+                    log_timer.start()
         datums_json = "".join(["[", "" if len(datums_json_fragments) == 0 else datums_json_fragments[0], "]"])
         log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_dict_to_json, off_thread=off_thread)
         return datums_json
@@ -463,30 +440,47 @@ class Plugin(object):
         datums_csv_fragments = [','.join(str(datum_field["name"]) for datum_field in DATUM_SCHEMA_JSON[7]["fields"]) if len(datums_dict) > 0 else ""]
         for datum_dict in datums_dict:
             datums_csv_fragments.append(Plugin.datum_dict_to_csv(datum_dict))
-            if off_thread:
-                count += 1
-                if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
-                    datums_csv_fragments = ["\n".join(datums_csv_fragments)]
-                    if count < len(datums_dict):
-                        log_timer.pause()
-                        time.sleep(SERIALISATION_BATCH_SLEEP)
-                        log_timer.start()
+            count += 1
+            if count % SERIALISATION_BATCH == 0 or count == len(datums_dict):
+                datums_csv_fragments = ["\n".join(datums_csv_fragments)]
+                if off_thread and count < len(datums_dict):
+                    log_timer.pause()
+                    time.sleep(SERIALISATION_BATCH_SLEEP)
+                    log_timer.start()
         datums_csv = "".join([datums_csv_fragments[0], "\n"])
         log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_dict_to_csv, off_thread=off_thread)
         return datums_csv
 
     @staticmethod
-    def datums_to_format(datums_dict, datum_format, off_thread=False):
+    def datums_csv_to_dict(datums_csv):
+        datums_dict = {"dict": []}
+        for datum_dict in datums_csv:
+            datum_dict["anode_id"] = base64.b64decode(datum_dict["anode_id"])
+            datum_dict["data_value"] = long(datum_dict["data_value"])
+            datum_dict["data_unit"] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
+            if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_HTML:
+                DATUM_SCHEMA_FROM_HTML[datum_dict["data_unit"]] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
+            datum_dict["data_scale"] = float(datum_dict["data_scale"])
+            datum_dict["data_timestamp"] = long(datum_dict["data_timestamp"])
+            datum_dict["bin_timestamp"] = long(datum_dict["bin_timestamp"])
+            datum_dict["bin_width"] = int(datum_dict["bin_width"])
+            if datum_dict["bin_unit"] not in DATUM_SCHEMA_FROM_HTML:
+                DATUM_SCHEMA_FROM_HTML[datum_dict["bin_unit"]] = HTMLParser.HTMLParser().unescape(datum_dict["bin_unit"])
+            datums_dict["dict"].append(datum_dict)
+        return datums_dict
+
+    @staticmethod
+    def datums_to_format(datums, datum_format, off_thread=False):
         log_timer = anode.Log(logging.DEBUG).start()
-        datums_formatted = Plugin.datum_to_format(datums_dict, "dict", off_thread)["dict"]
+        datums_formatted = Plugin.datum_to_format(datums, "dict", off_thread)["dict"]
         if datum_format == "json":
             datums_formatted = Plugin.datums_dict_to_json(datums_formatted, off_thread)
         elif datum_format == "csv":
             datums_formatted = Plugin.datums_dict_to_csv(datums_formatted, off_thread)
         elif datum_format != "dict":
             raise ValueError("Unkown datum format [{}]".format(datum_format))
-        log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums_dict.keys()), datum_format, sum(
-            len(datums_values) for datums_values in datums_dict.values())), context=Plugin.datums_to_format, off_thread=off_thread)
+        log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums.keys()), datum_format, sum(
+            len(datums_values) for datums_values in datums.values())), context=Plugin.datums_to_format, off_thread=off_thread)
         return datums_formatted
 
     def datum_value(self, data, keys=None, default=None, factor=1):
@@ -555,7 +549,8 @@ DATUM_QUEUE_LAST = "last"
 DATUM_QUEUE_PUBLISH = "publish"
 DATUM_QUEUE_HISTORY = "history"
 
-DATUM_SCHEMA_HTML = {}
+DATUM_SCHEMA_TO_HTML = {}
+DATUM_SCHEMA_FROM_HTML = {}
 DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
 DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)

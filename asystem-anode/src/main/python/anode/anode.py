@@ -177,16 +177,16 @@ class Log:
         self.time_user_start = None
 
     @staticmethod
-    def configure(options):
+    def configure(verbose, quiet):
         # noinspection PyProtectedMember
         client._HTTP11ClientFactory.noisy = False
         if not logging.getLogger().handlers:
             logging_handler = logging.StreamHandler(sys.stdout)
             logging_handler.setFormatter(logging.Formatter(LOG_FORMAT))
             logging.getLogger().addHandler(logging_handler)
-            if options.verbose:
+            if verbose:
                 log.PythonLoggingObserver(loggerName=logging.getLogger().name).start()
-        logging.getLogger().setLevel(logging.ERROR if options.quiet else (logging.DEBUG if options.verbose else logging.INFO))
+        logging.getLogger().setLevel(logging.ERROR if quiet else (logging.DEBUG if verbose else logging.INFO))
 
     def start(self):
         if logging.getLogger().isEnabledFor(self.level):
@@ -247,7 +247,7 @@ def main(main_reactor=reactor, callback=None):
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="noisy output to stdout")
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress all output to stdout")
     (options, args) = parser.parse_args()
-    Log.configure(options)
+    Log.configure(options.verbose, options.quiet)
     with open(options.config, "r") as stream:
         config = yaml.load(stream)
     return ANode(main_reactor, callback, options, config).start_server()
