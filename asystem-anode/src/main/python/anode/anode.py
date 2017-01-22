@@ -24,6 +24,7 @@ from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
 
+from plugin import DATUM_QUEUE_LAST
 from plugin import Plugin
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
@@ -113,7 +114,7 @@ class WebWs(WebSocketServerProtocol):
 
     def onConnect(self, request):
         self.datum_filter = request.params
-        self.datum_filter.pop("scope", None)
+        self.datum_filter["scope"] = [DATUM_QUEUE_LAST]
         Log(logging.DEBUG).log("Interface", "state", lambda: "[ws] connection request")
 
     def onOpen(self):
@@ -160,7 +161,7 @@ class WebRest:
         Log(logging.DEBUG).log("Interface", "request", lambda: "[rest] get with filter [{}] and [{}] datums"
                                .format(datum_filter, sum(len(datums_values) for datums_values in datums.values())))
         datum_format = "json" if "format" not in datum_filter else datum_filter["format"][0]
-        datums_formatted = yield threads.deferToThread(Plugin.datums_to_format, datums, datum_format, True)
+        datums_formatted = yield threads.deferToThread(Plugin.datums_to_format, datums, datum_format, datum_filter, True)
         request.setHeader("Content-Disposition", "attachment; filename=anode." + datum_format)
         request.setHeader("Content-Type", ("application/" if datum_format != "csv" else "text/") + datum_format)
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.get)

@@ -55,13 +55,10 @@ class ANodeTest(TestCase):
         self.assertTrue(anode is not None)
         metrics = 0
         metrics_anode = 0
-
         for metric in json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest("/rest/?metrics=anode")))):
             metrics_anode += 1
             if metric["data_metric"].endswith("metrics"):
                 metrics += metric["data_value"]
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?scope=some_nonexistant_scope"))))))
         self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=some.nonexistant.metric"))))))
         self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
@@ -70,8 +67,6 @@ class ANodeTest(TestCase):
             "/rest/?metrics=power&types=some_nonexistant_type"))))))
         self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power&types=point&bins=some_nonexistant_bin"))))))
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?scope=publish"))))))
         self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power.production.inverter&bins=1second"))))))
         self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
@@ -94,12 +89,6 @@ class ANodeTest(TestCase):
             "/rest/?bins=1second"))))))
         self.assertEquals(21, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?metrics=power"))))))
-        self.assertEquals(metrics - metrics_anode, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?scope=history"))))))
-        self.assertEquals(metrics - metrics_anode + 1, self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?scope=history&format=csv"))).count("\n"))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?scope=last"))))))
         self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/rest/?something=else"))))))
         self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
@@ -108,6 +97,9 @@ class ANodeTest(TestCase):
             "/pull/"))))))
         self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
             "/pull"))))))
+
+        self.assertTrue(self.unwrap_defered(anode.web_rest.get(MockRequest(
+            "/rest/?format=csv"))).count("\n") > 1)
 
     def test_main_default(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG])
@@ -135,43 +127,51 @@ class ANodeModelTest(TestCase):
         super(ANodeModelTest, self).__init__(*args, **kwargs)
         anode.Log().configure(True, False)
         self.file_data = os.path.dirname(__file__) + "/data/"
-        self.file_data_source = "datums_power_production_point"
+        self.file_data_source = "datums_power_production_grid_inverter_point"
         with gzip.open(self.file_data + self.file_data_source + ".csv.gz", 'rt') as file_csv:
-            self.datums = Plugin.datums_csv_to_dict(csv.DictReader(file_csv))
+            self.datums_dict = Plugin.datums_csv_to_dict(csv.DictReader(file_csv))
+        self.datums_df = {"df": Plugin.datums_dict_to_df(self.datums_dict["dict"])}
 
     def test_size(self):
-        datum_sizes_tmp = [["format", "container", "memory", "disk", "size"]]
+        datum_sizes_tmp = [["format", "container", "memory", "disk"]]
 
-        def datum_sizes_add(datums, datums_count, datums_format, datums_container="none"):
+        def datum_sizes_add(datums, datums_count, datums_format, datums_container):
             size_disk = None
             if datums_format == "dict":
-                datums = {datums_format: datums} if datums_container != "none" else datums
+                datums = {datums_format: datums} if datums_container is not None else datums
                 size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_format]) + \
                               sum(sum(map(sys.getsizeof, datum.itervalues())) for datum in datums[datums_format]) + \
                               8 * len(datums[datums_format]) * len(DATUM_SCHEMA_JSON[7]["fields"]) + \
-                              (0 if datums_container == "none" else sys.getsizeof(datums[datums_format]))
+                              (0 if datums_container is None else sys.getsizeof(datums[datums_format]))
             else:
-                datums = {datums_format: [datums]} if datums_container != "none" else datums
-                size_memory = sum(
-                    sys.getsizeof(datum) for datum in datums[datums_format])
-                with tempfile.NamedTemporaryFile() as datums_file:
-                    for datum in datums[datums_format]:
-                        datums_file.write(datum)
-                    datums_file.flush()
-                    size_disk = os.path.getsize(datums_file.name)
-
-            if datums_container == "none" and len(datums[datums_format]) != datums_count:
-                raise Expcetion("Formated datum count [{}] does not match input [{}]".format(len(datums[datums_format]), datums_count))
+                datums = {datums_format: [datums]} if datums_container is not None else datums
+                if datums_format == "df":
+                    if datums_container is None:
+                        size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_format]) + \
+                                      sum(sys.getsizeof(datum["data_df"]) for datum in datums[datums_format]) + \
+                                      8 * len(datums[datums_format]) * (len(DATUM_SCHEMA_JSON[7]["fields"]) - 3)
+                    else:
+                        size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_format]) + \
+                                      sum(sys.getsizeof(datum_df) for datum in datums[datums_format] for datum_df in datum)
+                else:
+                    size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_format])
+                    with tempfile.NamedTemporaryFile() as datums_file:
+                        for datum in datums[datums_format]:
+                            datums_file.write(datum)
+                        datums_file.flush()
+                        size_disk = os.path.getsize(datums_file.name)
             datum_sizes_tmp.append([datums_format, datums_container, size_memory / datums_count,
-                                    size_disk / datums_count if size_disk is not None else None,
-                                    "variable" if (size_memory if size_disk is None else size_disk) %
-                                                  ((size_memory if size_disk is None else size_disk) / datums_count) != 0 else "constant"])
+                                    size_disk / datums_count if size_disk is not None else None])
 
-        for datum_format in ["dict", "avro", "csv", "json"]:
-            datum_sizes_add(Plugin.datum_to_format(self.datums, datum_format), len(self.datums["dict"]), datum_format)
-        for datum_format in ["dict", "csv", "json"]:
-            datum_sizes_add(Plugin.datums_to_format(self.datums, datum_format), len(self.datums["dict"]), datum_format, "list")
-        anode.Log().log("ANodeModelTest", "test", lambda: "Datum sizes:\n" + tabulate(datum_sizes_tmp, tablefmt='grid'))
+        datums_dict_count = len(self.datums_dict["dict"])
+        for datum_format in [("dict", None, self.datums_dict), ("df", None, self.datums_df), ("avro", None, self.datums_dict),
+                             ("csv", None, self.datums_dict), ("json", None, self.datums_dict)]:
+            datum_sizes_add(Plugin.datum_to_format(datum_format[2], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1])
+        for datum_format in [("dict", "list", self.datums_dict), ("df", "list", self.datums_df), ("csv", "csv", self.datums_df),
+                             ("json", "json", self.datums_dict)]:
+            datum_sizes_add(Plugin.datums_to_format(datum_format[2], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1])
+
+        anode.Log().log("ANodeModelTest", "test", lambda: "[test_size] datum sizes:\n" + tabulate(datum_sizes_tmp, tablefmt='grid'))
 
 
 class MockRequest:
