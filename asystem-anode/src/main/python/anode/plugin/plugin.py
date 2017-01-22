@@ -323,7 +323,8 @@ class Plugin(object):
     def datum_period(self, timestamp, period):
         return (timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset
 
-    def datum_tostring(self, datum_dict):
+    @staticmethod
+    def datum_tostring(datum_dict):
         return "{}.{}.{}.{}{}.{}={}{}".format(
             datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"], datum_dict["bin_timestamp"],
             datum_dict["bin_unit"].encode("utf-8"),

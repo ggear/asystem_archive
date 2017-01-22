@@ -21,9 +21,8 @@ from anode.plugin.plugin import DATUM_SCHEMA_JSON
 from anode.plugin.plugin import Plugin
 
 
-# noinspection PyUnresolvedReferences
+# noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames
 class ANodeTest(TestCase):
-    # noinspection PyPep8Naming, PyAttributeOutsideInit
     def setUp(self):
         self.ticks = 0
         self.clock = Clock()
@@ -38,7 +37,6 @@ class ANodeTest(TestCase):
             self.clock.advance(period)
             self.ticks += 1
 
-    # noinspection PyShadowingNames
     def clock_tock(self, anode):
         for i in range(self.ticks):
             for source in HTTP_POSTS:
@@ -48,58 +46,48 @@ class ANodeTest(TestCase):
     def unwrap_defered(defered):
         return getattr(defered, 'result', "")
 
-    # noinspection PyShadowingNames
+    @staticmethod
+    def rest(anode, url):
+        return ANodeTest.unwrap_defered(anode.web_rest.get(MockRequest(url)))
+
+    @staticmethod
+    def rest_json(anode, url):
+        return json.loads(ANodeTest.rest(anode, url))
+
+    def assertRestJsonLen(self, length, anode, url):
+        self.assertEquals(length, len(json.loads(ANodeTest.rest(anode, url))))
+
     def assert_anode(self, callback):
         anode = main(self.clock, callback)
         self.clock_tock(anode)
         self.assertTrue(anode is not None)
         metrics = 0
         metrics_anode = 0
-        for metric in json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest("/rest/?metrics=anode")))):
+        for metric in self.rest_json(anode, "/rest/?metrics=anode"):
             metrics_anode += 1
             if metric["data_metric"].endswith("metrics"):
                 metrics += metric["data_value"]
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=some.nonexistant.metric"))))))
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric"))))))
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power&types=some_nonexistant_type"))))))
-        self.assertEquals(0, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power&types=point&bins=some_nonexistant_bin"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&bins=1second"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&types=point"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&types=point&bins=1second"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&metrics=some.nonexistant.metric&metrics=&types=point&bins=1second"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&metrics=&types=point&types=some_nonexistant_type&bins=1second"))))))
-        self.assertEquals(1, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin"))))))
-        self.assertEquals(2, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"))))))
-        self.assertEquals(3, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power.production.inverter"))))))
-        self.assertEquals(9, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?bins=1second"))))))
-        self.assertEquals(21, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?metrics=power"))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?something=else"))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?"))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/pull/"))))))
-        self.assertEquals(metrics, len(json.loads(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/pull"))))))
+        self.assertRestJsonLen(0, anode, "/rest/?metrics=some.nonexistant.metric")
+        self.assertRestJsonLen(0, anode, "/rest/?metrics=some.nonexistant.metric&metrics=some.other.nonexistant.metric")
+        self.assertRestJsonLen(0, anode, "/rest/?metrics=power&types=some_nonexistant_type")
+        self.assertRestJsonLen(0, anode, "/rest/?metrics=power&types=point&bins=some_nonexistant_bin")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&bins=1second")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&types=point")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&types=point&bins=1second")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&metrics=some.nonexistant.metric&metrics=&types=point&bins=1second")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&metrics=&types=point&types=some_nonexistant_type&bins=1second")
+        self.assertRestJsonLen(1, anode, "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=some_nonexistant_bin")
+        self.assertRestJsonLen(2, anode, "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second")
+        self.assertRestJsonLen(3, anode, "/rest/?metrics=power.production.inverter")
+        self.assertRestJsonLen(9, anode, "/rest/?bins=1second")
+        self.assertRestJsonLen(21, anode, "/rest/?metrics=power")
+        self.assertRestJsonLen(metrics, anode, "/rest/?something=else")
+        self.assertRestJsonLen(metrics, anode, "/rest/?")
+        self.assertRestJsonLen(metrics, anode, "/pull/")
+        self.assertRestJsonLen(metrics, anode, "/pull")
 
-        self.assertTrue(self.unwrap_defered(anode.web_rest.get(MockRequest(
-            "/rest/?format=csv"))).count("\n") > 1)
+        self.assertTrue(self.rest(anode, "/rest/?format=csv").count("\n") > 1)
 
     def test_main_default(self):
         self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG])
@@ -174,44 +162,43 @@ class ANodeModelTest(TestCase):
         anode.Log().log("ANodeModelTest", "test", lambda: "[test_size] datum sizes:\n" + tabulate(datum_sizes_tmp, tablefmt='grid'))
 
 
+# noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
 class MockRequest:
     def __init__(self, uri):
         self.uri = uri
 
-    # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
     @staticmethod
     def setHeader(name, value):
         None
 
 
+# noinspection PyPep8Naming,PyUnusedLocal
 class MockHttpResponse:
     def __init__(self, url):
         self.url = url
         self.code = 200 if url in HTTP_GETS else 404
 
-    # noinspection PyPep8Naming,PyUnusedLocal
     def addCallbacks(self, callback, errback=None):
         callback(self)
 
 
-# noinspection PyPep8
+# noinspection PyPep8, PyPep8Naming, PyUnusedLocal
 class MockHttpResponseContent:
     def __init__(self, response):
         self.response = response
         self.content = HTTP_GETS[response.url] if response.code == 200 else HTTP_GETS["http_404"]
 
-    # noinspection PyPep8Naming,PyUnusedLocal
     def addCallbacks(self, callback, errback=None):
         callback(self.content)
 
 
+# noinspection PyPep8Naming,PyUnusedLocal
 class MockDeferToThread:
     def __init__(self, function, *arguments, **keyword_arguments):
         self.function = function
         self.arguments = arguments
         self.keyword_arguments = keyword_arguments
 
-    # noinspection PyPep8Naming,PyUnusedLocal
     def addCallback(self, callback, *arguments, **keyword_arguments):
         callback(self.function(*self.arguments, **self.keyword_arguments), *arguments, **keyword_arguments)
 
