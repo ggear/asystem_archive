@@ -2,10 +2,8 @@
 
 from __future__ import print_function
 
-import calendar
 import json
 import logging
-import time
 from decimal import Decimal
 
 import anode
@@ -17,7 +15,7 @@ class Davis(Plugin):
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
-            bin_timestamp = calendar.timegm(time.gmtime())
+            bin_timestamp = self.get_time()
             if "packet" in dict_content:
                 bin_unit = "second"
                 bin_width = dict_content["packet"]["interval"]
@@ -351,9 +349,9 @@ class Davis(Plugin):
                 )
             self.datum_pop()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)
 
-    def __init__(self, parent, name, config):
-        super(Davis, self).__init__(parent, name, config)
-        self.last_push = calendar.timegm(time.gmtime())
+    def __init__(self, parent, name, config, reactor):
+        super(Davis, self).__init__(parent, name, config, reactor)
+        self.last_push = self.get_time()

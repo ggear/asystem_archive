@@ -1,0 +1,12 @@
+host: 0.0.0.0
+port: 8091
+callback_poll_seconds: 1
+plugin:
+    fronius:
+      poll_seconds: 1
+      buffer_ticks: 2
+      history_days: 1
+      history_ticks: 2
+      publish_ticks: -1
+      push_upstream: True
+

@@ -12,6 +12,7 @@ import numbers
 import operator
 import os
 import time
+import urllib
 from collections import deque
 from decimal import Decimal
 from functools import reduce
@@ -25,7 +26,7 @@ import avro.schema
 import numpy
 import pandas
 from avro.io import AvroTypeException
-from bs4.dammit import EntitySubstitution
+from twisted.internet.task import Clock
 
 import anode.plugin
 
@@ -46,8 +47,8 @@ class Plugin(object):
     def datum_pop(self):
         datums_popped = 0
         matric_name = "anode." + self.name + "."
-        time_now = calendar.timegm(time.gmtime())
-        metrics_count = sum(len(types) for metrics in self.datums.values() for types in metrics.values())
+        time_now = self.get_time()
+        metrics_count = sum(len(units) for metrics in self.datums.values() for types in metrics.values() for units in types.values())
         self.datum_push(
             matric_name + "metrics",
             "current", "point",
@@ -56,8 +57,8 @@ class Plugin(object):
             1,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_bound_lower=0,
             data_derived_max=True,
             data_derived_min=True,
@@ -66,13 +67,13 @@ class Plugin(object):
         self.datum_push(
             matric_name + "buffer",
             "current", "point",
-            self.datum_value(float(self.datums_buffer) / (BUFFER_BATCH * metrics_count) * 100),
+            self.datum_value(0 if metrics_count == 0 else (float(self.datums_buffer) / (self.datums_buffer_batch * metrics_count) * 100)),
             "%",
             1,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_bound_upper=100,
             data_bound_lower=0,
             data_derived_max=True,
@@ -88,8 +89,8 @@ class Plugin(object):
             1,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_bound_upper=100,
             data_bound_lower=0,
             data_derived_max=True,
@@ -105,8 +106,8 @@ class Plugin(object):
             1,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_bound_upper=100,
             data_bound_lower=0,
             data_derived_max=True,
@@ -121,8 +122,8 @@ class Plugin(object):
             100,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_bound_lower=0,
             data_derived_max=True,
             data_derived_min=True,
@@ -136,8 +137,8 @@ class Plugin(object):
             1,
             time_now,
             time_now,
-            1,
-            "alltime",
+            self.config["poll_seconds"],
+            "second",
             data_derived_max=True,
             data_derived_min=True,
             data_transient=True
@@ -149,14 +150,15 @@ class Plugin(object):
         if "push_upstream" in self.config and self.config["push_upstream"]:
             for datum_metric in self.datums:
                 for datum_type in self.datums[datum_metric]:
-                    for datum_bin in self.datums[datum_metric][datum_type]:
-                        # noinspection PyCompatibility
-                        for i in xrange(len(self.datums[datum_metric][datum_type][datum_bin][DATUM_QUEUE_PUBLISH])):
-                            datum_avro = self.datums[datum_metric][datum_type][datum_bin][DATUM_QUEUE_PUBLISH].popleft()
-                            anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] popped datum [{}]".format(
-                                self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0])))
-                            # TDOD: push to QMTT broker, returning datums to left of deque if push fails
-                            datums_popped += 1
+                    for datum_unit in self.datums[datum_metric][datum_type]:
+                        for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
+                            # noinspection PyCompatibility
+                            for i in xrange(len(self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_PUBLISH])):
+                                datum_avro = self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_PUBLISH].popleft()
+                                anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] popped datum [{}]".format(
+                                    self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0])))
+                                # TDOD: push to QMTT broker, returning datums to left of deque if push fails
+                                datums_popped += 1
         self.datum_push(
             matric_name + "queue",
             "current", "point",
@@ -213,21 +215,26 @@ class Plugin(object):
                 self.datums[datum_dict["data_metric"]] = {}
             if datum_dict["data_type"] not in self.datums[datum_dict["data_metric"]]:
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]] = {}
-            if str(datum_dict["bin_width"]) + datum_dict["bin_unit"] not in self.datums[datum_dict["data_metric"]][datum_dict["data_type"]]:
-                self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
+            if datum_dict["data_unit"] not in self.datums[datum_dict["data_metric"]][datum_dict["data_type"]]:
+                self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]] = {}
+            if str(datum_dict["bin_width"]) + datum_dict["bin_unit"] not in \
+                    self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]]:
+                self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
+                    str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(
                         maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1 else self.config["publish_ticks"])),
                     DATUM_QUEUE_BUFFER: deque(),
                     DATUM_QUEUE_HISTORY: {}
                 }
-            datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][str(datum_dict["bin_width"]) + datum_dict["bin_unit"]]
+            datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][str(datum_dict["bin_width"]) +
+                                                                                                                    datum_dict["bin_unit"]]
             if DATUM_QUEUE_LAST not in datums_deref or datums_deref[DATUM_QUEUE_LAST]["data_value"] != datum_dict["data_value"] or \
                             datums_deref[DATUM_QUEUE_LAST]["data_unit"] != \
                             datum_dict["data_unit"] or datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
-                self.time_seen = calendar.timegm(time.gmtime())
+                self.time_seen = self.get_time()
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
-                bin_timestamp_derived = self.datum_period(datum_dict["bin_timestamp"],
-                                                          Plugin.get_seconds(data_derived_period, data_derived_unit))
+                bin_timestamp_derived = self.get_time_period(datum_dict["bin_timestamp"],
+                                                             Plugin.get_seconds(data_derived_period, data_derived_unit))
                 if not data_transient:
                     if data_derived_max:
                         if DATUM_QUEUE_MAX not in datums_deref or datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] < bin_timestamp_derived or \
@@ -236,7 +243,7 @@ class Plugin(object):
                             datums_deref[DATUM_QUEUE_MAX]["bin_type"] = "high"
                             datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] = bin_timestamp_derived if \
                                 (DATUM_QUEUE_MAX in datums_deref and datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] < bin_timestamp_derived) else \
-                                calendar.timegm(time.gmtime())
+                                self.get_time()
                             datums_deref[DATUM_QUEUE_MAX]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MAX]["bin_unit"] = data_derived_unit
                             anode.Log(logging.DEBUG).log("Plugin", "state",
@@ -254,7 +261,7 @@ class Plugin(object):
                             datums_deref[DATUM_QUEUE_MIN]["bin_type"] = "low"
                             datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] = bin_timestamp_derived if \
                                 (DATUM_QUEUE_MAX in datums_deref and datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] < bin_timestamp_derived) else \
-                                calendar.timegm(time.gmtime())
+                                self.get_time()
                             datums_deref[DATUM_QUEUE_MIN]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MIN]["bin_unit"] = data_derived_unit
                             anode.Log(logging.DEBUG).log("Plugin", "state",
@@ -269,8 +276,9 @@ class Plugin(object):
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                                     "history_days" in self.config and self.config["history_days"] > 0:
-                        bin_timestamp_day = self.datum_period(datum_dict["bin_timestamp"], Plugin.get_seconds(1, "day"))
-                        if len(datums_deref[DATUM_QUEUE_BUFFER]) == BUFFER_BATCH or bin_timestamp_day not in datums_deref[DATUM_QUEUE_HISTORY]:
+                        bin_timestamp_day = self.get_time_period(datum_dict["bin_timestamp"], Plugin.get_seconds(1, "day"))
+                        if len(datums_deref[DATUM_QUEUE_BUFFER]) == self.datums_buffer_batch or bin_timestamp_day \
+                                not in datums_deref[DATUM_QUEUE_HISTORY]:
                             self.datum_merge_buffer_history(datums_deref[DATUM_QUEUE_BUFFER], datums_deref[DATUM_QUEUE_HISTORY])
                         datums_deref[DATUM_QUEUE_BUFFER].append(datum_dict)
                         self.datums_buffer += 1
@@ -289,7 +297,7 @@ class Plugin(object):
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                         "history_days" in self.config and self.config["history_days"] > 0:
             if len(datums_buffer) > 0:
-                bin_timestamp_day = self.datum_period(datums_buffer[0]["bin_timestamp"], Plugin.get_seconds(1, "day"))
+                bin_timestamp_day = self.get_time_period(datums_buffer[0]["bin_timestamp"], Plugin.get_seconds(1, "day"))
                 datums_df = self.datums_dict_to_df(datums_buffer)
                 if len(datums_df) != 1:
                     raise ValueError("Assertion error merging mixed datum types when there should not be any!")
@@ -299,7 +307,8 @@ class Plugin(object):
                 if bin_timestamp_day not in datums_history:
                     datums_history[bin_timestamp_day] = datums_df
                 else:
-                    datums_history[bin_timestamp_day]["data_df"] = pandas.concat([datums_history[bin_timestamp_day]["data_df"], datums_df["data_df"]])
+                    datums_history[bin_timestamp_day]["data_df"] = pandas.concat([datums_history[bin_timestamp_day]["data_df"], datums_df["data_df"]],
+                                                                                 ignore_index=True)
                     anode.Log(logging.DEBUG).log("Plugin", "state",
                                                  lambda: "[{}] merged buffer partition [{}]".format(self.name, bin_timestamp_day))
                 bin_timestamp_day_expireds = []
@@ -314,14 +323,30 @@ class Plugin(object):
                 while len(datums_history) > self.config["history_days"] or \
                                 sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > self.config[
                             "history_ticks"]:
-                    del datums_history[sorted(datums_history, key=datums_history.get)[0]]
+                    bin_timestamp_day_upperbounded = max(datums_history.iterkeys())
+                    del datums_history[bin_timestamp_day_upperbounded]
                     anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] purged upperbounded partition [{}]".format(self.name, bin_timestamp_day_expireds))
+                                                 lambda: "[{}] purged upperbounded partition [{}]".format(self.name, bin_timestamp_day_upperbounded))
                 self.datums_days = len(datums_history)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_merge_buffer_history)
 
-    def datum_period(self, timestamp, period):
-        return (timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset
+    def datum_merge_history(self, datums_history, datum_filter):
+        datums = []
+        datums_day_metadata = {}
+        datums_day_upper = self.get_time_period(self.get_time(), Plugin.get_seconds(1, "day")) + \
+                           (0 if "days" not in datum_filter else max(datum_filter["days"])) * Plugin.get_seconds(1, "day")
+        datums_day_partitions = []
+        for datums_day in datums_history:
+            if datums_day <= datums_day_upper:
+                datums_day_metadata = datums_history[datums_day]
+                datums_day_partitions.append(datums_day_metadata["data_df"])
+        if len(datums_day_partitions) > 0:
+            if len(datums_day_partitions) == 1:
+                datums_day_metadata["data_df"] = datums_day_partitions[0].copy(deep=False)
+            else:
+                datums_day_metadata["data_df"] = pandas.concat(datums_day_partitions, ignore_index=True)
+            datums.append(datums_day_metadata)
+        return datums
 
     @staticmethod
     def datum_tostring(datum_dict):
@@ -332,11 +357,11 @@ class Plugin(object):
             datum_dict["data_unit"].encode("utf-8")
         )
 
-    def datum_get(self, datum_scope, data_metric, data_type, bin_width, bin_unit, data_derived_period=None, data_derived_unit="day"):
-        if data_metric in self.datums and data_type in self.datums[data_metric] and \
-                        (str(bin_width) + bin_unit) in self.datums[data_metric][data_type] and \
-                        datum_scope in self.datums[data_metric][data_type][str(bin_width) + bin_unit]:
-            datum_dict = self.datums[data_metric][data_type][str(bin_width) + bin_unit][datum_scope]
+    def datum_get(self, datum_scope, data_metric, data_type, data_unit, bin_width, bin_unit, data_derived_period=None, data_derived_unit="day"):
+        if data_metric in self.datums and data_type in self.datums[data_metric] and data_unit in self.datums[data_metric][data_type] and \
+                        (str(bin_width) + bin_unit) in self.datums[data_metric][data_type][data_unit] and \
+                        datum_scope in self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit]:
+            datum_dict = self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit][datum_scope]
             if data_derived_period is None or (datum_dict["bin_width"] == data_derived_period and
                                                        datum_dict["bin_unit"] == data_derived_unit and
                                                            datum_dict["bin_timestamp"] %
@@ -351,28 +376,32 @@ class Plugin(object):
             if Plugin.is_fitlered(datum_filter, "metrics", data_metric):
                 for datum_type in self.datums[data_metric]:
                     if Plugin.is_fitlered(datum_filter, "types", datum_type):
-                        for datum_bin in self.datums[data_metric][datum_type]:
-                            if Plugin.is_fitlered(datum_filter, "bins", datum_bin):
-                                datum_scopes = [DATUM_QUEUE_LAST] if "scope" not in datum_filter else datum_filter["scope"]
-                                for datum_scope in datum_scopes:
-                                    if datum_scope in self.datums[data_metric][datum_type][datum_bin]:
-                                        datums = []
-                                        if datum_scope == DATUM_QUEUE_LAST:
-                                            datums_format = "dict"
-                                            datums = [self.datums[data_metric][datum_type][datum_bin][datum_scope]]
-                                        elif datum_scope == DATUM_QUEUE_HISTORY:
-                                            self.datum_merge_buffer_history(self.datums[data_metric][datum_type][datum_bin][DATUM_QUEUE_BUFFER],
-                                                                            self.datums[data_metric][datum_type][datum_bin][DATUM_QUEUE_HISTORY])
-                                            datums_format = "df"
-                                            datums_day_upper = self.datum_period(calendar.timegm(time.gmtime()), Plugin.get_seconds(1, "day")) + \
-                                                               (0 if "days" not in datum_filter else max(datum_filter["days"])) * \
-                                                               Plugin.get_seconds(1, "day")
-                                            for datums_day in self.datums[data_metric][datum_type][datum_bin][DATUM_QUEUE_HISTORY]:
-                                                if datums_day <= datums_day_upper:
-                                                    datums.append(self.datums[data_metric][datum_type][datum_bin][DATUM_QUEUE_HISTORY][datums_day])
-                                        if datums_format not in datums_filtered:
-                                            datums_filtered[datums_format] = []
-                                        datums_filtered[datums_format].extend(datums)
+                        for datum_unit in self.datums[data_metric][datum_type]:
+                            if Plugin.is_fitlered(datum_filter, "units", datum_unit.encode("utf-8")):
+                                for datum_bin in self.datums[data_metric][datum_type][datum_unit]:
+                                    if Plugin.is_fitlered(datum_filter, "bins", datum_bin):
+                                        datum_scopes = [DATUM_QUEUE_LAST] if "scope" not in datum_filter else datum_filter["scope"]
+                                        for datum_scope in datum_scopes:
+                                            if datum_scope in self.datums[data_metric][datum_type][datum_unit][datum_bin]:
+                                                datums = []
+                                                if datum_scope == DATUM_QUEUE_LAST:
+                                                    datums_format = "dict"
+                                                    datums = [self.datums[data_metric][datum_type][datum_unit][datum_bin][datum_scope]]
+                                                elif datum_scope == DATUM_QUEUE_HISTORY:
+                                                    self.datum_merge_buffer_history(self.datums[data_metric][datum_type][datum_unit][datum_bin]
+                                                                                    [DATUM_QUEUE_BUFFER],
+                                                                                    self.datums[data_metric][datum_type][datum_unit][datum_bin]
+                                                                                    [DATUM_QUEUE_HISTORY])
+                                                    datums_format = "df"
+                                                    datums = self.datum_merge_history(
+                                                        self.datums[data_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_HISTORY],
+                                                        datum_filter)
+                                                elif datum_scope == DATUM_QUEUE_PUBLISH:
+                                                    datums_format = "avro"
+                                                    datums = self.datums[data_metric][datum_type][datum_unit][datum_bin][datum_scope]
+                                                if datums_format not in datums_filtered:
+                                                    datums_filtered[datums_format] = []
+                                                datums_filtered[datums_format].extend(datums)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datums_filter_get)
         return datums_filtered
 
@@ -382,10 +411,11 @@ class Plugin(object):
         for datum in Plugin.datum_to_format(datums, "dict")["dict"]:
             if Plugin.is_fitlered(datum_filter, "metrics", datum["data_metric"]):
                 if Plugin.is_fitlered(datum_filter, "types", datum["data_type"]):
-                    if Plugin.is_fitlered(datum_filter, "bins", str(datum["bin_width"]) + datum["bin_unit"]):
-                        if "dict" not in datums_filtered:
-                            datums_filtered["dict"] = []
-                        datums_filtered["dict"].append(datum)
+                    if Plugin.is_fitlered(datum_filter, "units", datum["data_unit"].encode("utf-8")):
+                        if Plugin.is_fitlered(datum_filter, "bins", str(datum["bin_width"]) + datum["bin_unit"]):
+                            if "dict" not in datums_filtered:
+                                datums_filtered["dict"] = []
+                            datums_filtered["dict"].append(datum)
         log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_filter)
         return datums_filtered
 
@@ -435,12 +465,12 @@ class Plugin(object):
     def datum_dict_to_csv(datum_dict):
         datum_dict = datum_dict.copy()
         datum_dict["anode_id"] = ID_BASE64
-        if datum_dict["data_unit"] not in DATUM_SCHEMA_TO_HTML:
-            DATUM_SCHEMA_TO_HTML[datum_dict["data_unit"]] = EntitySubstitution().substitute_html(datum_dict["data_unit"])
-        datum_dict["data_unit"] = DATUM_SCHEMA_TO_HTML[datum_dict["data_unit"]]
-        if datum_dict["bin_unit"] not in DATUM_SCHEMA_TO_HTML:
-            DATUM_SCHEMA_TO_HTML[datum_dict["bin_unit"]] = EntitySubstitution().substitute_html(datum_dict["bin_unit"])
-        datum_dict["bin_unit"] = DATUM_SCHEMA_TO_HTML[datum_dict["bin_unit"]]
+        if datum_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
+            DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]] = urllib.quote_plus(datum_dict["data_unit"].encode("utf-8"))
+        datum_dict["data_unit"] = DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]]
+        if datum_dict["bin_unit"] not in DATUM_SCHEMA_TO_ASCII:
+            DATUM_SCHEMA_TO_ASCII[datum_dict["bin_unit"]] = urllib.quote_plus(datum_dict["bin_unit"].encode("utf-8"))
+        datum_dict["bin_unit"] = DATUM_SCHEMA_TO_ASCII[datum_dict["bin_unit"]]
         return [','.join(str(datum_dict[datum_field["name"]]) for datum_field in DATUM_SCHEMA_JSON[7]["fields"])]
 
     @staticmethod
@@ -518,14 +548,14 @@ class Plugin(object):
             datum_dict["anode_id"] = base64.b64decode(datum_dict["anode_id"])
             datum_dict["data_value"] = long(datum_dict["data_value"])
             datum_dict["data_unit"] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
-            if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_HTML:
-                DATUM_SCHEMA_FROM_HTML[datum_dict["data_unit"]] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
+            if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_ASCII:
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["data_unit"]] = urllib.unquote_plus(datum_dict["data_unit"]).decode("utf-8")
             datum_dict["data_scale"] = float(datum_dict["data_scale"])
             datum_dict["data_timestamp"] = long(datum_dict["data_timestamp"])
             datum_dict["bin_timestamp"] = long(datum_dict["bin_timestamp"])
             datum_dict["bin_width"] = int(datum_dict["bin_width"])
-            if datum_dict["bin_unit"] not in DATUM_SCHEMA_FROM_HTML:
-                DATUM_SCHEMA_FROM_HTML[datum_dict["bin_unit"]] = HTMLParser.HTMLParser().unescape(datum_dict["bin_unit"])
+            if datum_dict["bin_unit"] not in DATUM_SCHEMA_FROM_ASCII:
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["bin_unit"]] = urllib.unquote_plus(datum_dict["bin_unit"]).decode("utf-8")
             datums_dict["dict"].append(datum_dict)
         return datums_dict
 
@@ -584,16 +614,15 @@ class Plugin(object):
         if len(datums_df) > 0:
             datums_df_groups = {}
             for datums_df_dict in datums_df:
-
-                if datums_df_dict["data_unit"] not in DATUM_SCHEMA_TO_HTML:
-                    DATUM_SCHEMA_TO_HTML[datums_df_dict["data_unit"]] = EntitySubstitution().substitute_html(datums_df_dict["data_unit"])
-                if datums_df_dict["bin_unit"] not in DATUM_SCHEMA_TO_HTML:
-                    DATUM_SCHEMA_TO_HTML[datums_df_dict["bin_unit"]] = EntitySubstitution().substitute_html(datums_df_dict["bin_unit"])
+                if datums_df_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
+                    DATUM_SCHEMA_TO_ASCII[datums_df_dict["data_unit"]] = urllib.quote_plus(datums_df_dict["data_unit"].encode("utf-8"))
+                if datums_df_dict["bin_unit"] not in DATUM_SCHEMA_TO_ASCII:
+                    DATUM_SCHEMA_TO_ASCII[datums_df_dict["bin_unit"]] = urllib.quote_plus(datums_df_dict["bin_unit"].encode("utf-8"))
                 datum_name = "&".join(
                     ["metrics=" + datums_df_dict["data_metric"],
                      "types=" + datums_df_dict["data_type"],
-                     "bins=" + str(datums_df_dict["bin_width"]) + DATUM_SCHEMA_TO_HTML[datums_df_dict["bin_unit"]],
-                     "unit=" + DATUM_SCHEMA_TO_HTML[datums_df_dict["data_unit"]],
+                     "bins=" + str(datums_df_dict["bin_width"]) + DATUM_SCHEMA_TO_ASCII[datums_df_dict["bin_unit"]],
+                     "unit=" + DATUM_SCHEMA_TO_ASCII[datums_df_dict["data_unit"]],
                      "scale=" + str(datums_df_dict["data_scale"]),
                      "temporal=" + datums_df_dict["data_temporal"],
                      "source=" + datums_df_dict["data_source"],
@@ -658,6 +687,8 @@ class Plugin(object):
         # noinspection PyBroadException
         try:
             value = data if keys is None else reduce(operator.getitem, keys, data)
+            if isinstance(value, basestring) and not value:
+                value = None
             if value is None:
                 value = default
                 anode.Log(logging.WARN).log("Plugin", "state",
@@ -668,6 +699,12 @@ class Plugin(object):
                                          lambda: "[{}] setting value {} to default [{}] from response [{}] due to error [{}]".format(
                                              self.name, keys, default, data, exception), exception)
             return None if default is None else int(default * factor)
+
+    def get_time(self):
+        return calendar.timegm(time.gmtime()) if not self.is_clock else (int(self.reactor.seconds()) + self.time_boot)
+
+    def get_time_period(self, timestamp, period):
+        return (timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset
 
     @staticmethod
     def get_seconds(scalor, unit):
@@ -687,20 +724,22 @@ class Plugin(object):
             raise Exception("Unknown time unit [{}]".format(unit))
 
     @staticmethod
-    def get(parent, module, config):
+    def get(parent, module, config, reactor):
         plugin = getattr(import_module("anode.plugin") if hasattr(anode.plugin, module.title()) else
-                         import_module("anode.plugin." + module), module.title())(parent, module, config)
+                         import_module("anode.plugin." + module), module.title())(parent, module, config, reactor)
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] initialised".format(module))
         return plugin
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, parent, name, config):
+    def __init__(self, parent, name, config, reactor):
         self.has_poll = getattr(self, "_poll", None) is not None
         self.has_push = getattr(self, "_push", None) is not None
+        self.is_clock = isinstance(reactor, Clock)
         self.anode = parent
         self.name = name
         self.config = config
+        self.reactor = reactor
         self.datums = {}
         self.datums_pushed = 0
         self.datums_dropped = 0
@@ -711,9 +750,11 @@ class Plugin(object):
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
         self.time_tmz_offset = calendar.timegm(time_local) - calendar.timegm(time.gmtime(time.mktime(time_local)))
+        self.datums_buffer_batch = BUFFER_BATCH_DEFAULT if ("buffer_ticks" not in self.config or self.config["buffer_ticks"] < 1) \
+            else self.config["buffer_ticks"]
 
 
-BUFFER_BATCH = 100
+BUFFER_BATCH_DEFAULT = 60
 
 SERIALISATION_BATCH = 1000
 SERIALISATION_BATCH_SLEEP = 0.3
@@ -725,8 +766,8 @@ DATUM_QUEUE_PUBLISH = "publish"
 DATUM_QUEUE_BUFFER = "buffer"
 DATUM_QUEUE_HISTORY = "history"
 
-DATUM_SCHEMA_TO_HTML = {}
-DATUM_SCHEMA_FROM_HTML = {}
+DATUM_SCHEMA_TO_ASCII = {}
+DATUM_SCHEMA_FROM_ASCII = {}
 DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
 DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)

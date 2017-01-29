@@ -1,0 +1,940 @@
+{
+  "response": {
+    "version": "0.1",
+    "termsofService": "http://www.wunderground.com/weather/api/d/terms.html",
+    "features": {
+      "forecast10day": 1
+    }
+  },
+  "forecast": {
+    "txt_forecast": {
+      "date": "\"${TIME}\"",
+      "forecastday": [
+        {
+          "period": 0,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Monday",
+          "fcttext": "Sunny. High 84F. Winds WSW at 10 to 20 mph.",
+          "fcttext_metric": "Abundant sunshine. High 29C. Winds WSW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 1,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Monday Night",
+          "fcttext": "A clear sky. Low 54F. Winds SSW at 10 to 15 mph.",
+          "fcttext_metric": "Clear skies. Low 12C. Winds SSW at 15 to 25 km/h.",
+          "pop": "10"
+        },
+        {
+          "period": 2,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Tuesday",
+          "fcttext": "Mainly sunny. High around 85F. Winds S at 10 to 20 mph.",
+          "fcttext_metric": "Mainly sunny. High around 30C. Winds S at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 3,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Tuesday Night",
+          "fcttext": "Clear. Low 56F. Winds SE at 10 to 15 mph.",
+          "fcttext_metric": "Clear. Low 13C. Winds SE at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 4,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Wednesday",
+          "fcttext": "Sunny along with a few clouds. High 79F. Winds SW at 15 to 25 mph.",
+          "fcttext_metric": "Except for a few afternoon clouds, mainly sunny. High 26C. Winds SW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 5,
+          "icon": "nt_partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_partlycloudy.gif",
+          "title": "Wednesday Night",
+          "fcttext": "A few clouds. Low 51F. Winds S at 10 to 20 mph.",
+          "fcttext_metric": "A few clouds. Low near 10C. Winds S at 15 to 30 km/h.",
+          "pop": "10"
+        },
+        {
+          "period": 6,
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "title": "Thursday",
+          "fcttext": "Partly cloudy skies. High 76F. Winds SSW at 10 to 20 mph.",
+          "fcttext_metric": "Partly cloudy skies. High 24C. Winds SSW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 7,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Thursday Night",
+          "fcttext": "Clear skies. Low 51F. Winds SSE at 10 to 15 mph.",
+          "fcttext_metric": "A mostly clear sky. Low around 10C. Winds SSE at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 8,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Friday",
+          "fcttext": "Plentiful sunshine. High 83F. E winds shifting to SW at 10 to 20 mph.",
+          "fcttext_metric": "Generally sunny. High 29C. E winds shifting to SW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 9,
+          "icon": "nt_partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_partlycloudy.gif",
+          "title": "Friday Night",
+          "fcttext": "Partly cloudy skies. Low 49F. Winds SSW at 10 to 15 mph.",
+          "fcttext_metric": "Partly cloudy. Low 9C. Winds SSW at 15 to 25 km/h.",
+          "pop": "10"
+        },
+        {
+          "period": 10,
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "title": "Saturday",
+          "fcttext": "Partly cloudy. High 76F. Winds SW at 15 to 25 mph.",
+          "fcttext_metric": "Sunshine and clouds mixed. High near 25C. Winds SW at 25 to 40 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 11,
+          "icon": "nt_mostlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_mostlycloudy.gif",
+          "title": "Saturday Night",
+          "fcttext": "Mostly cloudy skies. Low 52F. Winds SW at 10 to 15 mph.",
+          "fcttext_metric": "Mostly cloudy skies. Low 11C. Winds SW at 15 to 25 km/h.",
+          "pop": "20"
+        },
+        {
+          "period": 12,
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "title": "Sunday",
+          "fcttext": "Intervals of clouds and sunshine. High 76F. Winds SSW at 15 to 25 mph.",
+          "fcttext_metric": "Sunshine and clouds mixed. High 24C. Winds SSW at 15 to 30 km/h.",
+          "pop": "10"
+        },
+        {
+          "period": 13,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Sunday Night",
+          "fcttext": "Clear skies. Low 51F. Winds SSE at 10 to 20 mph.",
+          "fcttext_metric": "Clear skies. Low near 10C. Winds SSE at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 14,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Monday",
+          "fcttext": "Sunny. High 81F. ESE winds shifting to SW at 10 to 20 mph.",
+          "fcttext_metric": "Sunny. High 27C. ESE winds shifting to SW at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 15,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Monday Night",
+          "fcttext": "Clear skies. Low 56F. Winds SE at 10 to 15 mph.",
+          "fcttext_metric": "Clear. Low 13C. Winds SE at 15 to 25 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 16,
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "title": "Tuesday",
+          "fcttext": "Sunny. High 89F. E winds shifting to SSW at 10 to 20 mph.",
+          "fcttext_metric": "Sunny skies. High 32C. E winds shifting to SSW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 17,
+          "icon": "nt_clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_clear.gif",
+          "title": "Tuesday Night",
+          "fcttext": "Clear skies. Low near 60F. Winds SE at 10 to 20 mph.",
+          "fcttext_metric": "Clear. Low around 15C. Winds SE at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 18,
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "title": "Wednesday",
+          "fcttext": "Partly cloudy. High 89F. ENE winds shifting to SW at 10 to 20 mph.",
+          "fcttext_metric": "Intervals of clouds and sunshine. High 32C. ENE winds shifting to SW at 15 to 30 km/h.",
+          "pop": "0"
+        },
+        {
+          "period": 19,
+          "icon": "nt_partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/nt_partlycloudy.gif",
+          "title": "Wednesday Night",
+          "fcttext": "A few clouds. Low 61F. Winds SE at 5 to 10 mph.",
+          "fcttext_metric": "A few clouds. Low 16C. Winds SE at 10 to 15 km/h.",
+          "pop": "0"
+        }
+      ]
+    },
+    "simpleforecast": {
+      "forecastday": [
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on November 28, 2016",
+            "day": 28,
+            "month": 11,
+            "year": 2016,
+            "yday": 332,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "November",
+            "monthname_short": "Nov",
+            "weekday_short": "Mon",
+            "weekday": "Monday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 1,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "WSW",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "WSW",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on November 29, 2016",
+            "day": 29,
+            "month": 11,
+            "year": 2016,
+            "yday": 333,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "November",
+            "monthname_short": "Nov",
+            "weekday_short": "Tue",
+            "weekday": "Tuesday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 2,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on November 30, 2016",
+            "day": 30,
+            "month": 11,
+            "year": 2016,
+            "yday": 334,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "November",
+            "monthname_short": "Nov",
+            "weekday_short": "Wed",
+            "weekday": "Wednesday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 3,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SW",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SW",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 01, 2016",
+            "day": 1,
+            "month": 12,
+            "year": 2016,
+            "yday": 335,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Thu",
+            "weekday": "Thursday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 4,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Partly Cloudy",
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSW",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSW",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 02, 2016",
+            "day": 2,
+            "month": 12,
+            "year": 2016,
+            "yday": 336,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Fri",
+            "weekday": "Friday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 5,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 03, 2016",
+            "day": 3,
+            "month": 12,
+            "year": 2016,
+            "yday": 337,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Sat",
+            "weekday": "Saturday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 6,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Partly Cloudy",
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SW",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SW",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 04, 2016",
+            "day": 4,
+            "month": 12,
+            "year": 2016,
+            "yday": 338,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Sun",
+            "weekday": "Sunday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 7,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Partly Cloudy",
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "skyicon": "",
+          "pop": 10,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSW",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSW",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 05, 2016",
+            "day": 5,
+            "month": 12,
+            "year": 2016,
+            "yday": 339,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Mon",
+            "weekday": "Monday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 8,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "S",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 06, 2016",
+            "day": 6,
+            "month": 12,
+            "year": 2016,
+            "yday": 340,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Tue",
+            "weekday": "Tuesday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 9,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Clear",
+          "icon": "clear",
+          "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSE",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "SSE",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        },
+        {
+          "date": {
+            "epoch": "\"{EPOCH}\"",
+            "pretty": "7:00 PM AWST on December 07, 2016",
+            "day": 7,
+            "month": 12,
+            "year": 2016,
+            "yday": 341,
+            "hour": 19,
+            "low": "00",
+            "sec": 0,
+            "isdst": "0",
+            "monthname": "December",
+            "monthname_short": "Dec",
+            "weekday_short": "Wed",
+            "weekday": "Wednesday",
+            "ampm": "PM",
+            "tz_short": "AWST",
+            "tz_long": "Australia/Perth"
+          },
+          "period": 10,
+          "high": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "low": {
+            "fahrenheit": "\"${INTEGER}\"",
+            "celsius": "\"${INTEGER}\""
+          },
+          "conditions": "Partly Cloudy",
+          "icon": "partlycloudy",
+          "icon_url": "http://icons.wxug.com/i/c/k/partlycloudy.gif",
+          "skyicon": "",
+          "pop": 0,
+          "qpf_allday": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_day": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "qpf_night": {
+            "in": "${FLOATINGPOINT}",
+            "mm": "${INTEGER}"
+          },
+          "snow_allday": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_day": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "snow_night": {
+            "in": "${FLOATINGPOINT}",
+            "cm": "${FLOATINGPOINT}"
+          },
+          "maxwind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "ESE",
+            "degrees": "${INTEGER}"
+          },
+          "avewind": {
+            "mph": "${INTEGER}",
+            "kph": "${INTEGER}",
+            "dir": "ESE",
+            "degrees": "${INTEGER}"
+          },
+          "avehumidity": "${INTEGER}",
+          "maxhumidity": "${INTEGER}",
+          "minhumidity": "${INTEGER}"
+        }
+      ]
+    }
+  }
+}

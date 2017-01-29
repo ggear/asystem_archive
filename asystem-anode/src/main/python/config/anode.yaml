@@ -30,4 +30,3 @@ plugin:
       history_ticks: 5000
       publish_ticks: -1
       push_upstream: True
-

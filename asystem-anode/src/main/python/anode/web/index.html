@@ -87,7 +87,7 @@
                             datumGroupDiv.className = "datum";
                             if (datumGroup == "detail") {
                                 datumGroupDiv.appendChild(datumGroupDiv = document.createElement("a"));
-                                datumGroupDiv.href = "/rest/?metrics=" + datum.data_metric + "&bins=" + datum.bin_width + datum.bin_unit + "&scope=history&format=csv"
+                                datumGroupDiv.href = "/rest/?metrics=" + datum.data_metric + "&types=" + datum.data_type + "&units=" + datum.data_unit + "&bins=" + datum.bin_width + datum.bin_unit + "&scope=history&format=csv"
                             }
                             for (var datumField in datumGroupsFields[datumGroup]) {
                                 (function (datumField) {
