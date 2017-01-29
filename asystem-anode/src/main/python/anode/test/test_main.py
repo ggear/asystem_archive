@@ -113,23 +113,26 @@ class ANodeTest(TestCase):
         return response_df, \
                sum(response_df[response_df_column].count() for response_df_column in response_df if response_df_column.startswith("data_value"))
 
-    def assertRest(self, length, anode, url, format, assertions, log=False):
+    def assertRest(self, assertion, anode, url, iterations=1, log=False):
         response = None
-        if format == "json":
+        response_format = urlparse.parse_qs(urlparse.urlparse(url).query)["format"][0] \
+            if "format" in urlparse.parse_qs(urlparse.urlparse(url).query) else "json"
+        if response_format == "json":
             response = self.rest_json(anode, url)
-        elif format == "csv":
+        elif response_format == "csv":
             response = self.rest_csv(anode, url)
         else:
-            raise Exception("Unknown format [{}]".format(format))
-        if log or (assertions > 0 and length != response[1]):
-            print(
-                "RESTful [{}] {} response:\n{}".format(url, format.upper(), json.dumps(response[0], sort_keys=True, indent=4, separators=(',', ': '))
-                if format == "json" else response[0]))
-        if assertions > 0:
-            self.assertEquals(length, response[1])
-        return response[0]
+            raise Exception("Unknown format [{}]".format(response_format))
+        if log or (iterations > 0 and assertion != response[1]):
+            print("RESTful [{}] {} response:\n{}"
+                  .format(url, response_format.upper(),
+                          json.dumps(response[0], sort_keys=True, indent=4, separators=(',', ': ')) if response_format == "json" else response[0]))
+            print("RESTful [{}] {} response includes [{}] datums".format(url, response_format.upper(), response[1]))
+        if iterations > 0:
+            self.assertEquals(assertion, iterations * response[1])
+        return response
 
-    def assert_anode(self, assertions=-1, radomise=False, repeats=False, nulls=False, corruptions=False, callback=None, url=None):
+    def assert_anode(self, iterations=-1, radomise=False, repeats=False, nulls=False, corruptions=False, callback=None, url=None):
         global test_ticks
         global test_randomise
         global test_repeats
@@ -145,8 +148,7 @@ class ANodeTest(TestCase):
         self.assertTrue(anode is not None)
         assert_results = []
         if url is not None:
-            assert_results.append(self.assertRest(-1, anode, url, urlparse.parse_qs(urlparse.urlparse(url).query)["format"][0] \
-                if "format" in urlparse.parse_qs(urlparse.urlparse(url).query) else "json", -1, True))
+            assert_results.append(self.assertRest(-1, anode, url, -1, True))
         else:
             metrics = 0
             metrics_anode = 0
@@ -159,103 +161,103 @@ class ANodeTest(TestCase):
                     assert_results.append(self.assertRest(0, anode,
                                                           "/rest/?metrics=some.fake.metric" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0, anode,
                                                           "/rest/?metrics=some.fake.metric&metrics=some.other.fake.metric" + (
                                                               ("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0, anode,
                                                           "/rest/?metrics=power&types=fake.type" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0, anode,
                                                           "/rest/?metrics=power&units=°" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0, anode,
                                                           "/rest/?metrics=power&types=point&bins=fake_bin" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&types=point" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&types=point&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=some.fake.metric&metrics=&types=point&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=&types=point&types=fake.type&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=fake_bin" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&units=W" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 2, anode,
                                                           "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 3, anode,
                                                           "/rest/?metrics=power.production.inverter" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 3, anode,
                                                           "/rest/?metrics=windgustbearing.outdoor.roof&units=°" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 17, anode,
                                                           "/rest/?bins=2second" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 21, anode,
                                                           "/rest/?metrics=power" +
                                                           (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format,
-                                                          assertions))
+                                                          (("&scope=" + scope) if scope is not None else ""),
+                                                          iterations))
                     assert_results.append(
                         self.assertRest(0 if (scope == "publish") else (metrics if scope != "history" else (metrics - metrics_anode)), anode,
                                         "/rest/?something=else" +
                                         (("&format=" + format) if format is not None else "") +
-                                        (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format, assertions))
+                                        (("&scope=" + scope) if scope is not None else ""), iterations))
                     assert_results.append(
                         self.assertRest(0 if (scope == "publish") else (metrics if scope != "history" else (metrics - metrics_anode)), anode,
                                         "/rest/?" +
                                         (("&format=" + format) if format is not None else "") +
-                                        (("&scope=" + scope) if scope is not None else ""), "json" if format is None else format, assertions))
+                                        (("&scope=" + scope) if scope is not None else ""), iterations))
         return assert_results
 
     def test_main_default(self):
@@ -288,12 +290,11 @@ class ANodeTest(TestCase):
 
     def test_main_quiet_short_random(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_MIN, "-q"])
-        self.assert_anode(-1, False, False, False, False, lambda: self.clock_tick(100))
+        self.assert_anode(-1, False, False, False, False, lambda: self.clock_tick(1))
 
     def test_main_verbose_short_oneoff(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-q"])
-        print(len(self.assert_anode(callback=lambda: self.clock_tick(5), url="/rest/?metrics=windgustbearing.outdoor.roof&units=°&types=point&scope=history&format=json")[0]))
-        # print(len(self.assert_anode(callback=lambda: self.clock_tick(5), url="/rest/?metrics=windgustbearing.outdoor.roof&units=°&types=point&scope=history&format=csv")[0].index))
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_MIN_PARTITIONS, "-q"])
+        self.assert_anode(callback=lambda: self.clock_tick(101), url="/rest/?metrics=power&bins=1second&scope=history&format=json")[0]
 
 
 class ANodeModelTest(TestCase):
@@ -401,6 +402,8 @@ DIR_ROOT = os.path.dirname(__file__) + "/../../"
 
 FILE_CONFIG = DIR_ROOT + "config/anode.yaml"
 FILE_CONFIG_MIN = DIR_ROOT + "anode/test/data/anode_min.yaml"
+FILE_CONFIG_MIN_TICKS = DIR_ROOT + "anode/test/data/anode_min_ticks.yaml"
+FILE_CONFIG_MIN_PARTITIONS = DIR_ROOT + "anode/test/data/anode_min_partitions.yaml"
 
 FILE_DATUMS_CSV = DIR_ROOT + "anode/test/data/datums_power_production_grid_inverter_point.csv.gz"
 

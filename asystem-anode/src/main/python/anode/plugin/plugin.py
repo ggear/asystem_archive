@@ -98,10 +98,10 @@ class Plugin(object):
             data_transient=True
         )
         self.datum_push(
-            matric_name + "days",
+            matric_name + "partitions",
             "current", "point",
-            self.datum_value(0 if ("history_days" not in self.config or self.config["history_days"] < 1) else (
-                float(self.datums_days) / self.config["history_days"] * 100)),
+            self.datum_value(0 if ("history_partitions" not in self.config or self.config["history_partitions"] < 1) else (
+                float(self.datums_partitions) / self.config["history_partitions"] * 100)),
             "%",
             1,
             time_now,
@@ -275,9 +275,10 @@ class Plugin(object):
                     self.datums_pushed += 1
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
-                                    "history_days" in self.config and self.config["history_days"] > 0:
-                        bin_timestamp_day = self.get_time_period(datum_dict["bin_timestamp"], Plugin.get_seconds(1, "day"))
-                        if len(datums_deref[DATUM_QUEUE_BUFFER]) == self.datums_buffer_batch or bin_timestamp_day \
+                                    "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                                    "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+                        bin_timestamp_partition = self.get_time_period(datum_dict["bin_timestamp"], self.config["history_partition_seconds"])
+                        if len(datums_deref[DATUM_QUEUE_BUFFER]) == self.datums_buffer_batch or bin_timestamp_partition \
                                 not in datums_deref[DATUM_QUEUE_HISTORY]:
                             self.datum_merge_buffer_history(datums_deref[DATUM_QUEUE_BUFFER], datums_deref[DATUM_QUEUE_HISTORY])
                         datums_deref[DATUM_QUEUE_BUFFER].append(datum_dict)
@@ -295,57 +296,65 @@ class Plugin(object):
     def datum_merge_buffer_history(self, datums_buffer, datums_history):
         log_timer = anode.Log(logging.DEBUG).start()
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
-                        "history_days" in self.config and self.config["history_days"] > 0:
+                        "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                        "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
             if len(datums_buffer) > 0:
-                bin_timestamp_day = self.get_time_period(datums_buffer[0]["bin_timestamp"], Plugin.get_seconds(1, "day"))
+                bin_timestamp_partition = self.get_time_period(datums_buffer[0]["bin_timestamp"], self.config["history_partition_seconds"])
                 datums_df = self.datums_dict_to_df(datums_buffer)
                 if len(datums_df) != 1:
                     raise ValueError("Assertion error merging mixed datum types when there should not be any!")
                 datums_df = datums_df[0]
                 datums_buffer.clear()
                 self.datums_buffer = 0
-                if bin_timestamp_day not in datums_history:
-                    datums_history[bin_timestamp_day] = datums_df
+                if bin_timestamp_partition not in datums_history:
+                    datums_history[bin_timestamp_partition] = datums_df
                 else:
-                    datums_history[bin_timestamp_day]["data_df"] = pandas.concat([datums_history[bin_timestamp_day]["data_df"], datums_df["data_df"]],
-                                                                                 ignore_index=True)
+                    datums_history[bin_timestamp_partition]["data_df"] = pandas.concat([datums_history[bin_timestamp_partition]["data_df"],
+                                                                                        datums_df["data_df"]], ignore_index=True)
                     anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] merged buffer partition [{}]".format(self.name, bin_timestamp_day))
-                bin_timestamp_day_expireds = []
-                bin_timestamp_day_upper = bin_timestamp_day + self.config["history_days"] * Plugin.get_seconds(1, "day")
-                for bin_timestamp_day_cached in datums_history:
-                    if bin_timestamp_day_cached > bin_timestamp_day_upper:
-                        bin_timestamp_day_expireds.append(bin_timestamp_day_cached)
-                for bin_timestamp_day_expired in bin_timestamp_day_expireds:
-                    del datums_history[bin_timestamp_day_expired]
+                                                 lambda: "[{}] merged buffer partition [{}]".format(self.name, bin_timestamp_partition))
+                bin_timestamp_partition_expireds = []
+                bin_timestamp_partition_upper = bin_timestamp_partition + self.config["history_partitions"] * self.config["history_partition_seconds"]
+                for bin_timestamp_partition_cached in datums_history:
+                    if bin_timestamp_partition_cached > bin_timestamp_partition_upper:
+                        bin_timestamp_partition_expireds.append(bin_timestamp_partition_cached)
+                for bin_timestamp_partition_expired in bin_timestamp_partition_expireds:
+                    del datums_history[bin_timestamp_partition_expired]
                     anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] purged expired partition [{}]".format(self.name, bin_timestamp_day_expired))
-                while len(datums_history) > self.config["history_days"] or \
-                                sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > self.config[
-                            "history_ticks"]:
-                    bin_timestamp_day_upperbounded = max(datums_history.iterkeys())
-                    del datums_history[bin_timestamp_day_upperbounded]
+                                                 lambda: "[{}] purged expired partition [{}]".format(self.name, bin_timestamp_partition_expired))
+                while len(datums_history) > self.config["history_partitions"] or \
+                                sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
+                                self.config["history_ticks"]:
+                    bin_timestamp_partition_upperbounded = max(datums_history.iterkeys())
+                    del datums_history[bin_timestamp_partition_upperbounded]
                     anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] purged upperbounded partition [{}]".format(self.name, bin_timestamp_day_upperbounded))
-                self.datums_days = len(datums_history)
+                                                 lambda: "[{}] purged upperbounded partition [{}]".format(self.name,
+                                                                                                          bin_timestamp_partition_upperbounded))
+                self.datums_partitions = len(datums_history)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_merge_buffer_history)
 
     def datum_merge_history(self, datums_history, datum_filter):
         datums = []
-        datums_day_metadata = {}
-        datums_day_upper = self.get_time_period(self.get_time(), Plugin.get_seconds(1, "day")) + \
-                           (0 if "days" not in datum_filter else max(datum_filter["days"])) * Plugin.get_seconds(1, "day")
-        datums_day_partitions = []
-        for datums_day in datums_history:
-            if datums_day <= datums_day_upper:
-                datums_day_metadata = datums_history[datums_day]
-                datums_day_partitions.append(datums_day_metadata["data_df"])
-        if len(datums_day_partitions) > 0:
-            if len(datums_day_partitions) == 1:
-                datums_day_metadata["data_df"] = datums_day_partitions[0].copy(deep=False)
-            else:
-                datums_day_metadata["data_df"] = pandas.concat(datums_day_partitions, ignore_index=True)
-            datums.append(datums_day_metadata)
+        if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
+                        "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                        "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+            datums_partition_metadata = {}
+            datums_partition_upper = DATUM_TIMESTAMP_MAX if "finish" not in datum_filter else \
+                (self.get_time_period(max(datum_filter["finish"]), self.config["history_partition_seconds"]) + \
+                                     self.config["history_partition_seconds"])
+            datums_partition_lower = DATUM_TIMESTAMP_MIN if "start" not in datum_filter else \
+                (self.get_time_period(max(datum_filter["start"]), self.config["history_partition_seconds"]))
+            datums_partitions = []
+            for datums_partition in datums_history:
+                if datums_partition_upper >= datums_partition >= datums_partition_lower:
+                    datums_partition_metadata = datums_history[datums_partition]
+                    datums_partitions.append(datums_partition_metadata["data_df"])
+            if len(datums_partitions) > 0:
+                if len(datums_partitions) == 1:
+                    datums_partition_metadata["data_df"] = datums_partitions[0].copy(deep=False)
+                else:
+                    datums_partition_metadata["data_df"] = pandas.concat(datums_partitions, ignore_index=True)
+                datums.append(datums_partition_metadata)
         return datums
 
     @staticmethod
@@ -745,7 +754,7 @@ class Plugin(object):
         self.datums_dropped = 0
         self.datums_buffer = 0
         self.datums_history = 0
-        self.datums_days = 0
+        self.datums_partitions = 0
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
@@ -758,6 +767,9 @@ BUFFER_BATCH_DEFAULT = 60
 
 SERIALISATION_BATCH = 1000
 SERIALISATION_BATCH_SLEEP = 0.3
+
+DATUM_TIMESTAMP_MIN = -2211753600
+DATUM_TIMESTAMP_MAX = 32500915200
 
 DATUM_QUEUE_MIN = "min"
 DATUM_QUEUE_MAX = "max"
