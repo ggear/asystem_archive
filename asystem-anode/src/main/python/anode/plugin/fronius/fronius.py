@@ -6,7 +6,6 @@ from __future__ import print_function
 import calendar
 import json
 import logging
-import time
 from decimal import Decimal
 
 import dateutil.parser
@@ -50,7 +49,7 @@ class Fronius(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
-            bin_timestamp = calendar.timegm(time.gmtime())
+            bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             self.datum_push(
                 "power.production.grid",
@@ -269,7 +268,7 @@ class Fronius(Plugin):
             )
             self.datum_pop()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_flow)
 
@@ -277,7 +276,7 @@ class Fronius(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
-            bin_timestamp = calendar.timegm(time.gmtime())
+            bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             energy_production_grid_alltime = self.datum_value(dict_content, ["Body", "Data", "0", "EnergyReal_WAC_Minus_Absolute"], factor=10)
             self.datum_push(
@@ -294,7 +293,7 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            energy_production_grid_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.grid", "integral", "1", "alltime")
+            energy_production_grid_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.grid", "integral", "Wh", "1", "alltime")
             if energy_production_grid_alltime_min is not None:
                 energy_production_grid_day = energy_production_grid_alltime - energy_production_grid_alltime_min["data_value"]
                 self.datum_push(
@@ -325,8 +324,10 @@ class Fronius(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-                energy_production_inverter_alltime_last = self.datum_get(DATUM_QUEUE_LAST, "energy.production.inverter", "integral", "1", "alltime")
-                energy_production_inverter_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.inverter", "integral", "1", "alltime")
+                energy_production_inverter_alltime_last = self.datum_get(DATUM_QUEUE_LAST, "energy.production.inverter", "integral", "Wh", "1",
+                                                                         "alltime")
+                energy_production_inverter_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy.production.inverter", "integral", "Wh", "1",
+                                                                        "alltime")
                 if energy_production_inverter_alltime_last is not None and energy_production_inverter_alltime_min is not None:
                     energy_production_inverter_day = energy_production_inverter_alltime_last["data_value"] - \
                                                      energy_production_inverter_alltime_min["data_value"]
@@ -359,7 +360,7 @@ class Fronius(Plugin):
                 data_derived_max=True,
                 data_derived_min=True
             )
-            energy_consumption_grid_min = self.datum_get(DATUM_QUEUE_MIN, "energy.consumption.grid", "integral", "1", "alltime")
+            energy_consumption_grid_min = self.datum_get(DATUM_QUEUE_MIN, "energy.consumption.grid", "integral", "Wh", "1", "alltime")
             if energy_consumption_grid_min is not None:
                 energy_consumption_grid_day = energy_consumption_grid_alltime - energy_consumption_grid_min["data_value"]
                 self.datum_push(
@@ -392,10 +393,10 @@ class Fronius(Plugin):
                 )
             self.datum_pop()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_meter)
 
-    def __init__(self, parent, name, config):
-        super(Fronius, self).__init__(parent, name, config)
+    def __init__(self, parent, name, config, reactor):
+        super(Fronius, self).__init__(parent, name, config, reactor)
         self.poll_meter_iteration = POLL_METER_ITERATIONS

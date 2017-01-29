@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import calendar
 import json
 import logging
 import os
@@ -27,7 +26,7 @@ class Netatmo(Plugin):
                                                                         'client_id': self.netatmo_client_id,
                                                                         'client_secret': self.netatmo_client_secret,
                                                                         'scope': 'read_station'}, self.cache_tokens)
-            elif self.token_expiry <= calendar.timegm(time.gmtime()):
+            elif self.token_expiry <= self.get_time():
                 self.http_post("https://api.netatmo.com/oauth2/token", {'grant_type': 'refresh_token',
                                                                         'refresh_token': self.token_refresh,
                                                                         'client_id': os.environ['NETATMO_CLIENT_ID'],
@@ -55,7 +54,7 @@ class Netatmo(Plugin):
         dict_content = json.loads(text_content)
         self.token_access = dict_content["access_token"]
         self.token_refresh = dict_content["refresh_token"]
-        self.token_expiry = calendar.timegm(time.gmtime()) + dict_content["expires_in"] - 10 * self.config["poll_seconds"]
+        self.token_expiry = self.get_time() + dict_content["expires_in"] - 10 * self.config["poll_seconds"]
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[netatmo] access tokens cached, refresh [{}]"
                                     .format(time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(self.token_expiry))))
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.cache_tokens)
@@ -67,7 +66,7 @@ class Netatmo(Plugin):
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
-            bin_timestamp = calendar.timegm(time.gmtime())
+            bin_timestamp = self.get_time()
             for module in dict_content["body"]["devices"]:
                 module_name = ".indoor." + module["module_name"].lower()
                 data_timestamp = module["dashboard_data"]["time_utc"]
@@ -243,12 +242,12 @@ class Netatmo(Plugin):
                     )
             self.datum_pop()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_devicelist)
 
-    def __init__(self, parent, name, config):
-        super(Netatmo, self).__init__(parent, name, config)
+    def __init__(self, parent, name, config, reactor):
+        super(Netatmo, self).__init__(parent, name, config, reactor)
         self.disabled = False
         self.token_access = None
         self.token_refresh = None

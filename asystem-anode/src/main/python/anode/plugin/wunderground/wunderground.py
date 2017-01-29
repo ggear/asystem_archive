@@ -6,7 +6,6 @@ import calendar
 import datetime
 import json
 import logging
-import time
 from decimal import Decimal
 
 import dateutil.parser
@@ -42,7 +41,7 @@ class Wunderground(Plugin):
         # noinspection PyBroadException
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
-            bin_timestamp = calendar.timegm(time.gmtime())
+            bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["forecast"]["txt_forecast"]["date"]).timetuple()))
             day_index_start = 0
             day_index_finish = 3
@@ -285,6 +284,6 @@ class Wunderground(Plugin):
                 )
             self.datum_pop()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response [{}]"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_forecast)

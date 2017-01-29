@@ -31,8 +31,8 @@ LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
 
 class ANode:
-    def __init__(self, main_reactor, callback, options, config):
-        self.main_reactor = main_reactor
+    def __init__(self, core_reactor, callback, options, config):
+        self.core_reactor = core_reactor
         self.callback = callback
         self.options = options
         self.config = config
@@ -43,10 +43,10 @@ class ANode:
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
 
     def register_plugin(self, plugin_name, plugin_config):
-        plugin_instance = Plugin.get(self, plugin_name, plugin_config)
+        plugin_instance = Plugin.get(self, plugin_name, plugin_config, self.core_reactor)
         if plugin_config["poll_seconds"] > 0:
             plugin_loopingcall = LoopingCall(plugin_instance.poll)
-            plugin_loopingcall.clock = self.main_reactor
+            plugin_loopingcall.clock = self.core_reactor
             plugin_loopingcall.start(plugin_config["poll_seconds"])
         return plugin_instance
 
@@ -76,11 +76,11 @@ class ANode:
         web_root = File(os.path.dirname(__file__) + "/web")
         web_root.putChild(b"ws", WebSocketResource(self.web_ws))
         web_root.putChild(u"rest", KleinResource(self.web_rest.server))
-        if self.main_reactor == reactor:
+        if self.core_reactor == reactor:
             web = Site(web_root, logPath="/dev/null")
             web.noisy = False
-            self.main_reactor.listenTCP(self.config["port"], web)
-            self.main_reactor.run()
+            self.core_reactor.listenTCP(self.config["port"], web)
+            self.core_reactor.run()
         return self
 
 
@@ -113,7 +113,7 @@ class WebWs(WebSocketServerProtocol):
         self.datum_filter = None
 
     def onConnect(self, request):
-        self.datum_filter = request.params
+        self.datum_filter = WebUtil.parse_query(request.params, "latin-1")
         self.datum_filter["scope"] = [DATUM_QUEUE_LAST]
         Log(logging.DEBUG).log("Interface", "state", lambda: "[ws] connection request")
 
@@ -146,7 +146,7 @@ class WebRest:
     @server.route("/", methods=["POST"])
     def post(self, request):
         log_timer = Log(logging.DEBUG).start()
-        datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
+        datum_filter = WebUtil.parse_query(urlparse.parse_qs(urlparse.urlparse(request.uri).query))
         Log(logging.DEBUG).log("Interface", "request", lambda: "[rest] post with filter [{}]".format(datum_filter))
         self.anode.put_datums(datum_filter, request.content.read())
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.post)
@@ -156,7 +156,7 @@ class WebRest:
     @inlineCallbacks
     def get(self, request):
         log_timer = Log(logging.DEBUG).start()
-        datum_filter = urlparse.parse_qs(urlparse.urlparse(request.uri).query)
+        datum_filter = WebUtil.parse_query(urlparse.parse_qs(urlparse.urlparse(request.uri).query))
         datums = self.anode.get_datums(datum_filter)
         Log(logging.DEBUG).log("Interface", "request", lambda: "[rest] get with filter [{}] and [{}] datums"
                                .format(datum_filter, sum(len(datums_values) for datums_values in datums.values())))
@@ -166,6 +166,21 @@ class WebRest:
         request.setHeader("Content-Type", ("application/" if datum_format != "csv" else "text/") + datum_format)
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.get)
         returnValue(datums_formatted)
+
+
+class WebUtil:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def parse_query(query_dict, encoding=None):
+        query_dict_parsed = {}
+        for query_key in query_dict:
+            query_key_values = []
+            for query_key_value in query_dict[query_key]:
+                query_key_values.append(query_key_value.encode(encoding) if encoding is not None else query_key_value)
+            query_dict_parsed[query_key] = query_key_values
+        return query_dict_parsed
 
 
 class Log:
@@ -241,7 +256,7 @@ class Log:
                 logging.exception(exception)
 
 
-def main(main_reactor=reactor, callback=None):
+def main(core_reactor=reactor, callback=None):
     parser = OptionParser()
     parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE",
                       metavar="FILE")
@@ -251,4 +266,4 @@ def main(main_reactor=reactor, callback=None):
     Log.configure(options.verbose, options.quiet)
     with open(options.config, "r") as stream:
         config = yaml.load(stream)
-    return ANode(main_reactor, callback, options, config).start_server()
+    return ANode(core_reactor, callback, options, config).start_server()
