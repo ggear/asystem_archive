@@ -5,28 +5,32 @@ plugin:
     fronius:
       poll_seconds: 1
       buffer_ticks: 60
-      history_days: 5
+      history_partitions: 5
       history_ticks: 1250000
+      history_partition_seconds: 86400
       publish_ticks: -1
       push_upstream: True
     davis:
       poll_seconds: -1
       buffer_ticks: 30
-      history_days: 5
+      history_partitions: 5
       history_ticks: 201000
+      history_partition_seconds: 86400
       publish_ticks: -1
       push_upstream: True
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
-      history_days: 5
+      history_partitions: 5
       history_ticks: 335000
+      history_partition_seconds: 86400
       publish_ticks: -1
       push_upstream: True
     wunderground:
       poll_seconds: 300
       buffer_ticks: 10
-      history_days: 5
+      history_partitions: 5
       history_ticks: 5000
+      history_partition_seconds: 86400
       publish_ticks: -1
       push_upstream: True
