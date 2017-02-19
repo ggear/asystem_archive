@@ -3,6 +3,7 @@
 <head>
     <title>anode</title>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-control" content="no-cache">
     <link rel="apple-touch-icon" sizes="57x57" href="ico/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="ico/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="ico/apple-icon-72x72.png">
@@ -32,26 +33,15 @@
         };
         var datumsLast = [];
         var datumsTimer = {};
-        var datumsLinks = {
-            "all": "/",
-            "temp": "/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s",
-            "power": "/?metrics=power",
-            "energy": "/?metrics=energy&bins=1day"
-
-        };
         var anode = new ANode(document.location.href,
             function () {
-                var anodeMetric = "<a href=\"/?metrics=anode&metrics=_system\">anode" + "</a>";
-                for (var datumsLinksName in datumsLinks) {
-                    anodeMetric += (".<a href=\"" + datumsLinks[datumsLinksName] + "\">" + datumsLinksName + "</a>");
-                }
-                document.getElementById("datums_header_metric").innerHTML = anodeMetric;
-                document.getElementById("datums_header_timeliness").innerHTML = "<a href=\"" + document.location.href + "\">connected</a>";
-                styleTick(document.getElementById("datums_header_timeliness"), 1);
+                document.getElementById("datums_header").innerHTML =
+                    "<a href=\"javascript: toggleLinks(); void(0)\">anode.<span id='datums_header_connection'>connected</span><span id='datums_header_status'>»</span></a>";
+                styleTick(document.getElementById("datums_header_connection"), 1);
             },
             function () {
-                document.getElementById("datums_header_timeliness").innerHTML = "<a href=\"" + document.location.href + "\">disconnected</a>";
-                styleTick(document.getElementById("datums_header_timeliness"), -1);
+                document.getElementById("datums_header").innerHTML = "<a href=\"" + document.location.href + "\">anode.<span id='datums_header_connection'>disconnected</span><span id='datums_header_status'>!</span></a>";
+                styleTick(document.getElementById("datums_header_connection"), -1);
             },
             function (datum) {
                 if (document.location.href.indexOf("metrics=_system") > 0 || datum.data_metric.indexOf("anode") == -1) {
@@ -136,10 +126,10 @@
                             },
                             "trend": {
                                 "id": datum.ui_id + "_trend",
-                                "value": ((datum.data_type == "high" || datum.data_type == "low") ? null : datum.data_type == "enumeration" ? datum.data_unit :
+                                "value": ((datum.data_type == "high" || datum.data_type == "low") ? null : datum.data_type == "enumeration" ? "" :
                                         (datum.data_type == "epoch" ? moment(new Date(datum.data_value * 1000)).format("MMM Do YYYY").toLowerCase() : datumValueDelta)),
                                 "value_delta": datumValueDelta,
-                                "value_prefix": datum.data_type == "epoch" ? "" : (datum.data_type == "enumeration" ? "was " : (datumValueDelta >= 0 ? "+" : ""))
+                                "value_prefix": (datum.data_type == "epoch" || datum.data_type == "enumeration") ? "" : (datumValueDelta >= 0 ? "+" : "")
                             }
                         };
                         for (var datumGroup in datumGroupsValues) {
@@ -162,6 +152,16 @@
                     }
                 }
             });
+        function toggleLinks() {
+            if (document.getElementById('datums_header_links').style.display == 'block') {
+                document.getElementById('datums_header_links').style.display = 'none';
+                document.getElementById('datums_header_status').innerHTML = "»"
+            }
+            else {
+                document.getElementById('datums_header_links').style.display = 'block';
+                document.getElementById('datums_header_status').innerHTML = "«"
+            }
+        }
         function styleTick(element, delta) {
             element.classList.remove("datum-detail-up");
             element.classList.remove("datum-detail-down");
@@ -178,9 +178,66 @@
 <div>
     <div class="datums">
         <div class="datum">
-            <div class="datum"><span id="datums_header_metric" class="datum-detail">anode</span><span
-                    id="datums_header_timeliness" class="datum-detail"><a
-                    href="javascript:window.location.href=window.location.href">connecting ...</a></span></div>
+            <hr/>
+            <div class="datum"><span id="datums_header" class="datum-detail"><a
+                    href="javascript:window.location.href=window.location.href">anode.<span
+                    id='datums_header_connection'>connecting</span><span
+                    id='datums_header_status'>...</span></a></span>
+            </div>
+            <div id="datums_header_links" style="display:none;">
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=anode&metrics=_system">anode</a>.<a
+                        href="/">all</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=power&metrics=energy">utilities</a>.<a
+                        href="/?metrics=power">power</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=power&metrics=energy">utilities</a>.<a
+                        href="/?metrics=energy&bins=1day">energy</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=power&metrics=energy">utilities</a>.<a
+                        href="/?metrics=energy&types=integral&types=low&types=high&units=Wh">meters</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                        href="/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                        href="/?metrics=carbondioxide">carbondioxide</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                        href="/?metrics=humidity">humidity</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                        href="/?metrics=noise">noise</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent">temperature</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
+                        href="/?metrics=rain">rain</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
+                        href="/?metrics=wind">wind</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
+                        href="/?metrics=pressure">pressure</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=sun">almanac</a>.<a
+                        href="/?metrics=sun">sun</a>
+                </span></div>
+            </div>
             <hr/>
         </div>
     </div>

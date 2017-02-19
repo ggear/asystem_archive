@@ -53,7 +53,7 @@ describe('ANode', function () {
     });
 
     it('message metrics metrics types bins', function (done) {
-        messageTest(done, connectionUri("metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second"), 2)
+        messageTest(done, connectionUri("metrics=power.production.inverter&metrics=power.export.grid&metrics=&types=point&bins=1second"), 2)
     });
 
     it('message metrics', function (done) {

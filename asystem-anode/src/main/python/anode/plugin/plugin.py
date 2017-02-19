@@ -4,6 +4,7 @@ import HTMLParser
 import abc
 import base64
 import calendar
+import datetime
 import decimal
 import io
 import json
@@ -48,7 +49,10 @@ class Plugin(object):
         datums_popped = 0
         matric_name = "anode." + self.name + "."
         time_now = self.get_time()
-        metrics_count = sum(len(units) for metrics in self.datums.values() for types in metrics.values() for units in types.values())
+        metrics_count = sum(len(units)
+                            for metrics in self.datums.values()
+                            for types in metrics.values()
+                            for units in types.values())
         self.datum_push(
             matric_name + "metrics",
             "current", "point",
@@ -60,8 +64,6 @@ class Plugin(object):
             self.config["poll_seconds"],
             "second",
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
         self.datum_push(
@@ -76,8 +78,6 @@ class Plugin(object):
             "second",
             data_bound_upper=100,
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
         self.datum_push(
@@ -93,15 +93,18 @@ class Plugin(object):
             "second",
             data_bound_upper=100,
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
+        partitions_count_max = max(len(bins[DATUM_QUEUE_HISTORY])
+                                   for metrics in self.datums.values()
+                                   for types in metrics.values()
+                                   for units in types.values()
+                                   for bins in units.values())
         self.datum_push(
             matric_name + "partitions",
             "current", "point",
             self.datum_value(0 if ("history_partitions" not in self.config or self.config["history_partitions"] < 1) else (
-                float(self.datums_partitions) / self.config["history_partitions"] * 100)),
+                float(partitions_count_max) / self.config["history_partitions"] * 100)),
             "%",
             1,
             time_now,
@@ -110,13 +113,11 @@ class Plugin(object):
             "second",
             data_bound_upper=100,
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
         self.datum_push(
             matric_name + "uptime",
-            "current", "integral",
+            "current", "point",
             self.datum_value((time_now - self.time_boot) / Decimal(24 * 60 * 60), factor=100),
             "d",
             100,
@@ -125,8 +126,6 @@ class Plugin(object):
             self.config["poll_seconds"],
             "second",
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
         self.datum_push(
@@ -139,8 +138,6 @@ class Plugin(object):
             time_now,
             self.config["poll_seconds"],
             "second",
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
 
         )
@@ -170,8 +167,6 @@ class Plugin(object):
             self.config["poll_seconds"],
             "second",
             data_bound_lower=0,
-            data_derived_max=True,
-            data_derived_min=True,
             data_transient=True
         )
         self.datums_pushed = 0
@@ -229,8 +224,8 @@ class Plugin(object):
             datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][str(datum_dict["bin_width"]) +
                                                                                                                     datum_dict["bin_unit"]]
             if DATUM_QUEUE_LAST not in datums_deref or datums_deref[DATUM_QUEUE_LAST]["data_value"] != datum_dict["data_value"] or \
-                            datums_deref[DATUM_QUEUE_LAST]["data_unit"] != \
-                            datum_dict["data_unit"] or datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
+                            datums_deref[DATUM_QUEUE_LAST]["data_unit"] != datum_dict["data_unit"] or \
+                            datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
                 self.time_seen = self.get_time()
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 bin_timestamp_derived = self.get_time_period(datum_dict["bin_timestamp"],
@@ -241,9 +236,7 @@ class Plugin(object):
                                         datums_deref[DATUM_QUEUE_MAX]["data_value"] < datum_dict["data_value"]:
                             datums_deref[DATUM_QUEUE_MAX] = datum_dict.copy()
                             datums_deref[DATUM_QUEUE_MAX]["bin_type"] = "high"
-                            datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] = bin_timestamp_derived if \
-                                (DATUM_QUEUE_MAX in datums_deref and datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] < bin_timestamp_derived) else \
-                                self.get_time()
+                            datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] = bin_timestamp_derived
                             datums_deref[DATUM_QUEUE_MAX]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MAX]["bin_unit"] = data_derived_unit
                             anode.Log(logging.DEBUG).log("Plugin", "state",
@@ -259,9 +252,7 @@ class Plugin(object):
                                         datums_deref[DATUM_QUEUE_MIN]["data_value"] > datum_dict["data_value"]:
                             datums_deref[DATUM_QUEUE_MIN] = datum_dict.copy()
                             datums_deref[DATUM_QUEUE_MIN]["bin_type"] = "low"
-                            datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] = bin_timestamp_derived if \
-                                (DATUM_QUEUE_MAX in datums_deref and datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"] < bin_timestamp_derived) else \
-                                self.get_time()
+                            datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] = bin_timestamp_derived
                             datums_deref[DATUM_QUEUE_MIN]["bin_width"] = data_derived_period
                             datums_deref[DATUM_QUEUE_MIN]["bin_unit"] = data_derived_unit
                             anode.Log(logging.DEBUG).log("Plugin", "state",
@@ -325,23 +316,23 @@ class Plugin(object):
                 while len(datums_history) > self.config["history_partitions"] or \
                                 sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
                                 self.config["history_ticks"]:
-                    bin_timestamp_partition_upperbounded = max(datums_history.iterkeys())
+                    bin_timestamp_partition_upperbounded = min(datums_history.iterkeys())
                     del datums_history[bin_timestamp_partition_upperbounded]
                     anode.Log(logging.DEBUG).log("Plugin", "state",
                                                  lambda: "[{}] purged upperbounded partition [{}]".format(self.name,
                                                                                                           bin_timestamp_partition_upperbounded))
-                self.datums_partitions = len(datums_history)
-        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_merge_buffer_history)
+        log_timer.log("Plugin", "timer", lambda: "[{}] partitions [{}]".format(self.name, len(datums_history)),
+                      context=self.datum_merge_buffer_history)
 
     def datum_merge_history(self, datums_history, datum_filter):
+        log_timer = anode.Log(logging.DEBUG).start()
         datums = []
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                         "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
                         "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
             datums_partition_metadata = {}
             datums_partition_upper = DATUM_TIMESTAMP_MAX if "finish" not in datum_filter else \
-                (self.get_time_period(max(datum_filter["finish"]), self.config["history_partition_seconds"]) + \
-                                     self.config["history_partition_seconds"])
+                (self.get_time_period(max(datum_filter["finish"]), self.config["history_partition_seconds"]))
             datums_partition_lower = DATUM_TIMESTAMP_MIN if "start" not in datum_filter else \
                 (self.get_time_period(max(datum_filter["start"]), self.config["history_partition_seconds"]))
             datums_partitions = []
@@ -354,7 +345,10 @@ class Plugin(object):
                     datums_partition_metadata["data_df"] = datums_partitions[0].copy(deep=False)
                 else:
                     datums_partition_metadata["data_df"] = pandas.concat(datums_partitions, ignore_index=True)
+                datums_partition_metadata["data_df"] = \
+                    datums_partition_metadata["data_df"][~datums_partition_metadata["data_df"]["bin_timestamp"].duplicated(keep="first")]
                 datums.append(datums_partition_metadata)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_merge_history)
         return datums
 
     @staticmethod
@@ -371,10 +365,8 @@ class Plugin(object):
                         (str(bin_width) + bin_unit) in self.datums[data_metric][data_type][data_unit] and \
                         datum_scope in self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit]:
             datum_dict = self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit][datum_scope]
-            if data_derived_period is None or (datum_dict["bin_width"] == data_derived_period and
-                                                       datum_dict["bin_unit"] == data_derived_unit and
-                                                           datum_dict["bin_timestamp"] %
-                                                           Plugin.get_seconds(data_derived_period, data_derived_unit) == 0):
+            if data_derived_period is None or datum_dict["bin_timestamp"] == \
+                    self.get_time_period(self.get_time(), Plugin.get_seconds(data_derived_period, data_derived_unit)):
                 return datum_dict
             else:
                 return None
@@ -490,6 +482,9 @@ class Plugin(object):
     def datum_df_to_dict(datum_df):
         datums_dict = datum_df["data_df"].to_dict(orient="records")
         for datum_dict in datums_dict:
+            datum_dict["data_value"] = numpy.asscalar(datum_dict["data_value"])
+            datum_dict["bin_timestamp"] = numpy.asscalar(datum_dict["bin_timestamp"])
+            datum_dict["data_timestamp"] = numpy.asscalar(datum_dict["data_timestamp"])
             datum_dict.update(datum_df)
             del datum_dict["data_df"]
         return datums_dict
@@ -619,8 +614,9 @@ class Plugin(object):
     @staticmethod
     def datums_df_to_df(datums_df, datum_options=None, off_thread=False):
         log_timer = anode.Log(logging.DEBUG).start()
-        datums_df_joined = []
+        datums_df_df = []
         if len(datums_df) > 0:
+            log_timer_input = anode.Log(logging.DEBUG).start()
             datums_df_groups = {}
             for datums_df_dict in datums_df:
                 if datums_df_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
@@ -638,36 +634,57 @@ class Plugin(object):
                      "anode_id=" + ID_BASE64
                      ]
                 )
-                datums_df_reference = datums_df_dict["data_df"].copy(deep=False)
-                datums_df_reference.set_index("bin_timestamp", inplace=True)
-                datums_df_reference.index = pandas.to_datetime(datums_df_reference.index, unit="s")
-                datums_df_reference["data_value"] = (datums_df_reference["data_value"] / datums_df_dict["data_scale"]).astype(
-                    numpy.dtype(decimal.Decimal))
-                datums_df_reference.rename(
-                    columns={"data_timestamp": "data_timestamp@" + datum_name, "data_value": "data_value_scaled@" + datum_name},
-                    inplace=True)
                 if datum_name not in datums_df_groups:
-                    datums_df_groups[datum_name] = datums_df_reference
+                    datums_df_groups[datum_name] = datums_df_dict.copy()
+                    datums_df_groups[datum_name]["data_df"] = [datums_df_dict["data_df"]]
                 else:
-                    datums_df_groups[datum_name] = pandas.concat([datums_df_groups[datum_name], datums_df_reference], ignore_index=True)
-            datum_df = datums_df_groups.values()[0] if len(datums_df_groups) == 1 else \
-                datums_df_groups.values()[0].join(datums_df_groups.values()[1:], how="outer")
+                    datums_df_groups[datum_name]["data_df"].append(datums_df_dict["data_df"])
+            log_timer_input.log("Plugin", "timer", lambda: "[*] input [{}] dataframes and [{}] datums".format(
+                len(datums_df),
+                sum(len(datums_df_value["data_df"].index) for datums_df_value in datums_df)), context=Plugin.datums_df_to_df, off_thread=off_thread)
+            log_timer_intermediate = anode.Log(logging.DEBUG).start()
+            datums_df_groups_concat = {}
+            datums_df_groups_concat_data = []
+            for datum_name, datums_df_dict in datums_df_groups.iteritems():
+                datums_df_dict_df = pandas.concat(datums_df_dict["data_df"], ignore_index=True)
+                datums_df_dict_df.set_index("bin_timestamp", inplace=True)
+                datums_df_dict_df.index = pandas.to_datetime(datums_df_dict_df.index, unit="s")
+                datums_df_dict_df["data_value"] = (datums_df_dict_df["data_value"] / datums_df_dict["data_scale"]).astype(
+                    numpy.dtype(decimal.Decimal))
+                datums_df_dict_df.rename(columns={"data_timestamp": "data_timestamp@" + datum_name, "data_value": "data_value_scaled@" + datum_name},
+                                         inplace=True)
+                datums_df_groups_concat_data.append("data_value_scaled@" + datum_name)
+                datums_df_groups_concat[datum_name] = datums_df_dict_df
+            datum_df = pandas.concat(datums_df_groups_concat.values(), axis=1, join='outer')
+            log_timer_intermediate.log("Plugin", "timer", lambda: "[*] intermediate [{}] dataframes and [{}] datums".format(
+                len(datums_df_groups_concat),
+                sum(len(datums_df_groups_concat_df.index) for datums_df_groups_concat_df in datums_df_groups_concat.values())),
+                                       context=Plugin.datums_df_to_df, off_thread=off_thread)
+            log_timer_output = anode.Log(logging.DEBUG).start()
             if datum_options is not None:
                 if "period" in datum_options:
-                    datum_df = getattr(datum_df.resample(str(datum_options["period"]) + "S"),
-                                       "mean" if "method" not in datum_options else datum_options["method"])()
+                    datum_df = getattr(datum_df.resample(str(datum_options["period"][0]) + "S"),
+                                       "max" if "method" not in datum_options else datum_options["method"][0])()
                 if "fill" in datum_options:
-                    if datum_options["fill"] == "all" or datum_options["fill"] == "linear":
-                        datum_df[datums_dict_group_names] = datum_df[datums_dict_group_names].interpolate()
-                    if datum_options["fill"] == "all" or datum_options["fill"] == "zeros":
-                        datum_df[datums_dict_group_names] = datum_df[datums_dict_group_names].fillna(0)
+                    if datum_options["fill"][0] == "all" or datum_options["fill"][0] == "linear":
+                        datum_df[datums_df_groups_concat_data] = datum_df[datums_df_groups_concat_data].interpolate()
+                    if datum_options["fill"][0] == "all" or datum_options["fill"][0] == "zeros":
+                        datum_df[datums_df_groups_concat_data] = datum_df[datums_df_groups_concat_data].fillna(0)
             datum_df.index = datum_df.index.astype(numpy.int64) // 10 ** 9
             datum_df.index.name = "bin_timestamp"
             datum_df.reset_index(inplace=True)
             datum_df.reindex_axis(sorted(datum_df.columns), axis=1)
-            datums_df_joined.append(datum_df)
+            if "print" in datum_options and datum_options["print"][0] == "pretty":
+                Plugin.datums_df_data_pretty(datum_df)
+                Plugin.datums_df_metadata_pretty(datum_df)
+            datums_df_df.append(datum_df)
+            log_timer_output.log("Plugin", "timer", lambda: "[*] output [{}] dataframes and [{}] datums".format(
+                len(datums_df_df),
+                sum(response_df[response_df_column].count() for response_df in datums_df_df for response_df_column in response_df if
+                    response_df_column.startswith("data_value"))),
+                                 context=Plugin.datums_df_to_df, off_thread=off_thread)
         log_timer.log("Plugin", "timer", lambda: "[*]", context=Plugin.datums_df_to_df, off_thread=off_thread)
-        return datums_df_joined
+        return datums_df_df
 
     @staticmethod
     def datums_to_format(datums, datum_format, datum_options, off_thread=False):
@@ -692,6 +709,61 @@ class Plugin(object):
                       context=Plugin.datums_to_format, off_thread=off_thread)
         return datums_formatted
 
+    @staticmethod
+    def datums_df_data_pretty(datum_df):
+        timestamps = []
+        if "Time" in datum_df:
+            timestamps.append("Time")
+        if "bin_timestamp" in datum_df:
+            timestamps.append("bin_timestamp")
+        for timestamp in timestamps:
+            datum_df[timestamp] = datum_df[timestamp].apply(
+                lambda epoch: datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S"))
+
+    @staticmethod
+    def datums_df_metadata_pretty(datum_df):
+        datum_df_columns_deletes = []
+        datum_df_columns_renames = {}
+        datum_df_columns_renames_tokens = {}
+        datum_df_columns_renames_tokens_metric0 = set()
+        datum_df_columns_renames_tokens_metric2 = set()
+        datum_df_columns_renames_tokens_metric2_type = set()
+        for datum_df_column in datum_df.columns:
+            if datum_df_column == "bin_timestamp":
+                datum_df_columns_renames[datum_df_column] = "Time"
+            elif datum_df_column.startswith("data_value"):
+                datum_df_column_tokens_all = datum_df_column.split("data_value_scaled@")[1].split("&")
+                datum_df_column_tokens_subset = datum_df_column_tokens_all[0].split("=")[1].split(".")
+                datum_df_column_tokens_subset.append(datum_df_column_tokens_all[1].split("=")[1])
+                datum_df_columns_renames_tokens_metric0.add(datum_df_column_tokens_subset[0])
+                datum_df_columns_renames_tokens_metric2.add(datum_df_column_tokens_subset[2])
+                datum_df_columns_renames_tokens_metric2_type.add(
+                    "".join([datum_df_column_tokens_subset[2], datum_df_column_tokens_subset[3]]))
+                datum_df_columns_renames_tokens[datum_df_column] = datum_df_column_tokens_subset
+            elif datum_df_column.startswith("data_timestamp"):
+                datum_df_columns_deletes.append(datum_df_column)
+        for datum_df_columns_delete in datum_df_columns_deletes:
+            del datum_df[datum_df_columns_delete]
+        for datum_df_columns_renames_token in datum_df_columns_renames_tokens:
+            datum_df_columns_renames_token_subset = []
+            if len(datum_df_columns_renames_tokens_metric0) > 1:
+                datum_df_columns_renames_token_subset.append(datum_df_columns_renames_tokens[datum_df_columns_renames_token][0].title())
+            if len(datum_df_columns_renames_tokens_metric2) == len(datum_df_columns_renames_tokens):
+                datum_df_columns_renames_token_subset.append(datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title())
+            else:
+                datum_df_columns_renames_tokens_metric2_type_str = datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title() if \
+                    datum_df_columns_renames_tokens[datum_df_columns_renames_token][3] == "point" else " ".join(
+                    [datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title(),
+                     datum_df_columns_renames_tokens[datum_df_columns_renames_token][3].title()])
+                if len(datum_df_columns_renames_tokens_metric2_type) == len(datum_df_columns_renames_tokens):
+                    datum_df_columns_renames_token_subset.append(datum_df_columns_renames_tokens_metric2_type_str)
+                else:
+                    datum_df_columns_renames_token_subset.append(
+                        " ".join([datum_df_columns_renames_tokens[datum_df_columns_renames_token][1].title(),
+                                  datum_df_columns_renames_tokens_metric2_type_str]))
+            datum_df_columns_renames[datum_df_columns_renames_token] = " ".join(datum_df_columns_renames_token_subset)
+        datum_df.rename(columns=datum_df_columns_renames, inplace=True)
+
     def datum_value(self, data, keys=None, default=None, factor=1):
         # noinspection PyBroadException
         try:
@@ -710,7 +782,8 @@ class Plugin(object):
             return None if default is None else int(default * factor)
 
     def get_time(self):
-        return calendar.timegm(time.gmtime()) if not self.is_clock else (int(self.reactor.seconds()) + self.time_boot)
+        return calendar.timegm(time.gmtime()) if not self.is_clock else ((1 if self.reactor.seconds() == 0 else int(self.reactor.seconds())) +
+                                                                         self.get_time_period(self.time_boot, 24 * 60 * 60))
 
     def get_time_period(self, timestamp, period):
         return (timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset
@@ -754,7 +827,6 @@ class Plugin(object):
         self.datums_dropped = 0
         self.datums_buffer = 0
         self.datums_history = 0
-        self.datums_partitions = 0
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
@@ -787,9 +859,3 @@ DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex")
 ID_BASE64 = base64.b64encode(ID_BYTE)
-
-
-class Callback(Plugin):
-    def _poll(self):
-        if "callback" in self.config and self.config["callback"] is not None:
-            self.config["callback"]()

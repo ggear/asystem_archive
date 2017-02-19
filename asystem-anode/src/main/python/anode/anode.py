@@ -31,9 +31,10 @@ LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
 
 class ANode:
-    def __init__(self, core_reactor, callback, options, config):
+    def __init__(self, core_reactor, options, config):
+        log_timer = Log(logging.DEBUG).start()
+        Log(logging.INFO).log("Service", "state", lambda: "[anode] initialising")
         self.core_reactor = core_reactor
-        self.callback = callback
         self.options = options
         self.config = config
         self.plugins = {}
@@ -41,6 +42,10 @@ class ANode:
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
+        for plugin_name in self.config["plugin"]:
+            self.config["plugin"][plugin_name]["pool"] = self.web_pool
+            self.plugins[plugin_name] = self.register_plugin(plugin_name, self.config["plugin"][plugin_name])
+        log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def register_plugin(self, plugin_name, plugin_config):
         plugin_instance = Plugin.get(self, plugin_name, plugin_config, self.core_reactor)
@@ -69,19 +74,23 @@ class ANode:
         self.web_ws.push(datums)
 
     def start_server(self):
-        for plugin_name in self.config["plugin"]:
-            self.config["plugin"][plugin_name]["pool"] = self.web_pool
-            self.plugins[plugin_name] = self.register_plugin(plugin_name, self.config["plugin"][plugin_name])
-        self.plugins["callback"] = self.register_plugin("callback", {"poll_seconds": self.config["callback_poll_seconds"], "callback": self.callback})
+        log_timer = Log(logging.DEBUG).start()
+        Log(logging.INFO).log("Service", "state", lambda: "[anode] starting")
         web_root = File(os.path.dirname(__file__) + "/web")
         web_root.putChild(b"ws", WebSocketResource(self.web_ws))
         web_root.putChild(u"rest", KleinResource(self.web_rest.server))
-        if self.core_reactor == reactor:
-            web = Site(web_root, logPath="/dev/null")
-            web.noisy = False
-            self.core_reactor.listenTCP(self.config["port"], web)
-            self.core_reactor.run()
-        return self
+        web = Site(web_root, logPath="/dev/null")
+        web.noisy = False
+        self.core_reactor.addSystemEventTrigger("after", "shutdown", self.stop_server)
+        self.core_reactor.listenTCP(self.config["port"], web)
+        log_timer.log("Service", "timer", lambda: "[anode] started", context=self.start_server)
+        self.core_reactor.run()
+
+    def stop_server(self):
+        log_timer = Log(logging.DEBUG).start()
+        Log(logging.INFO).log("Service", "state", lambda: "[anode] stopping")
+        log_timer.log("Service", "timer", lambda: "[anode] stopped", context=self.stop_server)
+        return succeed(None)
 
 
 class WebWsFactory(WebSocketServerFactory):
@@ -248,7 +257,7 @@ class Log:
             if not hasattr(message, '__call__'):
                 raise Exception("Non callabled object [{}] passed as message".format(message))
             logger(" ".join(filter(None, [".".join([source, intonation]), message(),
-                                          "" if context is None else "called [{}]".format(context.__name__),
+                                          "" if context is None else "in [{}]".format(context.__name__),
                                           "" if not self.time_tracked else ("off-thread" if off_thread else "on-thread"),
                                           "" if not self.time_tracked else "real [{}] ms".format(self.time_real),
                                           "" if not self.time_tracked else "user [{}] ms".format(self.time_user)])))
@@ -256,7 +265,7 @@ class Log:
                 logging.exception(exception)
 
 
-def main(core_reactor=reactor, callback=None):
+def main(core_reactor=reactor):
     parser = OptionParser()
     parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE",
                       metavar="FILE")
@@ -266,4 +275,7 @@ def main(core_reactor=reactor, callback=None):
     Log.configure(options.verbose, options.quiet)
     with open(options.config, "r") as stream:
         config = yaml.load(stream)
-    return ANode(core_reactor, callback, options, config).start_server()
+    anode = ANode(core_reactor, options, config)
+    if core_reactor == reactor:
+        anode.start_server()
+    return anode
