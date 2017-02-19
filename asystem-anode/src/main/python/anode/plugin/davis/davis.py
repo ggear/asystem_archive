@@ -7,6 +7,7 @@ import logging
 from decimal import Decimal
 
 import anode
+from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
 
@@ -283,11 +284,12 @@ class Davis(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
+                rain_outdoor_roof_month = None if self.datum_value(dict_content["packet"], ["monthRain"]) is None else self.datum_value(
+                    dict_content["packet"]["monthRain"] * Decimal(2.54), factor=100)
                 self.datum_push(
                     "rain.outdoor.roof",
                     "current", "integral",
-                    None if self.datum_value(dict_content["packet"], ["monthRain"]) is None else self.datum_value(
-                        dict_content["packet"]["monthRain"] * Decimal(2.54), factor=100),
+                    rain_outdoor_roof_month,
                     "cm",
                     100,
                     data_timestamp,
@@ -295,8 +297,22 @@ class Davis(Plugin):
                     1,
                     "month",
                     data_bound_lower=0,
-                    data_derived_max=True,
                     data_derived_min=True
+                )
+                rain_outdoor_roof_month_min = self.datum_get(DATUM_QUEUE_MIN, "rain.outdoor.roof", "integral", "cm", 1, "month")
+                rain_outdoor_roof_day = rain_outdoor_roof_month - rain_outdoor_roof_month_min["data_value"] \
+                    if rain_outdoor_roof_month_min is not None else 0
+                self.datum_push(
+                    "rain.outdoor.roof",
+                    "current", "integral",
+                    rain_outdoor_roof_day * 10,
+                    "mm",
+                    100,
+                    data_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0
                 )
                 self.datum_push(
                     "rain.outdoor.roof",
@@ -310,7 +326,6 @@ class Davis(Plugin):
                     1,
                     "year",
                     data_bound_lower=0,
-                    data_derived_max=True,
                     data_derived_min=True
                 )
             if "record" in dict_content:
@@ -344,7 +359,6 @@ class Davis(Plugin):
                     bin_width,
                     bin_unit,
                     data_bound_lower=0,
-                    data_derived_max=True,
                     data_derived_min=True
                 )
             self.datum_pop()

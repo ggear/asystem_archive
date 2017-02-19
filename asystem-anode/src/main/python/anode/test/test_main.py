@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
@@ -28,13 +28,9 @@ from anode.plugin.plugin import DATUM_SCHEMA_JSON
 from anode.plugin.plugin import Plugin
 
 
-# noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames
+# noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8
 class ANodeTest(TestCase):
     def setUp(self):
-        global test_ticks
-        global test_clock
-        test_ticks = 0
-        test_clock = Clock()
         self.patch(treq, "get", lambda url, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "post", lambda url, data, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "text_content", lambda response: MockHttpResponseContent(response))
@@ -42,35 +38,31 @@ class ANodeTest(TestCase):
         print("")
 
     @staticmethod
-    def clock_tick(periods):
+    def clock_tick(anode, period, periods):
         global test_ticks
-        for tickTock in range(0, TIME_TICK_PERIOD * periods, TIME_TICK_PERIOD):
-            test_clock.advance(TIME_TICK_PERIOD)
+        ANodeTest.clock_tock(anode)
+        for tickTock in range(0, period * periods, period):
+            test_clock.advance(period)
+            ANodeTest.clock_tock(anode)
             test_ticks += 1
 
     @staticmethod
     def clock_tock(anode):
-        for i in range(test_ticks + 1):
-            for source in HTTP_POSTS:
-                anode.put_datums({"sources": [source]}, ANodeTest.substitute(HTTP_POSTS[source], counter=i))
+        for source in HTTP_POSTS:
+            anode.put_datums({"sources": [source]}, ANodeTest.populate(HTTP_POSTS[source]))
 
     @staticmethod
-    def substitute(template, counter=None):
-        epoch = (int(test_clock.seconds()) if counter is None else (counter * TIME_TICK_PERIOD)) + TIME_BOOT
+    def populate(template):
+        integer = test_ticks % TEMPLATE_INTEGER_MAX
+        epoch = (1 if test_clock.seconds() == 0 else int(test_clock.seconds())) + TIME_START_OF_DAY
+        if integer == 0:
+            integer = 1 if test_repeats else TEMPLATE_INTEGER_MAX
+        if test_repeats and integer % 2 == 0:
+            integer = 1
         if test_nulls:
             integer = "null"
-            epoch = "null"
-        elif test_randomise:
-            integer = randint(0, TEMPLATE_INTEGER_MAX - 1)
-        else:
-            integer = (test_ticks if counter is None else counter) % TEMPLATE_INTEGER_MAX
-        if test_repeats:
-            if integer < 2:
-                integer = 1
-                epoch = 1485179384
-        else:
-            if integer == 0:
-                integer = TEMPLATE_INTEGER_MAX
+        if test_randomise:
+            integer = randint(1, TEMPLATE_INTEGER_MAX - 1)
         epoch_str = str(epoch)
         time_str = datetime.datetime.fromtimestamp(epoch).strftime('%-I:%M %p AWST') if epoch != "null" else "null"
         timestamp_str = datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%dT%H:%M:%S+08:00') if epoch != "null" else "null"
@@ -103,198 +95,314 @@ class ANodeTest(TestCase):
 
     @staticmethod
     def rest_json(anode, url):
-        response_json = json.loads(ANodeTest.rest(anode, url))
-        return response_json, len(response_json)
+        response_text = ANodeTest.rest(anode, url)
+        response_json = json.loads(response_text)
+        return response_json, len(response_json), json.dumps(response_json, sort_keys=True, indent=4, separators=(',', ': '))
 
     @staticmethod
     def rest_csv(anode, url):
+        response_print = urlparse.parse_qs(urlparse.urlparse(url).query)["print"][0] \
+            if "print" in urlparse.parse_qs(urlparse.urlparse(url).query) else "not-pretty"
         response_text = ANodeTest.rest(anode, url)
-        response_df = pandas.read_csv(StringIO(response_text)) if len(response_text) > 0 else pandas.DataFrame()
+        response_df = pandas.read_csv(StringIO(response_text)) \
+            if response_text is not None and isinstance(response_text, basestring) and len(response_text) > 0 else pandas.DataFrame()
         return response_df, \
-               sum(response_df[response_df_column].count() for response_df_column in response_df if response_df_column.startswith("data_value"))
+               sum(response_df[response_df_column].count() for response_df_column in response_df if
+                   response_df_column.startswith("data_value")) if response_print != "pretty" else sum(
+                   response_df[response_df_column].count() for response_df_column in response_df if
+                   not response_df_column.startswith("Time")), response_text
 
-    def assertRest(self, assertion, anode, url, iterations=1, log=False):
+    def assertRest(self, assertion, anode, url, assertions=True, log=False):
         response = None
-        response_format = urlparse.parse_qs(urlparse.urlparse(url).query)["format"][0] \
-            if "format" in urlparse.parse_qs(urlparse.urlparse(url).query) else "json"
-        if response_format == "json":
-            response = self.rest_json(anode, url)
-        elif response_format == "csv":
-            response = self.rest_csv(anode, url)
-        else:
-            raise Exception("Unknown format [{}]".format(response_format))
-        if log or (iterations > 0 and assertion != response[1]):
-            print("RESTful [{}] {} response:\n{}"
-                  .format(url, response_format.upper(),
-                          json.dumps(response[0], sort_keys=True, indent=4, separators=(',', ': ')) if response_format == "json" else response[0]))
-            print("RESTful [{}] {} response includes [{}] datums".format(url, response_format.upper(), response[1]))
-        if iterations > 0:
-            self.assertEquals(assertion, iterations * response[1])
+        exception_raised = None
+        response_format = "json"
+        try:
+            response_format = urlparse.parse_qs(urlparse.urlparse(url).query)["format"][0] \
+                if "format" in urlparse.parse_qs(urlparse.urlparse(url).query) else response_format
+            if response_format == "json":
+                response = self.rest_json(anode, url)
+            elif response_format == "csv":
+                response = self.rest_csv(anode, url)
+        except Exception as exception:
+            log = True
+            exception_raised = exception
+        if log or (assertions and assertion != response[1]):
+            print("RESTful [{}] {} response:\n{}".format(url, response_format.upper(), "" if response is None else response[2]))
+            print("RESTful [{}] {} response includes [{}] datums".format(url, response_format.upper(), 0 if response is None else response[1]))
+        if exception_raised is not None:
+            raise exception_raised
+        if assertions:
+            self.assertEquals(assertion, response[1])
         return response
 
-    def assert_anode(self, iterations=-1, radomise=False, repeats=False, nulls=False, corruptions=False, callback=None, url=None):
+    def anode_init(self, radomise=True, repeats=False, nulls=False, corruptions=False, period=1, iterations=1):
         global test_ticks
         global test_randomise
         global test_repeats
         global test_nulls
         global test_corruptions
-        test_ticks = 0
+        global test_clock
+        test_ticks = 1
+        test_clock = Clock()
         test_randomise = radomise
         test_repeats = repeats
         test_nulls = nulls
         test_corruptions = corruptions
-        anode = main(test_clock, callback)
-        self.clock_tock(anode)
+        anode = main(test_clock)
         self.assertTrue(anode is not None)
-        assert_results = []
-        if url is not None:
-            assert_results.append(self.assertRest(-1, anode, url, -1, True))
-        else:
+        self.clock_tick(anode, period, iterations)
+        return anode
+
+    def test_bare(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-q"])
+        anode = self.anode_init(False, False, False, False, iterations=5)
+        self.assertRest(0, anode, "/rest", False)
+
+    def test_null(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-q"])
+        anode = self.anode_init(False, False, True, False)
+        self.assertRest(0, anode, "/rest", False)
+
+    def test_corrupt(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-q"])
+        anode = self.anode_init(False, False, False, True)
+        self.assertRest(0, anode, "/rest", False)
+
+    def test_random(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-v"])
+        anode = self.anode_init(True, True, False, False, iterations=5)
+        self.assertRest(0, anode, "/rest", False)
+
+    def test_all(self):
+        for arguments in [
+            ["anode", "--config=" + FILE_CONFIG_ALL],
+            ["anode", "-c" + FILE_CONFIG_ALL, "-v"],
+            ["anode", "--config=" + FILE_CONFIG_ALL, "--verbose"],
+            ["anode", "-c" + FILE_CONFIG_ALL, "-q"],
+            ["anode", "--config=" + FILE_CONFIG_ALL, "--quiet"]
+        ]:
+            self.patch(sys, "argv", arguments)
+            anode = self.anode_init(False, True, False, False)
             metrics = 0
             metrics_anode = 0
             for metric in self.rest_json(anode, "/rest/?metrics=anode")[0]:
                 metrics_anode += 1
                 if metric["data_metric"].endswith("metrics"):
                     metrics += metric["data_value"]
-            for scope in [None, "last", "publish", "history"]:
-                for format in [None, "json", "csv"]:
-                    assert_results.append(self.assertRest(0, anode,
-                                                          "/rest/?metrics=some.fake.metric" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0, anode,
-                                                          "/rest/?metrics=some.fake.metric&metrics=some.other.fake.metric" + (
-                                                              ("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0, anode,
-                                                          "/rest/?metrics=power&types=fake.type" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0, anode,
-                                                          "/rest/?metrics=power&units=°" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0, anode,
-                                                          "/rest/?metrics=power&types=point&bins=fake_bin" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&types=point" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&types=point&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=some.fake.metric&metrics=&types=point&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=&types=point&types=fake.type&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=fake_bin" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 1, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&units=W" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 2, anode,
-                                                          "/rest/?metrics=power.production.inverter&metrics=power.production.grid&metrics=&types=point&bins=1second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 3, anode,
-                                                          "/rest/?metrics=power.production.inverter" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 3, anode,
-                                                          "/rest/?metrics=windgustbearing.outdoor.roof&units=°" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 17, anode,
-                                                          "/rest/?bins=2second" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(self.assertRest(0 if (nulls or corruptions or scope == "publish") else 21, anode,
-                                                          "/rest/?metrics=power" +
-                                                          (("&format=" + format) if format is not None else "") +
-                                                          (("&scope=" + scope) if scope is not None else ""),
-                                                          iterations))
-                    assert_results.append(
-                        self.assertRest(0 if (scope == "publish") else (metrics if scope != "history" else (metrics - metrics_anode)), anode,
-                                        "/rest/?something=else" +
-                                        (("&format=" + format) if format is not None else "") +
-                                        (("&scope=" + scope) if scope is not None else ""), iterations))
-                    assert_results.append(
-                        self.assertRest(0 if (scope == "publish") else (metrics if scope != "history" else (metrics - metrics_anode)), anode,
-                                        "/rest/?" +
-                                        (("&format=" + format) if format is not None else "") +
-                                        (("&scope=" + scope) if scope is not None else ""), iterations))
-        return assert_results
+            for filter_scope in [None, "last", "publish", "history"]:
+                for filter_format in [None, "json", "csv"]:
+                    anode = self.anode_init(False, True, False, False)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=some.fake.metric" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=some.fake.metric&metrics=some.other.fake.metric" + (
+                                        ("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=power&types=fake.type" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=power&units=°" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=power&types=point&bins=fake_bin" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=power&types=point&bins=fake_bin&print=fake_print" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0,
+                                    anode,
+                                    "/rest/?metrics=power&types=point&bins=fake_bin&print=pretty" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&types=point" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&types=point&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=some.fake.metric&metrics=&types=point&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=&types=point&types=fake.type&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&bins=fake_bin" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&units=W" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 1,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=&types=point&bins=1second&units=W&print=pretty" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 2,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter&metrics=power.export.grid&metrics=&types=point&bins=1second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 3,
+                                    anode,
+                                    "/rest/?metrics=power.production.inverter" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 3,
+                                    anode,
+                                    "/rest/?metrics=windgustbearing.outdoor.roof&units=°" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 17,
+                                    anode,
+                                    "/rest/?bins=2second" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 21,
+                                    anode,
+                                    "/rest/?metrics=power" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 21,
+                                    anode,
+                                    "/rest/?metrics=power&print=pretty" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                                    anode,
+                                    "/rest/?something=else" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                                    anode,
+                                    "/rest/?something=else&print=pretty" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                                    anode,
+                                    "/rest/?" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
 
-    def test_main_default(self):
-        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG])
-        self.assert_anode(1, False, True, False, False, lambda: self.clock_tick(1))
+    def test_bounded(self):
+        for config in [
+            FILE_CONFIG_FRONIUS_BOUNDED_TICKS,
+            FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS
+        ]:
+            self.patch(sys, "argv", ["anode", "-c" + config, "-q"])
+            anode = self.anode_init(False, False, False, False, iterations=100)
+            self.assertEquals(0 if config == FILE_CONFIG_FRONIUS_BOUNDED_TICKS else 100,
+                              self.assertRest(1,
+                                              anode,
+                                              "/rest/?metrics=anode.fronius.partitions&format=csv&print=pretty",
+                                              True)[0]["Partitions"][0])
+            self.assertEquals(TIME_START_OF_DAY + 52,
+                              self.assertRest(49,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][0])
+            self.assertEquals(TIME_START_OF_DAY + 100,
+                              self.assertRest(49,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][48])
+            self.assertRest(611,
+                            anode,
+                            "/rest/?scope=history",
+                            True)
 
-    def test_main_verbose_short(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-v"])
-        self.assert_anode(1, False, True, False, False, lambda: self.clock_tick(1))
+    def test_unbounded(self):
+        for config in [
+            FILE_CONFIG_FRONIUS_UNBOUNDED_DAY,
+            FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
+            FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE
+        ]:
+            self.patch(sys, "argv", ["anode", "-c" + config, "-q"])
+            anode = self.anode_init(False, False, False, False, iterations=100)
+            self.assertEquals(0,
+                              self.assertRest(1,
+                                              anode,
+                                              "/rest/?metrics=anode.fronius.partitions&format=csv&print=pretty",
+                                              True)[0]["Partitions"][0])
+            self.assertEquals(TIME_START_OF_DAY + 1,
+                              self.assertRest(100,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][0])
+            self.assertEquals(TIME_START_OF_DAY + 49,
+                              self.assertRest(100,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][48])
+            self.assertRest(1223,
+                            anode,
+                            "/rest/?scope=history",
+                            True)
 
-    def test_main_verbose_long(self):
-        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--verbose"])
-        self.assert_anode(1, False, True, False, False, lambda: self.clock_tick(1))
+    def test_temporal(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-q"])
+        anode = self.anode_init(False, False, False, False, period=1, iterations=3)
+        self.assertRest(1,
+                        anode,
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1alltime&types=low",
+                        True)
+        self.assertRest(3,
+                        anode,
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1day&types=integral",
+                        True)
+        global test_repeats
+        test_repeats = True
+        test_clock.advance(60 * 60 * 24 + 1)
+        self.assertRest(1,
+                        anode,
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1alltime&types=low",
+                        True)
+        self.assertRest(4,
+                        anode,
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1day&types=integral",
+                        True)
 
-    def test_main_quiet_short(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-q"])
-        self.assert_anode(1, False, True, False, False, lambda: self.clock_tick(1))
-
-    def test_main_quiet_long(self):
-        self.patch(sys, "argv", ["anode", "--config=" + FILE_CONFIG, "--quiet"])
-        self.assert_anode(1, False, True, False, False, lambda: self.clock_tick(1))
-
-    def test_main_verbose_short_null(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-v"])
-        self.assert_anode(1, False, False, True, False, lambda: self.clock_tick(1))
-
-    def test_main_verbose_short_corrupt(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG, "-v"])
-        self.assert_anode(1, False, False, False, True, lambda: self.clock_tick(1))
-
-    def test_main_quiet_short_random(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_MIN, "-q"])
-        self.assert_anode(-1, False, False, False, False, lambda: self.clock_tick(1))
-
-    def test_main_verbose_short_oneoff(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_MIN_PARTITIONS, "-q"])
-        self.assert_anode(callback=lambda: self.clock_tick(101), url="/rest/?metrics=power&bins=1second&scope=history&format=json")[0]
+    def test_oneoff(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-q"])
+        anode = self.anode_init(False, False, False, False, period=1, iterations=3)
+        self.assertRest(0,
+                        anode,
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid",
+                        False, True)
 
 
 class ANodeModelTest(TestCase):
@@ -336,11 +444,12 @@ class ANodeModelTest(TestCase):
                                     size_disk / datums_count if size_disk is not None else None])
 
         datums_dict_count = len(self.datums_dict["dict"])
-        for datum_format in [("dict", "long", None, self.datums_dict), ("df", "wide", None, self.datums_df), ("avro", "long", None, self.datums_dict),
+        for datum_format in [("dict", "long", None, self.datums_dict), ("df", "wide (int64)", None, self.datums_df),
+                             ("avro", "long", None, self.datums_dict),
                              ("csv", "long", None, self.datums_dict), ("json", "long", None, self.datums_dict)]:
             datum_sizes_add(Plugin.datum_to_format(datum_format[3], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1],
                             datum_format[2])
-        for datum_format in [("dict", "long", "list", self.datums_dict), ("df", "wide", "list", self.datums_df),
+        for datum_format in [("dict", "long", "list", self.datums_dict), ("df", "wide (Decimal)", "list", self.datums_df),
                              ("csv", "wide", "csv", self.datums_df), ("json", "long", "json", self.datums_dict)]:
             datum_sizes_add(Plugin.datums_to_format(datum_format[3], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1],
                             datum_format[2])
@@ -371,7 +480,7 @@ class MockHttpResponse:
 class MockHttpResponseContent:
     def __init__(self, response):
         self.response = response
-        self.content = ANodeTest.substitute(HTTP_GETS[response.url]) if response.code == 200 else HTTP_GETS["http_404"]
+        self.content = ANodeTest.populate(HTTP_GETS[response.url]) if response.code == 200 else HTTP_GETS["http_404"]
 
     def addCallbacks(self, callback, errback=None):
         callback(self.content)
@@ -396,14 +505,21 @@ test_nulls = False
 test_corruptions = False
 
 TEMPLATE_INTEGER_MAX = 8
-TIME_TICK_PERIOD = 60 * 60
-TIME_BOOT = calendar.timegm(time.gmtime()) - 2
+
+TIME_BOOT = calendar.timegm(time.gmtime())
+TIME_BOOT_LOCAL = time.localtime()
+TIME_OFFSET = calendar.timegm(TIME_BOOT_LOCAL) - calendar.timegm(time.gmtime(time.mktime(TIME_BOOT_LOCAL)))
+TIME_START_OF_DAY = (TIME_BOOT + TIME_OFFSET) - (TIME_BOOT + TIME_OFFSET) % (24 * 60 * 60) - TIME_OFFSET
+
 DIR_ROOT = os.path.dirname(__file__) + "/../../"
 
-FILE_CONFIG = DIR_ROOT + "config/anode.yaml"
-FILE_CONFIG_MIN = DIR_ROOT + "anode/test/data/anode_min.yaml"
-FILE_CONFIG_MIN_TICKS = DIR_ROOT + "anode/test/data/anode_min_ticks.yaml"
-FILE_CONFIG_MIN_PARTITIONS = DIR_ROOT + "anode/test/data/anode_min_partitions.yaml"
+FILE_CONFIG_ALL = DIR_ROOT + "anode/test/data/anode_all.yaml"
+FILE_CONFIG_BARE = DIR_ROOT + "anode/test/data/anode_bare.yaml"
+FILE_CONFIG_FRONIUS_BOUNDED_TICKS = DIR_ROOT + "anode/test/data/anode_fronius_bounded_ticks.yaml"
+FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS = DIR_ROOT + "anode/test/data/anode_fronius_bounded_partitions.yaml"
+FILE_CONFIG_FRONIUS_UNBOUNDED_DAY = DIR_ROOT + "anode/test/data/anode_fronius_unbounded_day.yaml"
+FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL = DIR_ROOT + "anode/test/data/anode_fronius_unbounded_small.yaml"
+FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE = DIR_ROOT + "anode/test/data/anode_fronius_unbounded_large.yaml"
 
 FILE_DATUMS_CSV = DIR_ROOT + "anode/test/data/datums_power_production_grid_inverter_point.csv.gz"
 
