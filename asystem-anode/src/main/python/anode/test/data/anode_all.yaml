@@ -1,5 +1,7 @@
 host: 0.0.0.0
 port: 8091
+save_on_exit: True
+save_seconds: -1
 plugin:
     fronius:
       poll_seconds: 1

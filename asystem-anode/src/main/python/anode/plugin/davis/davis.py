@@ -299,7 +299,7 @@ class Davis(Plugin):
                     data_bound_lower=0,
                     data_derived_min=True
                 )
-                rain_outdoor_roof_month_min = self.datum_get(DATUM_QUEUE_MIN, "rain.outdoor.roof", "integral", "cm", 1, "month")
+                rain_outdoor_roof_month_min = self.datum_get(DATUM_QUEUE_MIN, "rain.outdoor.roof", "integral", "cm", 1, "month", 1, "day")
                 rain_outdoor_roof_day = rain_outdoor_roof_month - rain_outdoor_roof_month_min["data_value"] \
                     if rain_outdoor_roof_month_min is not None else 0
                 self.datum_push(

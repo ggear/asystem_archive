@@ -12,6 +12,7 @@ import logging
 import numbers
 import operator
 import os
+import re
 import time
 import urllib
 from collections import deque
@@ -32,6 +33,7 @@ from twisted.internet.task import Clock
 import anode.plugin
 
 
+# noinspection PyTypeChecker
 class Plugin(object):
     def poll(self):
         if self.has_poll:
@@ -66,10 +68,15 @@ class Plugin(object):
             data_bound_lower=0,
             data_transient=True
         )
+        datums_buffer_count = sum(len(bins[DATUM_QUEUE_BUFFER])
+                                  for metrics in self.datums.values()
+                                  for types in metrics.values()
+                                  for units in types.values()
+                                  for bins in units.values())
         self.datum_push(
             matric_name + "buffer",
             "current", "point",
-            self.datum_value(0 if metrics_count == 0 else (float(self.datums_buffer) / (self.datums_buffer_batch * metrics_count) * 100)),
+            self.datum_value(0 if metrics_count == 0 else (float(datums_buffer_count) / (self.datums_buffer_batch * metrics_count) * 100)),
             "%",
             1,
             time_now,
@@ -80,11 +87,17 @@ class Plugin(object):
             data_bound_lower=0,
             data_transient=True
         )
+        datums_count = sum(0 if DATUM_QUEUE_HISTORY not in bins else (
+            sum(len(partitions["data_df"].index) for partitions in bins[DATUM_QUEUE_HISTORY].values()))
+                           for metrics in self.datums.values()
+                           for types in metrics.values()
+                           for units in types.values()
+                           for bins in units.values())
         self.datum_push(
             matric_name + "history",
             "current", "point",
             self.datum_value(0 if ("history_ticks" not in self.config or self.config["history_ticks"] < 1) else (
-                float(self.datums_history) / self.config["history_ticks"] * 100)),
+                float(datums_count) / self.config["history_ticks"] * 100)),
             "%",
             1,
             time_now,
@@ -143,7 +156,6 @@ class Plugin(object):
         )
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] dropped [{}] datums".format(self.name, self.datums_dropped))
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] pushed datums".format(self.name, self.datums_pushed))
-        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] saved datums".format(self.name, self.datums_history))
         if "push_upstream" in self.config and self.config["push_upstream"]:
             for datum_metric in self.datums:
                 for datum_type in self.datums[datum_metric]:
@@ -273,8 +285,6 @@ class Plugin(object):
                                 not in datums_deref[DATUM_QUEUE_HISTORY]:
                             self.datum_merge_buffer_history(datums_deref[DATUM_QUEUE_BUFFER], datums_deref[DATUM_QUEUE_HISTORY])
                         datums_deref[DATUM_QUEUE_BUFFER].append(datum_dict)
-                        self.datums_buffer += 1
-                        self.datums_history += 1
                         anode.Log(logging.DEBUG).log("Plugin", "state",
                                                      lambda: "[{}] saved datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
                 anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
@@ -289,38 +299,45 @@ class Plugin(object):
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                         "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
                         "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+            datums_buffer_partition_max = DATUM_TIMESTAMP_MAX
             if len(datums_buffer) > 0:
-                bin_timestamp_partition = self.get_time_period(datums_buffer[0]["bin_timestamp"], self.config["history_partition_seconds"])
-                datums_df = self.datums_dict_to_df(datums_buffer)
-                if len(datums_df) != 1:
-                    raise ValueError("Assertion error merging mixed datum types when there should not be any!")
-                datums_df = datums_df[0]
+                datums_buffer_partition = {}
+                for datum in datums_buffer:
+                    bin_timestamp_partition = self.get_time_period(datum["bin_timestamp"], self.config["history_partition_seconds"])
+                    if bin_timestamp_partition not in datums_buffer_partition:
+                        datums_buffer_partition[bin_timestamp_partition] = []
+                    datums_buffer_partition[bin_timestamp_partition].append(datum)
+                datums_buffer_partition_max = max(datums_buffer_partition.iterkeys())
+                for bin_timestamp_partition, datums in datums_buffer_partition.iteritems():
+                    datums_df = self.datums_dict_to_df(datums_buffer)
+                    if len(datums_df) != 1:
+                        raise ValueError("Assertion error merging mixed datum types when there should not be any!")
+                    datums_df = datums_df[0]
+                    if bin_timestamp_partition not in datums_history:
+                        datums_history[bin_timestamp_partition] = datums_df
+                    else:
+                        datums_history[bin_timestamp_partition]["data_df"] = pandas.concat([datums_history[bin_timestamp_partition]["data_df"],
+                                                                                            datums_df["data_df"]], ignore_index=True)
+                        anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                     lambda: "[{}] merged buffer partition [{}]".format(self.name, bin_timestamp_partition))
                 datums_buffer.clear()
-                self.datums_buffer = 0
-                if bin_timestamp_partition not in datums_history:
-                    datums_history[bin_timestamp_partition] = datums_df
-                else:
-                    datums_history[bin_timestamp_partition]["data_df"] = pandas.concat([datums_history[bin_timestamp_partition]["data_df"],
-                                                                                        datums_df["data_df"]], ignore_index=True)
-                    anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] merged buffer partition [{}]".format(self.name, bin_timestamp_partition))
-                bin_timestamp_partition_expireds = []
-                bin_timestamp_partition_upper = bin_timestamp_partition + self.config["history_partitions"] * self.config["history_partition_seconds"]
-                for bin_timestamp_partition_cached in datums_history:
-                    if bin_timestamp_partition_cached > bin_timestamp_partition_upper:
-                        bin_timestamp_partition_expireds.append(bin_timestamp_partition_cached)
-                for bin_timestamp_partition_expired in bin_timestamp_partition_expireds:
-                    del datums_history[bin_timestamp_partition_expired]
-                    anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] purged expired partition [{}]".format(self.name, bin_timestamp_partition_expired))
-                while len(datums_history) > self.config["history_partitions"] or \
-                                sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
-                                self.config["history_ticks"]:
-                    bin_timestamp_partition_upperbounded = min(datums_history.iterkeys())
-                    del datums_history[bin_timestamp_partition_upperbounded]
-                    anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                 lambda: "[{}] purged upperbounded partition [{}]".format(self.name,
-                                                                                                          bin_timestamp_partition_upperbounded))
+            bin_timestamp_partition_expireds = []
+            bin_timestamp_partition_upper = datums_buffer_partition_max + self.config["history_partitions"] * self.config["history_partition_seconds"]
+            for bin_timestamp_partition_cached in datums_history:
+                if bin_timestamp_partition_cached > bin_timestamp_partition_upper:
+                    bin_timestamp_partition_expireds.append(bin_timestamp_partition_cached)
+            for bin_timestamp_partition_expired in bin_timestamp_partition_expireds:
+                del datums_history[bin_timestamp_partition_expired]
+                anode.Log(logging.DEBUG).log("Plugin", "state",
+                                             lambda: "[{}] purged expired partition [{}]".format(self.name, bin_timestamp_partition_expired))
+            while len(datums_history) > self.config["history_partitions"] or \
+                            sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
+                            self.config["history_ticks"]:
+                bin_timestamp_partition_upperbounded = min(datums_history.iterkeys())
+                del datums_history[bin_timestamp_partition_upperbounded]
+                anode.Log(logging.DEBUG).log("Plugin", "state",
+                                             lambda: "[{}] purged upperbounded partition [{}]".format(self.name,
+                                                                                                      bin_timestamp_partition_upperbounded))
         log_timer.log("Plugin", "timer", lambda: "[{}] partitions [{}]".format(self.name, len(datums_history)),
                       context=self.datum_merge_buffer_history)
 
@@ -330,23 +347,29 @@ class Plugin(object):
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                         "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
                         "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
-            datums_partition_metadata = {}
-            datums_partition_upper = DATUM_TIMESTAMP_MAX if "finish" not in datum_filter else \
-                (self.get_time_period(max(datum_filter["finish"]), self.config["history_partition_seconds"]))
-            datums_partition_lower = DATUM_TIMESTAMP_MIN if "start" not in datum_filter else \
-                (self.get_time_period(max(datum_filter["start"]), self.config["history_partition_seconds"]))
             datums_partitions = []
-            for datums_partition in datums_history:
-                if datums_partition_upper >= datums_partition >= datums_partition_lower:
-                    datums_partition_metadata = datums_history[datums_partition]
-                    datums_partitions.append(datums_partition_metadata["data_df"])
+            if "partitions" in datum_filter:
+                datum_filter_partitions = 0 if not min(datum_filter["partitions"]).isdigit() else int(min(datum_filter["partitions"]))
+                if datum_filter_partitions > 0 and len(datums_history) > 0:
+                    for datums_partition in sorted(datums_history.iterkeys())[(
+                            (len(datums_history) - datum_filter_partitions) if len(datums_history) > datum_filter_partitions else 0):]:
+                        datums_partitions.append(datums_history[datums_partition]["data_df"])
+            else:
+                datums_partition_lower = DATUM_TIMESTAMP_MIN if "start" not in datum_filter else \
+                    (self.get_time_period(int(min(datum_filter["start"])), self.config["history_partition_seconds"]))
+                datums_partition_upper = DATUM_TIMESTAMP_MAX if "finish" not in datum_filter else \
+                    (self.get_time_period(int(max(datum_filter["finish"])), self.config["history_partition_seconds"]))
+                for datums_partition in sorted(datums_history.keys()):
+                    if datums_partition_upper >= datums_partition >= datums_partition_lower:
+                        datums_partitions.append(datums_history[datums_partition]["data_df"])
             if len(datums_partitions) > 0:
+                datums_partition_metadata = datums_history.itervalues().next().copy()
                 if len(datums_partitions) == 1:
                     datums_partition_metadata["data_df"] = datums_partitions[0].copy(deep=False)
                 else:
                     datums_partition_metadata["data_df"] = pandas.concat(datums_partitions, ignore_index=True)
-                datums_partition_metadata["data_df"] = \
-                    datums_partition_metadata["data_df"][~datums_partition_metadata["data_df"]["bin_timestamp"].duplicated(keep="first")]
+                datums_partition_metadata["data_df"] = Plugin.datums_df_resample(
+                    Plugin.datums_df_filter(Plugin.datums_df_reindex(datums_partition_metadata["data_df"]), datum_filter), datum_filter)
                 datums.append(datums_partition_metadata)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_merge_history)
         return datums
@@ -480,7 +503,8 @@ class Plugin(object):
 
     @staticmethod
     def datum_df_to_dict(datum_df):
-        datums_dict = datum_df["data_df"].to_dict(orient="records")
+        datums_dict_df = Plugin.datums_df_unindex(datum_df["data_df"].copy(deep=False))
+        datums_dict = datums_dict_df.to_dict(orient="records")
         for datum_dict in datums_dict:
             datum_dict["data_value"] = numpy.asscalar(datum_dict["data_value"])
             datum_dict["bin_timestamp"] = numpy.asscalar(datum_dict["bin_timestamp"])
@@ -646,9 +670,8 @@ class Plugin(object):
             datums_df_groups_concat = {}
             datums_df_groups_concat_data = []
             for datum_name, datums_df_dict in datums_df_groups.iteritems():
-                datums_df_dict_df = pandas.concat(datums_df_dict["data_df"], ignore_index=True)
-                datums_df_dict_df.set_index("bin_timestamp", inplace=True)
-                datums_df_dict_df.index = pandas.to_datetime(datums_df_dict_df.index, unit="s")
+                datums_df_dict_df = pandas.concat(datums_df_dict["data_df"])
+                datums_df_dict_df = Plugin.datums_df_reindex(datums_df_dict_df)
                 datums_df_dict_df["data_value"] = (datums_df_dict_df["data_value"] / datums_df_dict["data_scale"]).astype(
                     numpy.dtype(decimal.Decimal))
                 datums_df_dict_df.rename(columns={"data_timestamp": "data_timestamp@" + datum_name, "data_value": "data_value_scaled@" + datum_name},
@@ -661,19 +684,9 @@ class Plugin(object):
                 sum(len(datums_df_groups_concat_df.index) for datums_df_groups_concat_df in datums_df_groups_concat.values())),
                                        context=Plugin.datums_df_to_df, off_thread=off_thread)
             log_timer_output = anode.Log(logging.DEBUG).start()
-            if datum_options is not None:
-                if "period" in datum_options:
-                    datum_df = getattr(datum_df.resample(str(datum_options["period"][0]) + "S"),
-                                       "max" if "method" not in datum_options else datum_options["method"][0])()
-                if "fill" in datum_options:
-                    if datum_options["fill"][0] == "all" or datum_options["fill"][0] == "linear":
-                        datum_df[datums_df_groups_concat_data] = datum_df[datums_df_groups_concat_data].interpolate()
-                    if datum_options["fill"][0] == "all" or datum_options["fill"][0] == "zeros":
-                        datum_df[datums_df_groups_concat_data] = datum_df[datums_df_groups_concat_data].fillna(0)
-            datum_df.index = datum_df.index.astype(numpy.int64) // 10 ** 9
-            datum_df.index.name = "bin_timestamp"
-            datum_df.reset_index(inplace=True)
-            datum_df.reindex_axis(sorted(datum_df.columns), axis=1)
+            datum_df = Plugin.datums_df_unindex(
+                Plugin.datums_df_fill(
+                    Plugin.datums_df_resample(datum_df, datum_options), datums_df_groups_concat_data, datum_options))
             if "print" in datum_options and datum_options["print"][0] == "pretty":
                 Plugin.datums_df_data_pretty(datum_df)
                 Plugin.datums_df_metadata_pretty(datum_df)
@@ -710,6 +723,55 @@ class Plugin(object):
         return datums_formatted
 
     @staticmethod
+    def datums_df_reindex(datum_df):
+        if "bin_timestamp" in datum_df:
+            datum_df = datum_df[~datum_df["bin_timestamp"].duplicated(keep="first")]
+            datum_df.set_index("bin_timestamp", inplace=True)
+            datum_df.index = pandas.to_datetime(datum_df.index, unit="s")
+        return datum_df
+
+    @staticmethod
+    def datums_df_unindex(datum_df):
+        if "bin_timestamp" not in datum_df:
+            datum_df.index = datum_df.index.astype(numpy.int64) // 10 ** 9
+            datum_df.index.name = "bin_timestamp"
+            datum_df.reset_index(inplace=True)
+            datum_df.reindex_axis(sorted(datum_df.columns), axis=1)
+        return datum_df
+
+    @staticmethod
+    def datums_df_filter(datum_df, datum_options):
+        if datum_options is not None:
+            datum_df = Plugin.datums_df_reindex(datum_df)
+            if "start" in datum_options:
+                datum_df = datum_df[datum_df.index >= pandas.to_datetime(datum_options["start"], unit="s")[0]]
+            if "finish" in datum_options:
+                datum_df = datum_df[datum_df.index <= pandas.to_datetime(datum_options["finish"], unit="s")[0]]
+        return datum_df
+
+    @staticmethod
+    def datums_df_resample(datum_df, datum_options):
+        if datum_options is not None:
+            if "period" in datum_options:
+                datum_df = getattr(datum_df.resample(str(datum_options["period"][0]) + "S"),
+                                   "max" if "method" not in datum_options else datum_options["method"][0])()
+        return datum_df
+
+    @staticmethod
+    def datums_df_fill(datum_df, datum_df_columns, datum_options):
+        if datum_options is not None:
+            if "fill" in datum_options:
+                if datum_options["fill"][0] == "linear":
+                    try:
+                        datum_df[datum_df_columns] = datum_df[datum_df_columns].interpolate()
+                    except TypeError as type_error:
+                        anode.Log(logging.WARN).log("Plugin", "state",
+                                                    lambda: "[{}] could not interperloate data frame column [{}]".format(self.name, type_error))
+                if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "zeros":
+                    datum_df[datum_df_columns] = datum_df[datum_df_columns].fillna(0)
+        return datum_df
+
+    @staticmethod
     def datums_df_data_pretty(datum_df):
         timestamps = []
         if "Time" in datum_df:
@@ -728,6 +790,7 @@ class Plugin(object):
         datum_df_columns_renames_tokens_metric0 = set()
         datum_df_columns_renames_tokens_metric2 = set()
         datum_df_columns_renames_tokens_metric2_type = set()
+        datum_df_columns_renames_tokens_metric3_type = set()
         for datum_df_column in datum_df.columns:
             if datum_df_column == "bin_timestamp":
                 datum_df_columns_renames[datum_df_column] = "Time"
@@ -739,6 +802,12 @@ class Plugin(object):
                 datum_df_columns_renames_tokens_metric2.add(datum_df_column_tokens_subset[2])
                 datum_df_columns_renames_tokens_metric2_type.add(
                     "".join([datum_df_column_tokens_subset[2], datum_df_column_tokens_subset[3]]))
+                datum_df_columns_renames_tokens_metric3_type.add("".join(datum_df_column_tokens_subset[0:4]))
+                datum_df_column_tokens_subset_bin = "".join(["(", " ".join(
+                    [re.search(r'\d+', datum_df_column_tokens_all[2].split("=")[1]).group(), datum_df_column_tokens_all[2].split("=")[1].replace(
+                        re.search(r'\d+', datum_df_column_tokens_all[2].split("=")[1]).group(), "").title()]), ")"])
+                datum_df_column_tokens_subset.append(
+                    datum_df_column_tokens_subset_bin if datum_df_column_tokens_subset_bin.find("Alltime") == -1 else "(All-time)")
                 datum_df_columns_renames_tokens[datum_df_column] = datum_df_column_tokens_subset
             elif datum_df_column.startswith("data_timestamp"):
                 datum_df_columns_deletes.append(datum_df_column)
@@ -757,10 +826,15 @@ class Plugin(object):
                      datum_df_columns_renames_tokens[datum_df_columns_renames_token][3].title()])
                 if len(datum_df_columns_renames_tokens_metric2_type) == len(datum_df_columns_renames_tokens):
                     datum_df_columns_renames_token_subset.append(datum_df_columns_renames_tokens_metric2_type_str)
-                else:
+                elif len(datum_df_columns_renames_tokens_metric3_type) == len(datum_df_columns_renames_tokens):
                     datum_df_columns_renames_token_subset.append(
                         " ".join([datum_df_columns_renames_tokens[datum_df_columns_renames_token][1].title(),
                                   datum_df_columns_renames_tokens_metric2_type_str]))
+                else:
+                    datum_df_columns_renames_token_subset.append(
+                        " ".join([datum_df_columns_renames_tokens[datum_df_columns_renames_token][1].title(),
+                                  datum_df_columns_renames_tokens_metric2_type_str,
+                                  datum_df_columns_renames_tokens[datum_df_columns_renames_token][4]]))
             datum_df_columns_renames[datum_df_columns_renames_token] = " ".join(datum_df_columns_renames_token_subset)
         datum_df.rename(columns=datum_df_columns_renames, inplace=True)
 
@@ -780,6 +854,45 @@ class Plugin(object):
                                          lambda: "[{}] setting value {} to default [{}] from response [{}] due to error [{}]".format(
                                              self.name, keys, default, data, exception), exception)
             return None if default is None else int(default * factor)
+
+    def datums_store(self):
+        log_timer = anode.Log(logging.INFO).start()
+        metrics_count = 0
+        if len(self.datums) > 0:
+            pandas.to_pickle(self.datums, self.datums_file())
+        metrics_count = sum(len(units)
+                            for metrics in self.datums.values()
+                            for types in metrics.values()
+                            for units in types.values())
+        datums_count = sum(0 if DATUM_QUEUE_HISTORY not in bins else (
+            sum(len(partitions["data_df"].index) for partitions in bins[DATUM_QUEUE_HISTORY].values()))
+                           for metrics in self.datums.values()
+                           for types in metrics.values()
+                           for units in types.values()
+                           for bins in units.values())
+        log_timer.log("Plugin", "timer", lambda: "[{}] state stored [{}] metrics and [{}] datums".format(self.name, metrics_count, datums_count),
+                      context=self.datums_store)
+
+    def datums_load(self):
+        log_timer = anode.Log(logging.INFO).start()
+        metrics_count = 0
+        if os.path.isfile(self.datums_file()):
+            self.datums = pandas.read_pickle(self.datums_file())
+            metrics_count = sum(len(units)
+                                for metrics in self.datums.values()
+                                for types in metrics.values()
+                                for units in types.values())
+        datums_count = sum(0 if DATUM_QUEUE_HISTORY not in bins else (
+            sum(len(partitions["data_df"].index) for partitions in bins[DATUM_QUEUE_HISTORY].values()))
+                           for metrics in self.datums.values()
+                           for types in metrics.values()
+                           for units in types.values()
+                           for bins in units.values())
+        log_timer.log("Plugin", "timer", lambda: "[{}] state loaded [{}] metrics and [{}] datums".format(self.name, metrics_count, datums_count),
+                      context=self.datums_store)
+
+    def datums_file(self):
+        return self.config["db_dir"] + self.name + ".pkl"
 
     def get_time(self):
         return calendar.timegm(time.gmtime()) if not self.is_clock else ((1 if self.reactor.seconds() == 0 else int(self.reactor.seconds())) +
@@ -825,14 +938,13 @@ class Plugin(object):
         self.datums = {}
         self.datums_pushed = 0
         self.datums_dropped = 0
-        self.datums_buffer = 0
-        self.datums_history = 0
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
         self.time_tmz_offset = calendar.timegm(time_local) - calendar.timegm(time.gmtime(time.mktime(time_local)))
         self.datums_buffer_batch = BUFFER_BATCH_DEFAULT if ("buffer_ticks" not in self.config or self.config["buffer_ticks"] < 1) \
             else self.config["buffer_ticks"]
+        self.datums_load()
 
 
 BUFFER_BATCH_DEFAULT = 60
