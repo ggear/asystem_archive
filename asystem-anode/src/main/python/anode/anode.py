@@ -42,18 +42,19 @@ class ANode:
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
+        if "save_seconds" in self.config and self.config["save_seconds"] > 0:
+            save_loopingcall = LoopingCall(self.store_state)
+            save_loopingcall.clock = self.core_reactor
+            save_loopingcall.start(self.config["save_seconds"])
         for plugin_name in self.config["plugin"]:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
-            self.plugins[plugin_name] = self.register_plugin(plugin_name, self.config["plugin"][plugin_name])
+            self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
+            self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
+            if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
+                plugin_loopingcall = LoopingCall(self.plugins[plugin_name].poll)
+                plugin_loopingcall.clock = self.core_reactor
+                plugin_loopingcall.start(self.config["plugin"][plugin_name]["poll_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
-
-    def register_plugin(self, plugin_name, plugin_config):
-        plugin_instance = Plugin.get(self, plugin_name, plugin_config, self.core_reactor)
-        if plugin_config["poll_seconds"] > 0:
-            plugin_loopingcall = LoopingCall(plugin_instance.poll)
-            plugin_loopingcall.clock = self.core_reactor
-            plugin_loopingcall.start(plugin_config["poll_seconds"])
-        return plugin_instance
 
     def get_datums(self, datum_filter, datums=None):
         datums_filtered = {}
@@ -73,6 +74,14 @@ class ANode:
     def push_datums(self, datums):
         self.web_ws.push(datums)
 
+    def store_state(self):
+        for plugin in self.plugins.values():
+            plugin.datums_store()
+
+    def load_state(self):
+        for plugin in self.plugins.values():
+            plugin.datums_load()
+
     def start_server(self):
         log_timer = Log(logging.DEBUG).start()
         Log(logging.INFO).log("Service", "state", lambda: "[anode] starting")
@@ -89,6 +98,8 @@ class ANode:
     def stop_server(self):
         log_timer = Log(logging.DEBUG).start()
         Log(logging.INFO).log("Service", "state", lambda: "[anode] stopping")
+        if "save_on_exit" in self.config:
+            self.store_state()
         log_timer.log("Service", "timer", lambda: "[anode] stopped", context=self.stop_server)
         return succeed(None)
 
@@ -267,14 +278,16 @@ class Log:
 
 def main(core_reactor=reactor):
     parser = OptionParser()
-    parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE",
-                      metavar="FILE")
+    parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE", metavar="FILE")
+    parser.add_option("-d", "--db-dir", dest="db_dir", default="/etc/anode/", help="config FILE", metavar="FILE")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="noisy output to stdout")
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress all output to stdout")
     (options, args) = parser.parse_args()
     Log.configure(options.verbose, options.quiet)
     with open(options.config, "r") as stream:
         config = yaml.load(stream)
+    if not os.path.isdir(options.db_dir):
+        raise IOError("No such directory: {}".format(options.db_dir))
     anode = ANode(core_reactor, options, config)
     if core_reactor == reactor:
         anode.start_server()
