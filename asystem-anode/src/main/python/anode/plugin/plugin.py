@@ -67,11 +67,11 @@ class Plugin(object):
                                 datum_bin_timestamp = self.get_time()
                                 if (datum_bin_timestamp - datum["bin_timestamp"]) >= self.config["repeat_seconds"]:
 
-                                    def expired_max_min(max_or_min):
-                                        if max_or_min in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
-                                            if datums[max_or_min]["bin_timestamp"] < self.get_time_period(self.get_time(), Plugin.get_seconds(
-                                                    datums[max_or_min]["bin_width"],
-                                                    datums[max_or_min]["bin_unit"])):
+                                    def expired_max_min(type):
+                                        if type in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
+                                            if datums[type]["bin_timestamp"] < self.get_time_period(self.get_time(), Plugin.get_seconds(
+                                                    datums[type]["bin_width"],
+                                                    datums[type]["bin_unit"])):
                                                 return True
                                         return False
 
@@ -942,6 +942,8 @@ class Plugin(object):
                     except TypeError as type_error:
                         anode.Log(logging.WARN).log("Plugin", "state",
                                                     lambda: "[{}] could not interperloate data frame column [{}]".format(self.name, type_error))
+                if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "forwardback":
+                    datum_df[datum_df_columns] = datum_df[datum_df_columns].fillna(method="ffill").fillna(method="bfill")
                 if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "zeros":
                     datum_df[datum_df_columns] = datum_df[datum_df_columns].fillna(0)
         Plugin.datums_df_title(datum_df, datum_df_title)
