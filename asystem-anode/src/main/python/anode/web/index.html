@@ -70,10 +70,10 @@
                                         datumsPlotUri += "&partitions=3&period=1800&method=max&fill=linear"
                                     }
                                     else if (plot == "week") {
-                                        datumsPlotUri += "&partitions=7&period=3600&method=max&fill=linear"
+                                        datumsPlotUri += "&partitions=7&period=3600&method=median&fill=linear"
                                     }
                                     else {
-                                        datumsPlotUri += "&period=7200&method=max&fill=linear"
+                                        datumsPlotUri += "&period=7200&method=median&fill=linear"
                                     }
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
                                         "<div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +

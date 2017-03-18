@@ -811,7 +811,7 @@ class Plugin(object):
                      "source=" + datums_df_dict["data_source"],
                      "anode_id=" + ID_BASE64
                      ]
-                )
+                ).decode("utf-8")
                 if datum_name not in datums_df_groups:
                     datums_df_groups[datum_name] = datums_df_dict.copy()
                     datums_df_groups[datum_name]["data_df"] = [datums_df_dict["data_df"]]
@@ -938,7 +938,7 @@ class Plugin(object):
             if "fill" in datum_options:
                 if datum_options["fill"][0] == "linear":
                     try:
-                        datum_df[datum_df_columns] = datum_df[datum_df_columns].interpolate()
+                        datum_df[datum_df_columns] = datum_df[datum_df_columns].interpolate(method="time")
                     except TypeError as type_error:
                         anode.Log(logging.WARN).log("Plugin", "state",
                                                     lambda: "[{}] could not interperloate data frame column [{}]".format(self.name, type_error))
