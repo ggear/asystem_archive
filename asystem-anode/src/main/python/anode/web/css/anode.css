@@ -55,3 +55,7 @@ span {
 .datum-detail-down {
     color: red;
 }
+
+.datum-plot {
+    width: 100%;
+}

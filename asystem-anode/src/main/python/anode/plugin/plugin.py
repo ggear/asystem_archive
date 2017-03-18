@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import HTMLParser
+import StringIO
 import abc
 import base64
 import calendar
@@ -25,9 +26,15 @@ import avro
 import avro.io
 import avro.schema
 import avro.schema
+import matplotlib
+import matplotlib.dates as dates
+import matplotlib.pyplot as plot
 import numpy
 import pandas
 from avro.io import AvroTypeException
+from cycler import cycler
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 from twisted.internet.task import Clock
 
 import anode.plugin
@@ -46,6 +53,46 @@ class Plugin(object):
             log_timer = anode.Log(logging.DEBUG).start()
             self._push(text_content)
             log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push)
+
+    def repeat(self):
+        log_timer = anode.Log(logging.DEBUG).start()
+        for datum_metric in self.datums:
+            for datum_type in self.datums[datum_metric]:
+                for datum_unit in self.datums[datum_metric][datum_type]:
+                    for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
+                        if DATUM_QUEUE_LAST in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
+                            datums = self.datums[datum_metric][datum_type][datum_unit][datum_bin]
+                            datum = datums[DATUM_QUEUE_LAST]
+                            if datum["data_temporal"] != "derived":
+                                datum_bin_timestamp = self.get_time()
+                                if (datum_bin_timestamp - datum["bin_timestamp"]) >= self.config["repeat_seconds"]:
+
+                                    def expired_max_min(max_or_min):
+                                        if max_or_min in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
+                                            if datums[max_or_min]["bin_timestamp"] < self.get_time_period(self.get_time(), Plugin.get_seconds(
+                                                    datums[max_or_min]["bin_width"],
+                                                    datums[max_or_min]["bin_unit"])):
+                                                return True
+                                        return False
+
+                                    self.datum_push(
+                                        datum["data_metric"],
+                                        "forecast" if datum["data_temporal"] == "forecast" else "repeat", datum["data_type"],
+                                        datum["data_value"],
+                                        datum["data_unit"],
+                                        datum["data_scale"],
+                                        datum["data_timestamp"],
+                                        datum_bin_timestamp,
+                                        datum["bin_width"],
+                                        datum["bin_unit"],
+                                        data_string=datum["data_string"] if "data_string" in datum else None,
+                                        data_derived_max=expired_max_min(DATUM_QUEUE_MAX),
+                                        data_derived_min=expired_max_min(DATUM_QUEUE_MIN),
+                                        data_push_force=True,
+                                        data_transient=DATUM_QUEUE_HISTORY not in datums
+                                    )
+        self.datum_pop()
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.repeat)
 
     def datum_pop(self):
         datums_popped = 0
@@ -108,7 +155,8 @@ class Plugin(object):
             data_bound_lower=0,
             data_transient=True
         )
-        partitions_count_max = max(len(bins[DATUM_QUEUE_HISTORY])
+        partitions_count_max = max(0 if DATUM_QUEUE_HISTORY not in bins else (
+            len(bins[DATUM_QUEUE_HISTORY]))
                                    for metrics in self.datums.values()
                                    for types in metrics.values()
                                    for units in types.values()
@@ -186,8 +234,8 @@ class Plugin(object):
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] popped [{}] datums".format(self.name, datums_popped))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
-                   bin_unit, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
-                   data_derived_period=1, data_derived_unit="day", data_transient=False):
+                   bin_unit, data_string=None, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
+                   data_derived_period=1, data_derived_unit="day", data_push_force=False, data_transient=False):
         log_timer = anode.Log(logging.DEBUG).start()
         if data_value is not None:
             datum_dict = {
@@ -199,6 +247,7 @@ class Plugin(object):
                 "data_value": data_value,
                 "data_unit": data_unit,
                 "data_scale": data_scale,
+                "data_string": data_string,
                 "data_timestamp": data_timestamp,
                 "bin_timestamp": bin_timestamp,
                 "bin_width": bin_width,
@@ -230,14 +279,18 @@ class Plugin(object):
                     str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(
                         maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1 else self.config["publish_ticks"])),
-                    DATUM_QUEUE_BUFFER: deque(),
-                    DATUM_QUEUE_HISTORY: {}
+                    DATUM_QUEUE_BUFFER: deque()
                 }
+                if not data_transient:
+                    self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
+                        str(datum_dict["bin_width"]) + datum_dict["bin_unit"]][DATUM_QUEUE_HISTORY] = {}
             datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][str(datum_dict["bin_width"]) +
                                                                                                                     datum_dict["bin_unit"]]
             if DATUM_QUEUE_LAST not in datums_deref or datums_deref[DATUM_QUEUE_LAST]["data_value"] != datum_dict["data_value"] or \
                             datums_deref[DATUM_QUEUE_LAST]["data_unit"] != datum_dict["data_unit"] or \
-                            datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"]:
+                            datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"] or \
+                    ("data_string" in datums_deref[DATUM_QUEUE_LAST] and
+                             datums_deref[DATUM_QUEUE_LAST]["data_string"] != datum_dict["data_string"]) or data_push_force:
                 self.time_seen = self.get_time()
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 bin_timestamp_derived = self.get_time_period(datum_dict["bin_timestamp"],
@@ -254,11 +307,11 @@ class Plugin(object):
                             anode.Log(logging.DEBUG).log("Plugin", "state",
                                                          lambda: "[{}] seleted high [{}]".format(self.name,
                                                                                                  self.datum_tostring(datums_deref[DATUM_QUEUE_MAX])))
-                            self.datum_push(data_metric, data_temporal, "high", datum_dict["data_value"], data_unit, data_scale,
+                            self.datum_push(data_metric, "derived", "high", datum_dict["data_value"], data_unit, data_scale,
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
                                             else data_derived_period, datum_dict["bin_unit"] if datum_dict["data_type"] == "integral"
-                                            else data_derived_unit, data_transient=data_transient)
+                                            else data_derived_unit, data_push_force=data_push_force, data_transient=data_transient)
                     if data_derived_min:
                         if DATUM_QUEUE_MIN not in datums_deref or datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] < bin_timestamp_derived or \
                                         datums_deref[DATUM_QUEUE_MIN]["data_value"] > datum_dict["data_value"]:
@@ -270,11 +323,11 @@ class Plugin(object):
                             anode.Log(logging.DEBUG).log("Plugin", "state",
                                                          lambda: "[{}] deleted low [{}]".format(self.name,
                                                                                                 self.datum_tostring(datums_deref[DATUM_QUEUE_MIN])))
-                            self.datum_push(data_metric, data_temporal, "low", datum_dict["data_value"], data_unit, data_scale,
+                            self.datum_push(data_metric, "derived", "low", datum_dict["data_value"], data_unit, data_scale,
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
                                             else data_derived_period, datum_dict["bin_unit"] if datum_dict["data_type"] == "integral"
-                                            else data_derived_unit, data_transient=data_transient)
+                                            else data_derived_unit, data_push_force=data_push_force, data_transient=data_transient)
                     self.datums_pushed += 1
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
@@ -376,11 +429,12 @@ class Plugin(object):
 
     @staticmethod
     def datum_tostring(datum_dict):
-        return "{}.{}.{}.{}{}.{}={}{}".format(
+        return "{}.{}.{}.{}{}.{}={}{}{}".format(
             datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"], datum_dict["bin_timestamp"],
             datum_dict["bin_unit"].encode("utf-8"),
             int(datum_dict["data_value"]) / Decimal(datum_dict["data_scale"]),
-            datum_dict["data_unit"].encode("utf-8")
+            datum_dict["data_unit"].encode("utf-8"),
+            datum_dict["data_string"] if datum_dict["data_string"] is not None else ""
         )
 
     def datum_get(self, datum_scope, data_metric, data_type, data_unit, bin_width, bin_unit, data_derived_period=None, data_derived_unit="day"):
@@ -401,7 +455,7 @@ class Plugin(object):
                 for datum_type in self.datums[data_metric]:
                     if Plugin.is_fitlered(datum_filter, "types", datum_type):
                         for datum_unit in self.datums[data_metric][datum_type]:
-                            if Plugin.is_fitlered(datum_filter, "units", datum_unit.encode("utf-8")):
+                            if Plugin.is_fitlered(datum_filter, "units", datum_unit.encode("utf-8"), exact_match=True):
                                 for datum_bin in self.datums[data_metric][datum_type][datum_unit]:
                                     if Plugin.is_fitlered(datum_filter, "bins", datum_bin):
                                         datum_scopes = [DATUM_QUEUE_LAST] if "scope" not in datum_filter else datum_filter["scope"]
@@ -435,7 +489,7 @@ class Plugin(object):
         for datum in Plugin.datum_to_format(datums, "dict")["dict"]:
             if Plugin.is_fitlered(datum_filter, "metrics", datum["data_metric"]):
                 if Plugin.is_fitlered(datum_filter, "types", datum["data_type"]):
-                    if Plugin.is_fitlered(datum_filter, "units", datum["data_unit"].encode("utf-8")):
+                    if Plugin.is_fitlered(datum_filter, "units", datum["data_unit"].encode("utf-8"), exact_match=True):
                         if Plugin.is_fitlered(datum_filter, "bins", str(datum["bin_width"]) + datum["bin_unit"]):
                             if "dict" not in datums_filtered:
                                 datums_filtered["dict"] = []
@@ -444,11 +498,12 @@ class Plugin(object):
         return datums_filtered
 
     @staticmethod
-    def is_fitlered(datum_filter, datum_filter_field, datum_field):
+    def is_fitlered(datum_filter, datum_filter_field, datum_field, exact_match=False):
         if datum_filter_field not in datum_filter:
             return True
         for datum_filter_field_value in datum_filter[datum_filter_field]:
-            if datum_field.lower().find(datum_filter_field_value.lower()) != -1:
+            if exact_match and datum_field.lower() == datum_filter_field_value.lower() or \
+                            not exact_match and datum_field.lower().find(datum_filter_field_value.lower()) != -1:
                 return True
         return False
 
@@ -636,6 +691,105 @@ class Plugin(object):
         return datums_csv
 
     @staticmethod
+    def datums_df_to_svg(datums_df, off_thread=False):
+        datums_plot_font_size = 14
+        datums_plot_alpha = 0.7
+        datums_plot_colour = "white"
+        datums_plot_colour_foreground = "0.5"
+        datums_plot_colour_background = "black"
+        datums_plot_title = datums_df.title if hasattr(datums_df, "title") else None
+        datums_plot_buffer = StringIO.StringIO()
+        datums_df = Plugin.datums_df_reindex(datums_df)
+        datums_points = len(datums_df.index)
+        datums_axes_x_range = ((datums_df.index[-1] - datums_df.index[0]).total_seconds()) if datums_points > 0 else 0
+        if datums_points == 0 or datums_axes_x_range == 0:
+            return SVG_EMPTY
+        datums_figure = Figure()
+        datums_axes = datums_figure.add_subplot(111)
+        datums_axes.set_prop_cycle(cycler("color", ["lime", "red", "silver", "cyan", "darkorange", "deeppink", "yellow", "violet", "darkred"]))
+        for column in datums_df:
+            datums_axes.plot(datums_df.index, datums_df[column])
+        datums_axes.margins(0, 0, tight=True)
+        datums_axes.minorticks_off()
+        if datums_axes_x_range <= (10 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.SecondLocator(interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M:%S"))
+        elif datums_axes_x_range <= (60 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.SecondLocator(bysecond=[0, 10, 20, 30, 40, 50], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M:%S"))
+        if datums_axes_x_range <= (60 * 20 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=[0, 10, 20, 30, 40, 50], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 * 4 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=[0, 30], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 * 8 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 * 16 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 * 24 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[0, 4, 8, 12, 16, 20], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        elif datums_axes_x_range <= (60 * 60 * 24 * 3 + 2):
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[0, 8, 16], interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+        else:
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%a"))
+        datums_axes.xaxis.label.set_visible(False)
+        datums_axes.xaxis.label.set_color(datums_plot_colour)
+        datums_axes.tick_params(axis="x", colors=datums_plot_colour)
+        datums_axes.yaxis.tick_right()
+        datums_axes.yaxis.label.set_color(datums_plot_colour)
+        datums_axes.yaxis.grid(b=True, which="major", color=datums_plot_colour_foreground, linestyle='--')
+        datums_axes.tick_params(axis="y", colors=datums_plot_colour)
+        datums_axes.spines["bottom"].set_color(datums_plot_colour)
+        datums_axes.spines["top"].set_color(datums_plot_colour)
+        datums_axes.spines["left"].set_color(datums_plot_colour)
+        datums_axes.spines["right"].set_color(datums_plot_colour)
+        datums_axes.patch.set_facecolor(datums_plot_colour_background)
+        if datums_plot_title is not None and len(datums_plot_title) > 20:
+            datums_plot_legend = datums_axes.legend(loc="lower left", ncol=1)
+        else:
+            datums_plot_legend = datums_axes.legend(loc="upper left", ncol=1)
+        for datums_plot_legend_text in datums_plot_legend.get_texts():
+            datums_plot_legend_text.set_fontsize(datums_plot_font_size)
+            datums_plot_legend_text.set_color(datums_plot_colour)
+        datums_plot_legend.get_frame().set_alpha(datums_plot_alpha)
+        datums_plot_legend.get_frame().set_edgecolor(datums_plot_colour_foreground)
+        datums_plot_legend.get_frame().set_facecolor(datums_plot_colour_background)
+        datums_figure.subplots_adjust(left=0, right=0.9, top=0.9725, bottom=0.05)
+        datums_canvas = FigureCanvas(datums_figure)
+        datums_canvas.draw()
+        if datums_plot_title is not None:
+            datums_axes.text(0.98, 0.975, datums_plot_title, horizontalalignment="right", verticalalignment="top", transform=datums_axes.transAxes,
+                             color=datums_plot_colour, fontsize=datums_plot_font_size,
+                             bbox=dict(facecolor=datums_plot_colour_background, edgecolor=datums_plot_colour_background, alpha=datums_plot_alpha,
+                                       boxstyle="round,pad=0.2"))
+        datums_axes_x_labels = [tick.get_text() for tick in datums_axes.get_xticklabels()]
+        if len(datums_axes_x_labels) > 1:
+            datums_axes_x_labels[0] = u""
+        datums_axes.set_xticklabels(datums_axes_x_labels)
+        datums_axes.set_ylim([datums_axes.get_ylim()[0], datums_axes.get_ylim()[1] * 1.15])
+        datums_canvas.print_figure(datums_plot_buffer,
+                                   facecolor=datums_plot_colour_background,
+                                   figsize=(8.68, 12),
+                                   dpi=1200,
+                                   format="svg")
+        datums_figure.clf()
+        plot.close()
+        del datums_canvas
+        del datums_figure
+        del datums_df
+        datums_plot_buffer.seek(0)
+        return datums_plot_buffer.buf
+
+    @staticmethod
     def datums_df_to_df(datums_df, datum_options=None, off_thread=False):
         log_timer = anode.Log(logging.DEBUG).start()
         datums_df_df = []
@@ -678,7 +832,7 @@ class Plugin(object):
                                          inplace=True)
                 datums_df_groups_concat_data.append("data_value_scaled@" + datum_name)
                 datums_df_groups_concat[datum_name] = datums_df_dict_df
-            datum_df = pandas.concat(datums_df_groups_concat.values(), axis=1, join='outer')
+            datum_df = pandas.concat(datums_df_groups_concat.values(), axis=1, join="outer")
             log_timer_intermediate.log("Plugin", "timer", lambda: "[*] intermediate [{}] dataframes and [{}] datums".format(
                 len(datums_df_groups_concat),
                 sum(len(datums_df_groups_concat_df.index) for datums_df_groups_concat_df in datums_df_groups_concat.values())),
@@ -712,10 +866,12 @@ class Plugin(object):
             datums_formatted = Plugin.datum_to_format(datums, "dict", off_thread)["dict"]
             if datum_format == "json":
                 datums_formatted = Plugin.datums_dict_to_json(datums_formatted, off_thread)
-        elif datum_format == "csv" or datum_format == "df":
+        elif datum_format == "csv" or datum_format == "svg" or datum_format == "df":
             datums_formatted = Plugin.datums_df_to_df(Plugin.datum_to_format(datums, "df", off_thread)["df"], datum_options, off_thread=off_thread)
             if datum_format == "csv":
                 datums_formatted = Plugin.datums_df_to_csv(datums_formatted[0], off_thread) if len(datums_formatted) > 0 else ""
+            elif datum_format == "svg":
+                datums_formatted = Plugin.datums_df_to_svg(datums_formatted[0], off_thread) if len(datums_formatted) > 0 else SVG_EMPTY
         else:
             raise ValueError("Unkown datum format [{}]".format(datum_format))
         log_timer.log("Plugin", "timer", lambda: "[*] {} to {} for [{}] datums".format(",".join(datums.keys()), datum_format, datums_count),
@@ -723,42 +879,61 @@ class Plugin(object):
         return datums_formatted
 
     @staticmethod
+    def datums_df_title(datum_df, datum_df_title=None):
+        if datum_df_title is not None:
+            datum_df.title = datum_df_title
+        return datum_df_title if datum_df_title is not None else (datum_df.title if hasattr(datum_df, "title") else None)
+
+    @staticmethod
     def datums_df_reindex(datum_df):
+        datum_df_title = Plugin.datums_df_title(datum_df)
+        if "Time" in datum_df:
+            datum_df["bin_timestamp"] = pandas.to_datetime(datum_df["Time"])
+            datum_df["bin_timestamp"] = (datum_df['bin_timestamp'] - datetime.datetime(1970, 1, 1)).dt.total_seconds()
+            del datum_df["Time"]
         if "bin_timestamp" in datum_df:
             datum_df = datum_df[~datum_df["bin_timestamp"].duplicated(keep="first")]
             datum_df.set_index("bin_timestamp", inplace=True)
             datum_df.index = pandas.to_datetime(datum_df.index, unit="s")
+        Plugin.datums_df_title(datum_df, datum_df_title)
         return datum_df
 
     @staticmethod
     def datums_df_unindex(datum_df):
+        datum_df_title = Plugin.datums_df_title(datum_df)
         if "bin_timestamp" not in datum_df:
             datum_df.index = datum_df.index.astype(numpy.int64) // 10 ** 9
             datum_df.index.name = "bin_timestamp"
             datum_df.reset_index(inplace=True)
             datum_df.reindex_axis(sorted(datum_df.columns), axis=1)
+        Plugin.datums_df_title(datum_df, datum_df_title)
         return datum_df
 
     @staticmethod
     def datums_df_filter(datum_df, datum_options):
+        datum_df_title = Plugin.datums_df_title(datum_df)
         if datum_options is not None:
             datum_df = Plugin.datums_df_reindex(datum_df)
             if "start" in datum_options:
                 datum_df = datum_df[datum_df.index >= pandas.to_datetime(datum_options["start"], unit="s")[0]]
             if "finish" in datum_options:
                 datum_df = datum_df[datum_df.index <= pandas.to_datetime(datum_options["finish"], unit="s")[0]]
+        Plugin.datums_df_title(datum_df, datum_df_title)
         return datum_df
 
     @staticmethod
     def datums_df_resample(datum_df, datum_options):
+        datum_df_title = Plugin.datums_df_title(datum_df)
         if datum_options is not None:
             if "period" in datum_options:
                 datum_df = getattr(datum_df.resample(str(datum_options["period"][0]) + "S"),
                                    "max" if "method" not in datum_options else datum_options["method"][0])()
+        Plugin.datums_df_title(datum_df, datum_df_title)
         return datum_df
 
     @staticmethod
     def datums_df_fill(datum_df, datum_df_columns, datum_options):
+        datum_df_title = Plugin.datums_df_title(datum_df)
         if datum_options is not None:
             if "fill" in datum_options:
                 if datum_options["fill"][0] == "linear":
@@ -769,10 +944,12 @@ class Plugin(object):
                                                     lambda: "[{}] could not interperloate data frame column [{}]".format(self.name, type_error))
                 if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "zeros":
                     datum_df[datum_df_columns] = datum_df[datum_df_columns].fillna(0)
+        Plugin.datums_df_title(datum_df, datum_df_title)
         return datum_df
 
     @staticmethod
     def datums_df_data_pretty(datum_df):
+        datum_df_title = Plugin.datums_df_title(datum_df)
         timestamps = []
         if "Time" in datum_df:
             timestamps.append("Time")
@@ -781,12 +958,15 @@ class Plugin(object):
         for timestamp in timestamps:
             datum_df[timestamp] = datum_df[timestamp].apply(
                 lambda epoch: datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S"))
+        Plugin.datums_df_title(datum_df, datum_df_title)
+        return datum_df
 
     @staticmethod
     def datums_df_metadata_pretty(datum_df):
         datum_df_columns_deletes = []
         datum_df_columns_renames = {}
         datum_df_columns_renames_tokens = {}
+        datum_df_columns_renames_tokens_unit = set()
         datum_df_columns_renames_tokens_metric0 = set()
         datum_df_columns_renames_tokens_metric2 = set()
         datum_df_columns_renames_tokens_metric2_type = set()
@@ -798,14 +978,16 @@ class Plugin(object):
                 datum_df_column_tokens_all = datum_df_column.split("data_value_scaled@")[1].split("&")
                 datum_df_column_tokens_subset = datum_df_column_tokens_all[0].split("=")[1].split(".")
                 datum_df_column_tokens_subset.append(datum_df_column_tokens_all[1].split("=")[1])
+                datum_df_columns_renames_tokens_unit.add(
+                    urllib.unquote_plus(datum_df_column_tokens_all[3].split("=")[1].encode("utf-8")).decode("utf-8"))
                 datum_df_columns_renames_tokens_metric0.add(datum_df_column_tokens_subset[0])
                 datum_df_columns_renames_tokens_metric2.add(datum_df_column_tokens_subset[2])
                 datum_df_columns_renames_tokens_metric2_type.add(
                     "".join([datum_df_column_tokens_subset[2], datum_df_column_tokens_subset[3]]))
                 datum_df_columns_renames_tokens_metric3_type.add("".join(datum_df_column_tokens_subset[0:4]))
                 datum_df_column_tokens_subset_bin = "".join(["(", " ".join(
-                    [re.search(r'\d+', datum_df_column_tokens_all[2].split("=")[1]).group(), datum_df_column_tokens_all[2].split("=")[1].replace(
-                        re.search(r'\d+', datum_df_column_tokens_all[2].split("=")[1]).group(), "").title()]), ")"])
+                    [re.search(r"\d+", datum_df_column_tokens_all[2].split("=")[1]).group(), datum_df_column_tokens_all[2].split("=")[1].replace(
+                        re.search(r"\d+", datum_df_column_tokens_all[2].split("=")[1]).group(), "").title()]), ")"])
                 datum_df_column_tokens_subset.append(
                     datum_df_column_tokens_subset_bin if datum_df_column_tokens_subset_bin.find("Alltime") == -1 else "(All-time)")
                 datum_df_columns_renames_tokens[datum_df_column] = datum_df_column_tokens_subset
@@ -821,7 +1003,8 @@ class Plugin(object):
                 datum_df_columns_renames_token_subset.append(datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title())
             else:
                 datum_df_columns_renames_tokens_metric2_type_str = datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title() if \
-                    datum_df_columns_renames_tokens[datum_df_columns_renames_token][3] == "point" else " ".join(
+                    (datum_df_columns_renames_tokens[datum_df_columns_renames_token][3] == "point" or
+                     datum_df_columns_renames_tokens[datum_df_columns_renames_token][3] == "integral") else " ".join(
                     [datum_df_columns_renames_tokens[datum_df_columns_renames_token][2].title(),
                      datum_df_columns_renames_tokens[datum_df_columns_renames_token][3].title()])
                 if len(datum_df_columns_renames_tokens_metric2_type) == len(datum_df_columns_renames_tokens):
@@ -837,6 +1020,9 @@ class Plugin(object):
                                   datum_df_columns_renames_tokens[datum_df_columns_renames_token][4]]))
             datum_df_columns_renames[datum_df_columns_renames_token] = " ".join(datum_df_columns_renames_token_subset)
         datum_df.rename(columns=datum_df_columns_renames, inplace=True)
+        Plugin.datums_df_title(datum_df, " & ".join(datum_df_columns_renames_tokens_metric0).title() +
+                               " (" + ", ".join(datum_df_columns_renames_tokens_unit) + ")")
+        return datum_df
 
     def datum_value(self, data, keys=None, default=None, factor=1):
         # noinspection PyBroadException
@@ -892,7 +1078,7 @@ class Plugin(object):
                       context=self.datums_store)
 
     def datums_file(self):
-        return self.config["db_dir"] + self.name + ".pkl"
+        return self.config["db_dir"] + "/" + self.name + ".pkl"
 
     def get_time(self):
         return calendar.timegm(time.gmtime()) if not self.is_clock else ((1 if self.reactor.seconds() == 0 else int(self.reactor.seconds())) +
@@ -971,3 +1157,9 @@ DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex")
 ID_BASE64 = base64.b64encode(ID_BYTE)
+
+SVG_EMPTY = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+</svg>"""

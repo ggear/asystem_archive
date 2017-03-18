@@ -53,12 +53,13 @@ class Wunderground(Plugin):
                     "conditions.hills.forecast",
                     "forecast", "enumeration",
                     0,
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
+                    "",
                     1,
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
                 )
                 self.datum_push(
                     "temperature.hills.forecast",

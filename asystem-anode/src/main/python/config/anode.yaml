@@ -6,32 +6,36 @@ plugin:
     fronius:
       poll_seconds: 1
       buffer_ticks: 60
-      history_partitions: 12
-      history_ticks: 3500000
+      history_partitions: 14
+      history_ticks: 4100000
       history_partition_seconds: 86400
+      repeat_seconds: 201
       publish_ticks: -1
       push_upstream: True
     davis:
       poll_seconds: -1
       buffer_ticks: 30
-      history_partitions: 12
-      history_ticks: 900000
+      history_partitions: 14
+      history_ticks: 1700000
       history_partition_seconds: 86400
+      repeat_seconds: 211
       publish_ticks: -1
       push_upstream: True
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
-      history_partitions: 12
-      history_ticks: 35000
+      history_partitions: 14
+      history_ticks: 75000
       history_partition_seconds: 86400
+      repeat_seconds: 222
       publish_ticks: -1
       push_upstream: True
     wunderground:
       poll_seconds: 300
       buffer_ticks: 10
-      history_partitions: 12
-      history_ticks: 20000
+      history_partitions: 14
+      history_ticks: 50000
       history_partition_seconds: 86400
+      repeat_seconds: 233
       publish_ticks: -1
       push_upstream: True
