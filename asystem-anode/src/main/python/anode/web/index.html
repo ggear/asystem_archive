@@ -42,7 +42,8 @@
                     styleTick(document.getElementById("datums_header_connection"), 1);
                 },
                 function () {
-                    document.getElementById("datums_header").innerHTML = "<a href='" + document.location.href + "'>anode.<span id='datums_header_connection'>disconnected</span><span id='datums_header_status'>!</span></a>";
+                    document.getElementById("datums_header").innerHTML = "<a href='" + document.location.href +
+                        "'>anode.<span id='datums_header_connection'>disconnected</span><span id='datums_header_status'>!</span></a>";
                     styleTick(document.getElementById("datums_header_connection"), -1);
                 },
                 function (datum) {
@@ -54,7 +55,7 @@
                                     datumsPlot.add(datum["data_unit"]);
                                     var datumsPlotUri = document.location.href.replace("/?", "/rest/?") + "&units=" + datum["data_unit"] +
                                         "&types=point&types=integral&types=mean" +
-                                        "&scope=history&print=pretty&format=svg";
+                                        "&scope=history&print=pretty";
                                     var plot = "today";
                                     if (window.location.href.indexOf("&plot=") > 0) {
                                         plot = window.location.href.split("&plot=")[1].split("&")
@@ -75,7 +76,8 @@
                                         datumsPlotUri += "&period=7200&method=max&fill=linear"
                                     }
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
-                                        "<div class='datum'><img src='" + datumsPlotUri + "' class='datum-plot'/></div><hr/>"
+                                        "<div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
+                                        datumsPlotUri + "&format=svg' class='datum-plot'/></a></div><hr/>"
                                 }
                             }
                             datumDiv = document.createElement("div");
@@ -108,7 +110,7 @@
                                 datumGroupDiv.className = "datum";
                                 if (datumGroup == "detail") {
                                     datumGroupDiv.appendChild(datumGroupDiv = document.createElement("a"));
-                                    datumGroupDiv.href = "/rest/?metrics=" + datum.data_metric + "&types=" + datum.data_type + "&units=" + datum.data_unit + "&bins=" + datum.bin_width + datum.bin_unit + "&scope=history&format=csv"
+                                    datumGroupDiv.href = "/?metrics=" + datum.data_metric + "&bins=" + datum.bin_width + datum.bin_unit + "&bins=1day"
                                 }
                                 for (var datumField in datumGroupsFields[datumGroup]) {
                                     (function (datumField) {
