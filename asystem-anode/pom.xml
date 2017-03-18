@@ -16,8 +16,8 @@
     <properties>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
-        <dir.anode.db>${project.build.directory}/anode-runtime</dir.anode.db>
-        <integration.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.anode.db} --verbose</integration.test.anode.opts>
+        <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
+        <integration.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</integration.test.anode.opts>
         <integration.test.anode.log>${project.build.directory}/anode-runtime/anode.log</integration.test.anode.log>
     </properties>
 
@@ -196,6 +196,8 @@
                                     <arg value="develop" />
                                     <arg value="--user" />
                                 </exec>
+                                <delete dir="${dir.runtime.anode}" />
+                                <mkdir dir="${dir.runtime.anode}" />
                                 <echo>
 
                                 </echo>
@@ -264,16 +266,20 @@
                         <id>python-run</id>
                         <configuration>
                             <target>
-                                <mkdir dir="${dir.anode.db}" />
                                 <exec executable="python" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />
                                 </exec>
+                                <delete dir="${dir.runtime.anode}" />
+                                <mkdir dir="${dir.runtime.anode}" />
+                                <copy todir="${dir.runtime.anode}">
+                                    <fileset dir="${dir.source.python}/anode/test/data" includes="**/*.pkl" />
+                                </copy>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="--verbose" />
-                                    <arg value="-c${dir.source.python}/config/anode.yaml" />
-                                    <arg value="-d${dir.anode.db}/" />
+                                    <arg value="-c${dir.source.python}/anode/test/data/anode_plugins_run.yaml" />
+                                    <arg value="-d${dir.runtime.anode}/" />
                                 </exec>
                             </target>
                         </configuration>

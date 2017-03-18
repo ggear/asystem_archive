@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import gc
 import logging
 import logging.config
 import os
@@ -51,9 +52,13 @@ class ANode:
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
-                plugin_loopingcall = LoopingCall(self.plugins[plugin_name].poll)
-                plugin_loopingcall.clock = self.core_reactor
-                plugin_loopingcall.start(self.config["plugin"][plugin_name]["poll_seconds"])
+                plugin_pollingcall = LoopingCall(self.plugins[plugin_name].poll)
+                plugin_pollingcall.clock = self.core_reactor
+                plugin_pollingcall.start(self.config["plugin"][plugin_name]["poll_seconds"])
+            if "repeat_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["repeat_seconds"] > 0:
+                plugin_repeatingcall = LoopingCall(self.plugins[plugin_name].repeat)
+                plugin_repeatingcall.clock = self.core_reactor
+                plugin_repeatingcall.start(self.config["plugin"][plugin_name]["repeat_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def get_datums(self, datum_filter, datums=None):
@@ -183,7 +188,11 @@ class WebRest:
         datum_format = "json" if "format" not in datum_filter else datum_filter["format"][0]
         datums_formatted = yield threads.deferToThread(Plugin.datums_to_format, datums, datum_format, datum_filter, True)
         request.setHeader("Content-Disposition", "attachment; filename=anode." + datum_format)
-        request.setHeader("Content-Type", ("application/" if datum_format != "csv" else "text/") + datum_format)
+        request.setHeader("Content-Type",
+                          "text/csv" if datum_format == "csv" else (
+                              "application/json" if datum_format == "json" else ("image/svg+xml" if datum_format == "svg" else (
+                                  "application" + datum_format))))
+        gc.collect()
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.get)
         returnValue(datums_formatted)
 

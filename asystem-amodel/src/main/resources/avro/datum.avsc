@@ -122,6 +122,8 @@
     "type": "enum",
     "symbols": [
       "",
+      "repeat",
+      "derived",
       "current",
       "forecast"
     ]
@@ -167,26 +169,7 @@
       "mbar",
       "mm/h",
       "scalor",
-      "datums",
-      "chance of flurries",
-      "chance of rain",
-      "chance of sleet",
-      "chance of snow",
-      "chance of a thunderstorm",
-      "clear",
-      "cloudy",
-      "flurries",
-      "hazy",
-      "mostly cloudy",
-      "mostly sunny",
-      "partly cloudy",
-      "partly sunny",
-      "rain",
-      "sleet",
-      "snow",
-      "sunny",
-      "thunderstorm",
-      "unknown"
+      "datums"
     ]
   },
   {
@@ -254,6 +237,14 @@
         "name": "data_scale",
         "type": "float",
         "default": 1
+      },
+      {
+        "name": "data_string",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
       },
       {
         "name": "data_timestamp",

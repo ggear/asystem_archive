@@ -76,7 +76,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         datum.order_index = this.orderingIndexes["data_metric"][datum.data_metric] + this.orderingIndexes["data_type"][datum.data_type] +
             this.orderingIndexes["bin_unit"][datum.bin_unit] + datum.bin_width;
         datum.data_timeliness = "";
-        if ((datum.data_temporal == "current" && datum.data_type == "point") || datum.bin_width == 0) {
+        if (((datum.data_temporal == "current" || datum.data_temporal == "repeat" || datum.data_temporal == "derived") && datum.data_type == "point") || datum.bin_width == 0) {
             datum.data_timeliness = "now";
         }
         else {
@@ -104,7 +104,6 @@ function ANode(uri, onopen, onclose, onmessage) {
                             datum.data_timeliness += "ubermorrow night time";
                         }
                     }
-
                 } else {
                     datum.data_timeliness += "over the last " + datum.bin_width + " " + datum.bin_unit + "s";
                 }
