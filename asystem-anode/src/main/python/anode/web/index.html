@@ -143,14 +143,14 @@
                         var datumValueId = datum.ui_id + "_" + ((datum.data_type == "high" || datum.data_type == "low") ? datum.data_type : "value");
                         if (document.getElementById(datumValueId) != null) {
                             var datumValueDelta = datum.data_type == "enumeration" ? 0 : parseFloat(
-                                    document.getElementById(datumValueId).innerHTML.trim().length == 0 ? 0 :
-                                        (datum.data_type == "high" ? 1 : (datum.data_type == "low" ? -1 :
-                                                (datum.data_value / datum.data_scale - document.getElementById(datumValueId).innerHTML))).toFixed(2));
+                                document.getElementById(datumValueId).innerHTML.trim().length == 0 ? 0 :
+                                    (datum.data_type == "high" ? 1 : (datum.data_type == "low" ? -1 :
+                                        (datum.data_value / datum.data_scale - document.getElementById(datumValueId).innerHTML))).toFixed(2));
                             var datumGroupsValues = {
                                 "value": {
                                     "id": datumValueId,
                                     "value": datum.data_type == "enumeration" ? datum.data_string : (datum.data_type == "epoch" ?
-                                            moment(new Date(datum.data_value * 1000)).format("HH:mm:ss").toLowerCase() : (datum.data_value / datum.data_scale)),
+                                        moment(new Date(datum.data_value * 1000)).format("HH:mm:ss").toLowerCase() : (datum.data_value / datum.data_scale)),
                                     "value_delta": datumValueDelta,
                                     "value_prefix": (datum.data_type == "high" ? "&#8613;" : (datum.data_type == "low" ? "&#8615;" : ""))
                                 },
@@ -163,7 +163,7 @@
                                 "trend": {
                                     "id": datum.ui_id + "_trend",
                                     "value": ((datum.data_type == "high" || datum.data_type == "low") ? null : datum.data_type == "enumeration" ? "" :
-                                            (datum.data_type == "epoch" ? moment(new Date(datum.data_value * 1000)).format("MMM Do YYYY").toLowerCase() : datumValueDelta)),
+                                        (datum.data_type == "epoch" ? moment(new Date(datum.data_value * 1000)).format("MMM Do YYYY").toLowerCase() : datumValueDelta)),
                                     "value_delta": datumValueDelta,
                                     "value_prefix": (datum.data_type == "epoch" || datum.data_type == "enumeration") ? "" : (datumValueDelta >= 0 ? "+" : "")
                                 }
@@ -240,15 +240,15 @@
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=power">power</a>
+                        href="/?metrics=power.export&metrics=power.consumption&metrics=power.utlisation">power</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=energy&bins=1day">energy</a>
+                        href="/?metrics=energy.export&metrics=energy.consumption&bins=1day">energy</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=energy&types=integral&types=low&types=high&units=Wh">meters</a>
+                        href="/?metrics=energy&bins=1all-time">meters</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
@@ -260,27 +260,31 @@
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=humidity">humidity</a>
+                        href="/?metrics=humidity&bins=2second&bins=50second&bins=30minute&bins=1day">humidity</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
                         href="/?metrics=noise">noise</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent">temperature</a>
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck">temperature</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
-                        href="/?metrics=rain">rain</a>
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
-                        href="/?metrics=wind">wind</a>
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=wind&bins=2second&bins=1day">wind</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.apparent&metrics=rain&metrics=wind&metrics=pressure">weather</a>.<a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
                         href="/?metrics=pressure">pressure</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=forecast">forecast</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=sun">almanac</a>.<a

@@ -1,5 +1,9 @@
 host: 0.0.0.0
 port: 8091
+push_host: 37.187.106.16
+push_port: 1883
+push_topic: asystem/anode/datum
+push_seconds: 3613
 save_on_exit: True
 save_seconds: 86400
 plugin:
@@ -7,35 +11,35 @@ plugin:
       poll_seconds: 1
       buffer_ticks: 60
       history_partitions: 14
-      history_ticks: 4100000
+      history_ticks: 5000000
       history_partition_seconds: 86400
-      repeat_seconds: 201
-      publish_ticks: -1
+      repeat_seconds: 101
+      push_ticks: -1
       push_upstream: True
     davis:
       poll_seconds: -1
       buffer_ticks: 30
       history_partitions: 14
-      history_ticks: 1700000
+      history_ticks: 900000
       history_partition_seconds: 86400
-      repeat_seconds: 211
-      publish_ticks: -1
+      repeat_seconds: 103
+      push_ticks: -1
       push_upstream: True
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
       history_partitions: 14
-      history_ticks: 75000
+      history_ticks: 400000
       history_partition_seconds: 86400
-      repeat_seconds: 222
-      publish_ticks: -1
+      repeat_seconds: 107
+      push_ticks: -1
       push_upstream: True
     wunderground:
       poll_seconds: 300
-      buffer_ticks: 10
+      buffer_ticks: 5
       history_partitions: 14
-      history_ticks: 50000
+      history_ticks: 800000
       history_partition_seconds: 86400
-      repeat_seconds: 233
-      publish_ticks: -1
+      repeat_seconds: 111
+      push_ticks: -1
       push_upstream: True

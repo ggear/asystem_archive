@@ -91,13 +91,13 @@ function ANode(uri, onopen, onclose, onmessage) {
                         } else if (datum.bin_width == 3) {
                             datum.data_timeliness += "ubermorrow";
                         }
-                    } else if (datum.bin_unit == "lighthours") {
+                    } else if (datum.bin_unit == "day-time") {
                         if (datum.bin_width == 2) {
                             datum.data_timeliness += "tommorrow day time";
                         } else if (datum.bin_width == 3) {
                             datum.data_timeliness += "ubermorrow day time";
                         }
-                    } else if (datum.bin_unit == "darkhours") {
+                    } else if (datum.bin_unit == "night-time") {
                         if (datum.bin_width == 2) {
                             datum.data_timeliness += "tommorrow night time";
                         } else if (datum.bin_width == 3) {
@@ -110,11 +110,11 @@ function ANode(uri, onopen, onclose, onmessage) {
             } else {
                 if (datum.bin_unit == "day") {
                     datum.data_timeliness += "today";
-                } else if (datum.bin_unit == "lighthours") {
+                } else if (datum.bin_unit == "day-time") {
                     datum.data_timeliness += "during the day";
-                } else if (datum.bin_unit == "darkhours") {
+                } else if (datum.bin_unit == "night-time") {
                     datum.data_timeliness += "over night";
-                } else if (datum.bin_unit == "alltime") {
+                } else if (datum.bin_unit == "all-time") {
                     datum.data_timeliness += "for all time";
                 } else {
                     datum.data_timeliness += "this " + datum.bin_unit;

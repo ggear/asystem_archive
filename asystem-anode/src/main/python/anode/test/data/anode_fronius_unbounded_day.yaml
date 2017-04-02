@@ -8,6 +8,3 @@ plugin:
       history_ticks: 100000000000000
       history_partition_seconds: 86400
       repeat_seconds: -1
-      publish_ticks: -1
-      push_upstream: False
-

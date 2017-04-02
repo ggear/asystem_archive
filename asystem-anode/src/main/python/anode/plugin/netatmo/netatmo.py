@@ -4,11 +4,11 @@ from __future__ import print_function
 
 import json
 import logging
+
 import os
 import time
-from decimal import Decimal
-
 import treq
+from decimal import Decimal
 
 import anode
 from anode.plugin.plugin import Plugin
@@ -67,13 +67,13 @@ class Netatmo(Plugin):
         try:
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = self.get_time()
-            for module in dict_content["body"]["devices"]:
-                module_name = ".indoor." + module["module_name"].lower()
-                data_timestamp = module["dashboard_data"]["time_utc"]
+            for device in dict_content["body"]["devices"]:
+                module_name = ".indoor." + device["module_name"].lower()
+                data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Temperature"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
                     u"°C",
                     10,
                     data_timestamp,
@@ -84,10 +84,10 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "high",
-                    self.datum_value(module, ["dashboard_data", "max_temp"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
                     u"°C",
                     10,
-                    module["dashboard_data"]["date_max_temp"],
+                    device["dashboard_data"]["date_max_temp"],
                     bin_timestamp,
                     1,
                     "day"
@@ -95,10 +95,10 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "low",
-                    self.datum_value(module, ["dashboard_data", "min_temp"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
                     u"°C",
                     10,
-                    module["dashboard_data"]["date_min_temp"],
+                    device["dashboard_data"]["date_min_temp"],
                     bin_timestamp,
                     1,
                     "day"
@@ -106,7 +106,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "humidity" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Humidity"]),
+                    self.datum_value(device, ["dashboard_data", "Humidity"]),
                     "%",
                     1,
                     data_timestamp,
@@ -121,7 +121,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "pressure" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Pressure"]),
+                    self.datum_value(device, ["dashboard_data", "Pressure"]),
                     "mbar",
                     1,
                     data_timestamp,
@@ -135,7 +135,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "pressureabsolute" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "AbsolutePressure"]),
+                    self.datum_value(device, ["dashboard_data", "AbsolutePressure"]),
                     "mbar",
                     1,
                     data_timestamp,
@@ -149,7 +149,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "carbondioxide" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "CO2"]),
+                    self.datum_value(device, ["dashboard_data", "CO2"]),
                     "ppm",
                     1,
                     data_timestamp,
@@ -163,7 +163,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "noise" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Noise"]),
+                    self.datum_value(device, ["dashboard_data", "Noise"]),
                     "dB",
                     1,
                     data_timestamp,
@@ -174,13 +174,13 @@ class Netatmo(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-            for module in dict_content["body"]["modules"]:
-                module_name = (".indoor." if module["type"] == "NAModule4" else ".outdoor.") + module["module_name"].lower()
-                data_timestamp = module["dashboard_data"]["time_utc"]
+            for device in dict_content["body"]["modules"]:
+                module_name = (".indoor." if device["type"] == "NAModule4" else ".outdoor.") + device["module_name"].lower()
+                data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Temperature"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
                     u"°C",
                     10,
                     data_timestamp,
@@ -191,10 +191,10 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "high",
-                    self.datum_value(module, ["dashboard_data", "max_temp"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
                     u"°C",
                     10,
-                    module["dashboard_data"]["date_max_temp"],
+                    device["dashboard_data"]["date_max_temp"],
                     bin_timestamp,
                     1,
                     "day"
@@ -202,10 +202,10 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "low",
-                    self.datum_value(module, ["dashboard_data", "min_temp"], factor=10),
+                    self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
                     u"°C",
                     10,
-                    module["dashboard_data"]["date_min_temp"],
+                    device["dashboard_data"]["date_min_temp"],
                     bin_timestamp,
                     1,
                     "day"
@@ -213,7 +213,7 @@ class Netatmo(Plugin):
                 self.datum_push(
                     "humidity" + module_name,
                     "current", "point",
-                    self.datum_value(module, ["dashboard_data", "Humidity"]),
+                    self.datum_value(device, ["dashboard_data", "Humidity"]),
                     "%",
                     1,
                     data_timestamp,
@@ -225,11 +225,11 @@ class Netatmo(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-                if module["type"] == "NAModule4":
+                if device["type"] == "NAModule4":
                     self.datum_push(
                         "carbondioxide" + module_name,
                         "current", "point",
-                        self.datum_value(module, ["dashboard_data", "CO2"]),
+                        self.datum_value(device, ["dashboard_data", "CO2"]),
                         "ppm",
                         1,
                         data_timestamp,
@@ -240,7 +240,7 @@ class Netatmo(Plugin):
                         data_derived_max=True,
                         data_derived_min=True
                     )
-            self.datum_pop()
+            self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)

@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
 
-import gc
 import logging
+
 import logging.config
 import os
 import sys
 import time
 import urlparse
-from optparse import OptionParser
-
 import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from klein import Klein
 from klein.resource import KleinResource
+from mqtt.client import publisher
+from mqtt.client.base import MQTTBaseProtocol
+from mqtt.client.factory import MQTTFactory
+from mqtt.error import MQTTStateError
+from optparse import OptionParser
+from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet import reactor
 from twisted.internet import threads
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
 from twisted.internet.defer import succeed
+from twisted.internet.defer import fail
+from twisted.internet.endpoints import clientFromString
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.web import client
@@ -29,6 +36,8 @@ from plugin import DATUM_QUEUE_LAST
 from plugin import Plugin
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+
+KEEPALIVE_DEFAULT_SECONDS = 3613
 
 
 class ANode:
@@ -43,6 +52,10 @@ class ANode:
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
+        self.push_upstream = "push_host" in self.config and len(self.config["push_host"]) > 0 and \
+                             "push_port" in self.config and self.config["push_port"] > 0 and \
+                             "push_topic" in self.config and len(self.config["push_topic"]) > 0
+        self.push_upstream_plugin = False
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             save_loopingcall = LoopingCall(self.store_state)
             save_loopingcall.clock = self.core_reactor
@@ -51,6 +64,8 @@ class ANode:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
+            self.push_upstream_plugin = self.push_upstream_plugin or \
+                                        "push_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["push_upstream"]
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
                 plugin_pollingcall = LoopingCall(self.plugins[plugin_name].poll)
                 plugin_pollingcall.clock = self.core_reactor
@@ -59,6 +74,36 @@ class ANode:
                 plugin_repeatingcall = LoopingCall(self.plugins[plugin_name].repeat)
                 plugin_repeatingcall.clock = self.core_reactor
                 plugin_repeatingcall.start(self.config["plugin"][plugin_name]["repeat_seconds"])
+        for plugin in self.plugins.itervalues():
+            if "history_partition_seconds" in self.config["plugin"][plugin.name] and \
+                            self.config["plugin"][plugin.name]["history_partition_seconds"] > 0 and \
+                            "repeat_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["repeat_seconds"] >= 0:
+                time_current = plugin.get_time()
+                time_partition = self.config["plugin"][plugin.name]["history_partition_seconds"]
+                time_partition_next = time_partition - (time_current - plugin.get_time_period(time_current, time_partition))
+                plugin_partitioncall = LoopingCall(self.plugins[plugin.name].repeat, force=True)
+                plugin_partitioncall.clock = self.core_reactor
+                self.core_reactor.callLater(time_partition_next,
+                                            lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
+                                            plugin_partitioncall, time_partition)
+        push_mqtt = None
+        if self.push_upstream and self.push_upstream_plugin:
+            push_mqtt = MqttPublishService(
+                clientFromString(reactor, "tcp:" + self.config["push_host"] + ":" + str(self.config["push_port"])),
+                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["push_topic"],
+                (self.config["push_seconds"] * 2) if ("push_seconds" in self.config and self.config["push_seconds"] > 0) else
+                KEEPALIVE_DEFAULT_SECONDS)
+            push_mqtt.startService()
+        for plugin in self.plugins.itervalues():
+            plugin.config["push_upstream"] = self.push_upstream and "push_upstream" in self.config["plugin"][plugin.name] and \
+                                             self.config["plugin"][plugin.name]["push_upstream"]
+            if plugin.config["push_upstream"] and push_mqtt is not None:
+                plugin.config["push_service"] = push_mqtt
+        if self.push_upstream and self.push_upstream_plugin and "push_seconds" in self.config and self.config["push_seconds"] > 0:
+            plugin_pushcall = LoopingCall(self.publish_datums)
+            plugin_pushcall.clock = self.core_reactor
+            plugin_pushcall.start(self.config["push_seconds"])
+
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def get_datums(self, datum_filter, datums=None):
@@ -78,6 +123,10 @@ class ANode:
 
     def push_datums(self, datums):
         self.web_ws.push(datums)
+
+    def publish_datums(self):
+        for plugin in self.plugins.values():
+            plugin.publish()
 
     def store_state(self):
         for plugin in self.plugins.values():
@@ -107,6 +156,50 @@ class ANode:
             self.store_state()
         log_timer.log("Service", "timer", lambda: "[anode] stopped", context=self.stop_server)
         return succeed(None)
+
+
+# noinspection PyPep8Naming
+class MqttPublishService(ClientService):
+    def __init__(self, endpoint, factory, topic, keepalive):
+        self.topic = topic
+        self.keepalive = keepalive
+        self.protocol = None
+        ClientService.__init__(self, endpoint, factory, retryPolicy=backoffPolicy(maxDelay=keepalive))
+
+    def startService(self):
+        self.whenConnected().addCallback(self.makeConnection)
+        ClientService.startService(self)
+
+    @inlineCallbacks
+    def makeConnection(self, protocol):
+        self.protocol = protocol
+        self.protocol.onDisconnection = self.onDisconnection
+        self.protocol.setWindowSize(1)
+        self.protocol.setTimeout(MQTTBaseProtocol.TIMEOUT_MAX_INITIAL)
+        try:
+            yield self.protocol.connect("TwistedMQTT-publish", keepalive=self.keepalive)
+        except Exception as exception:
+            Log(logging.WARN).log("Interface", "state", lambda: "[mqtt] connection error [{}]:\n".format(exception), exception)
+        else:
+            Log(logging.DEBUG).log("Interface", "state", lambda: "[mqtt] connection opened")
+
+    def onDisconnection(self, reason):
+        Log(logging.DEBUG).log("Interface", "state", lambda: "[mqtt] connection lost [{}]".format(reason))
+        self.whenConnected().addCallback(self.makeConnection)
+
+    def isConnected(self):
+        return self.protocol is not None and isinstance(self.protocol.state, publisher.ConnectedState)
+
+    def publishMessage(self, message, queue, on_failure):
+        Log(logging.DEBUG).log("Interface", "publish", lambda: "[mqtt] message of size [{}]".format(len(message)))
+        if self.isConnected():
+            deferred = self.protocol.publish(self.topic, bytearray(message), qos=1)
+            deferred.addErrback(on_failure, message, queue)
+            return deferred
+        else:
+            on_failure(MQTTStateError("Attempt to execute publish() operation while not connected",
+                                      self.protocol.state if self.protocol is not None else None), message, queue)
+            return fail(None)
 
 
 class WebWsFactory(WebSocketServerFactory):
@@ -192,7 +285,6 @@ class WebRest:
                           "text/csv" if datum_format == "csv" else (
                               "application/json" if datum_format == "json" else ("image/svg+xml" if datum_format == "svg" else (
                                   "application" + datum_format))))
-        gc.collect()
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.get)
         returnValue(datums_formatted)
 

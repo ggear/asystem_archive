@@ -1,12 +1,16 @@
 host: 0.0.0.0
 port: 8091
-save_on_exit: True
-save_seconds: 100
+push_host: 37.187.106.16
+push_port: 1883
+push_topic: asystem/anode/datum-test
+push_seconds: 10
 plugin:
     fronius:
-      poll_seconds: 1
-      buffer_ticks: 100
+      poll_seconds: 100
+      buffer_ticks: 10
       history_partitions: 100000000000000
       history_ticks: 100000000000000
       history_partition_seconds: 9999999999
       repeat_seconds: -1
+      push_ticks: -1
+      push_upstream: True
