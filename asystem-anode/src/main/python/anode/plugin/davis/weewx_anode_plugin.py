@@ -1,7 +1,7 @@
 import json
-import time
 
 import requests
+import time
 import weecfg
 import weewx
 from weewx.almanac import Almanac

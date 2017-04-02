@@ -49,17 +49,16 @@ setup(
     packages=find_packages(),
     install_requires=[
         "twisted",
-        "treq",
-        "avro",
+        "twisted-mqtt",
         "autobahn[twisted]",
         "klein",
+        "treq",
+        "avro",
         "ilio",
         "pyyaml",
-        "tabulate",
         "pandas",
         "numpy",
-        "matplotlib",
-        "paho-mqtt"
+        "matplotlib"
     ],
     tests_require=["mock"],
     test_suite="anode.test",

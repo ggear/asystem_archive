@@ -8,7 +8,7 @@
           "usec": 796000
         },
         "main_device": "70:ee:50:19:43:7c",
-        "module_name": "Living",
+        "module_name": "Lounge",
         "type": "NAModule4",
         "firmware": 44,
         "last_message": 1479982102,
@@ -134,7 +134,7 @@
         "invitation_disable": false,
         "last_status_store": 1479982107,
         "last_upgrade": 1471071533,
-        "module_name": "Graham",
+        "module_name": "Office",
         "modules": [
           "03:00:00:02:ed:62",
           "03:00:00:03:00:f4",

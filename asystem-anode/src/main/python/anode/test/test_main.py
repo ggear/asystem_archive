@@ -2,25 +2,27 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import json
+
 import calendar
 import datetime
-import json
+import ilio
 import os.path
 import os.path
+import pandas
 import shutil
 import sys
 import time
+import treq
 import urlparse
 from StringIO import StringIO
 from random import randint
-
-import ilio
-import pandas
-import treq
 from twisted.internet import threads
+from twisted.internet.defer import succeed
 from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
 
+from anode.anode import MqttPublishService
 from anode.anode import main
 
 
@@ -30,7 +32,10 @@ class ANodeTest(TestCase):
         self.patch(treq, "get", lambda url, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "post", lambda url, data, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "text_content", lambda response: MockHttpResponseContent(response))
-        self.patch(threads, "deferToThread", lambda function, *arguments, **keyword_arguments: function(*arguments, **keyword_arguments))
+        self.patch(threads, "deferToThread", lambda to_execute, *arguments, **keyword_arguments: to_execute(*arguments, **keyword_arguments))
+        self.patch(MqttPublishService, "startService", lambda myself: None)
+        self.patch(MqttPublishService, "isConnected", lambda myself: True)
+        self.patch(MqttPublishService, "publishMessage", lambda myself, message, queue, on_failure: succeed(None))
         shutil.rmtree(DIR_ANODE, ignore_errors=True)
         os.makedirs(DIR_ANODE)
         shutil.rmtree(DIR_ANODE_TEST, ignore_errors=True)
@@ -110,7 +115,7 @@ class ANodeTest(TestCase):
                sum(response_df[response_df_column].count() for response_df_column in response_df if
                    response_df_column.startswith("data_value")) if response_print != "pretty" else sum(
                    response_df[response_df_column].count() for response_df_column in response_df if
-                   not response_df_column.startswith("Time")), response_text
+                   (not response_df_column.startswith("bin_timestamp")) and not response_df_column.startswith("Time")), response_text
 
     @staticmethod
     def rest_svg(anode, url):
@@ -315,12 +320,12 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=windgustbearing.outdoor.roof&units=°" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 14,
+                    self.assertRest(0 if filter_scope == "publish" else 15,
                                     anode,
                                     "/rest/?metrics=energy&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 17,
+                    self.assertRest(0 if filter_scope == "publish" else 16,
                                     anode,
                                     "/rest/?bins=2second" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
@@ -354,11 +359,11 @@ class ANodeTest(TestCase):
     def test_wide(self):
         period = 10
         iterations = 25
-        metrics_period10 = 323
-        metrics_period10_fill = 910
-        metrics_period5_fill = 1785
-        metrics_period20 = 179
-        metrics_period20_fill = 455
+        metrics_period10 = 348
+        metrics_period10_fill = 936
+        metrics_period5_fill = 1836
+        metrics_period20 = 192
+        metrics_period20_fill = 468
         for config in [
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
             FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE
@@ -390,32 +395,32 @@ class ANodeTest(TestCase):
 
     def test_bounded(self):
         period = 1
-        iterations = 100
-        partition_index = 48
+        iterations = 101
+        partition_index = 50
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_BOUNDED_TICKS, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(611, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(673, anode, "/rest/?scope=history", True)[1]
         for config in [
             FILE_CONFIG_FRONIUS_BOUNDED_TICKS,
             FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS
         ]:
             self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE, "-q"])
-            anode = self.anode_init(False, False, False, False, period=period, iterations=100)
+            anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
             self.assertEquals(0 if config == FILE_CONFIG_FRONIUS_BOUNDED_TICKS else 100,
                               self.assertRest(1,
                                               anode,
                                               "/rest/?metrics=anode.fronius.partitions&format=csv&print=pretty",
-                                              True)[0]["Partitions"][0])
-            self.assertEquals(TIME_START_OF_DAY + 4 + partition_index,
-                              self.assertRest(1 + partition_index,
+                                              True)[0]["Partitions (1 Second)"][0])
+            self.assertEquals(TIME_START_OF_DAY + 2 + partition_index,
+                              self.assertRest(partition_index,
                                               anode,
                                               "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
                                               True)[0]["bin_timestamp"][0])
-            self.assertEquals(TIME_START_OF_DAY + 100,
-                              self.assertRest(1 + partition_index,
+            self.assertEquals(TIME_START_OF_DAY + iterations,
+                              self.assertRest(partition_index,
                                               anode,
                                               "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
-                                              True)[0]["bin_timestamp"][partition_index])
+                                              True)[0]["bin_timestamp"][partition_index - 1])
             self.assertRest(metrics,
                             anode,
                             "/rest/?scope=history",
@@ -427,7 +432,7 @@ class ANodeTest(TestCase):
         partition_index = 48
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(1223, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1323, anode, "/rest/?scope=history", True)[1]
         for config in [
             FILE_CONFIG_FRONIUS_UNBOUNDED_DAY,
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
@@ -439,7 +444,7 @@ class ANodeTest(TestCase):
                               self.assertRest(1,
                                               anode,
                                               "/rest/?metrics=anode.fronius.partitions&format=csv&print=pretty",
-                                              True)[0]["Partitions"][0])
+                                              True)[0]["Partitions (1 Second)"][0])
             self.assertEquals(TIME_START_OF_DAY + 1,
                               self.assertRest(iterations,
                                               anode,
@@ -455,6 +460,24 @@ class ANodeTest(TestCase):
                             "/rest/?scope=history",
                             True)
 
+    def test_publish(self):
+        period = 100
+        iterations = 1
+        self.patch(MqttPublishService, "isConnected", lambda myself: False)
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_PUBLISH, "-d" + DIR_ANODE, "-v"])
+        anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
+        metrics = self.assertRest(36, anode, "/rest/?scope=publish&format=csv", True)[1]
+        self.assertRest(metrics,
+                        anode,
+                        "/rest/?scope=publish&format=csv",
+                        True)
+        self.patch(MqttPublishService, "isConnected", lambda myself: True)
+        test_clock.advance(10)
+        self.assertRest(0,
+                        anode,
+                        "/rest/?scope=publish&format=csv",
+                        True)
+
     def test_temporal(self):
         period = 1
         iterations = 3
@@ -462,7 +485,7 @@ class ANodeTest(TestCase):
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         self.assertRest(1,
                         anode,
-                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1alltime&types=low",
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1all-time&types=low",
                         True)
         self.assertRest(iterations,
                         anode,
@@ -473,7 +496,7 @@ class ANodeTest(TestCase):
         test_clock.advance(60 * 60 * 24 + 1)
         self.assertRest(1,
                         anode,
-                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1alltime&types=low",
+                        "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1all-time&types=low",
                         True)
         self.assertRest(iterations + 1,
                         anode,
@@ -486,7 +509,7 @@ class ANodeTest(TestCase):
         iterations_repeat = 15
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(1253, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1251, anode, "/rest/?scope=history", True)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,
@@ -541,14 +564,14 @@ class ANodeTest(TestCase):
         self.setUp()
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_DB, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=(iterations * 11))
-        metrics = self.assertRest(1343, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1453, anode, "/rest/?scope=history", True)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,
                         "/rest/?scope=history",
                         True)
         anode.load_state()
-        metrics_db = self.assertRest(1211, anode, "/rest/?scope=history", True)[1]
+        metrics_db = self.assertRest(1310, anode, "/rest/?scope=history", True)[1]
         self.assertTrue(metrics > metrics_db)
         self.assertRest(metrics_db,
                         anode,
@@ -601,39 +624,83 @@ class ANodeTest(TestCase):
                         "a", True)
 
     def test_repeat(self):
-        period = 1
+        period = 10
         iterations = 5
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_REPEAT, "-d" + DIR_ANODE, "-q"])
-        anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        self.assertRest(iterations,
-                        anode,
-                        "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
-                        True)
-        self.assertEquals(TIME_START_OF_DAY + 1,
-                          self.assertRest(iterations,
-                                          anode,
-                                          "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
-                                          True)[0]["bin_timestamp"][0])
-        self.assertEquals(TIME_START_OF_DAY + iterations,
-                          self.assertRest(iterations,
-                                          anode,
-                                          "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
-                                          True)[0]["bin_timestamp"][iterations - 1])
-        self.assertRest(1,
-                        anode,
-                        "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
-                        True)
-        global test_repeats
-        test_repeats = True
-        test_clock.advance(60 * 60 * 24 + 1)
-        self.assertRest(iterations + 1,
-                        anode,
-                        "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
-                        True)
-        self.assertRest(2,
-                        anode,
-                        "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
-                        True)
+        for config in [
+            FILE_CONFIG_FRONIUS_REPEAT_NONE,
+            FILE_CONFIG_FRONIUS_REPEAT_DAY,
+            FILE_CONFIG_FRONIUS_REPEAT_PARTITION
+        ]:
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE, "-q"])
+            anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
+            self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertEquals(TIME_START_OF_DAY + 1,
+                              self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][0])
+            self.assertEquals(TIME_START_OF_DAY + iterations * period - (0 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else period),
+                              self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
+                                              anode,
+                                              "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
+                                              True)[0]["bin_timestamp"][iterations - 1])
+            self.assertEquals(1,
+                              self.assertRest(1,
+                                              anode,
+                                              "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
+                                              True)[0]["Grid (1 Day)"][0])
+            self.assertEquals(4,
+                              self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
+                                              anode,
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
+            global test_repeats
+            test_repeats = True
+            test_clock.advance(60 * 60 * 24 - iterations * period)
+            self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertRest(1 if config == FILE_CONFIG_FRONIUS_REPEAT_NONE else 2,
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertEquals(0,
+                              self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
+                                              anode,
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
+            test_clock.advance(1)
+            self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertRest(1 if config == FILE_CONFIG_FRONIUS_REPEAT_NONE else 2,
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertEquals(0,
+                              self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
+                                              anode,
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
+            test_clock.advance(period - 1)
+            self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 3),
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertRest(1 if config == FILE_CONFIG_FRONIUS_REPEAT_NONE else 2,
+                            anode,
+                            "/rest/?metrics=power.export.grid&types=low&scope=history&format=csv&print=pretty",
+                            True)
+            self.assertEquals(0,
+                              self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 3),
+                                              anode,
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
 
     def test_filter(self):
         period = 1
@@ -763,7 +830,7 @@ class ANodeTest(TestCase):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
         anode.load_state()
-        last_timestamp = self.assertRest(0, anode, "/rest/?&metrics=temperature.outdoor.apparent&scope=history&format=csv",
+        last_timestamp = self.assertRest(0, anode, "/rest/?&metrics=temperature.outdoor.roof&scope=history&format=csv",
                                          False)[0]["bin_timestamp"].iloc[-1]
         for parameters in [
             ("&start=" + str(last_timestamp + 1) + "&period=1&method=max&fill=linear"),
@@ -805,63 +872,11 @@ class ANodeTest(TestCase):
 
     def test_oneoff(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-q"])
-        anode = self.anode_init(False, False, False, False, period=1, iterations=10)
+        anode = self.anode_init(False, False, False, False, period=10, iterations=20)
         self.assertRest(0,
                         anode,
-                        "/rest/?scope=history&format=csv&print=pretty&metrics=anode.fronius.partitions",
+                        "/rest/?metrics=forecast&scope=publish&print=pretty&partitions=1&period=300&method=max&fill=linear&format=csv",
                         False, True)
-
-
-# TODO: Refactor memory/serialised profiling into main line
-# class ANodeModelTest(TestCase):
-#     def __init__(self, *args, **kwargs):
-#         super(ANodeModelTest, self).__init__(*args, **kwargs)
-#         with gzip.open(FILE_DATUMS_CSV, 'rt') as file_csv:
-#             self.datums_dict = Plugin.datums_csv_to_dict(csv.DictReader(file_csv))
-#         self.datums_df = {"df": Plugin.datums_dict_to_df(self.datums_dict["dict"])}
-#
-#     def test_size(self):
-#         datum_sizes_tmp = [["model", "format", "container", "memory", "disk"]]
-#
-#         def datum_sizes_add(datums, datums_count, datums_model, datums_format, datums_container):
-#             size_disk = None
-#             if datums_model == "dict":
-#                 datums = {datums_model: datums} if datums_container is not None else datums
-#                 size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_model]) + \
-#                               sum(sum(map(sys.getsizeof, datum.itervalues())) for datum in datums[datums_model]) + \
-#                               8 * len(datums[datums_model]) * len(DATUM_SCHEMA_JSON[7]["fields"]) + \
-#                               (0 if datums_container is None else sys.getsizeof(datums[datums_model]))
-#             else:
-#                 datums = {datums_model: [datums]} if datums_container is not None else datums
-#                 if datums_model == "df":
-#                     if datums_container is None:
-#                         size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_model]) + \
-#                                       sum(sys.getsizeof(datum["data_df"]) for datum in datums[datums_model]) + \
-#                                       8 * len(datums[datums_model]) * (len(DATUM_SCHEMA_JSON[7]["fields"]) - 3)
-#                     else:
-#                         size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_model]) + \
-#                                       sum(sys.getsizeof(datum_df) for datum in datums[datums_model] for datum_df in datum)
-#                 else:
-#                     size_memory = sum(sys.getsizeof(datum) for datum in datums[datums_model])
-#                     with tempfile.NamedTemporaryFile() as datums_file:
-#                         for datum in datums[datums_model]:
-#                             datums_file.write(datum)
-#                         datums_file.flush()
-#                         size_disk = os.path.getsize(datums_file.name)
-#             datum_sizes_tmp.append([datums_model, datums_format, datums_container, size_memory / datums_count,
-#                                     size_disk / datums_count if size_disk is not None else None])
-#
-#         datums_dict_count = len(self.datums_dict["dict"])
-#         for datum_format in [("dict", "long", None, self.datums_dict), ("df", "wide (int64)", None, self.datums_df),
-#                              ("avro", "long", None, self.datums_dict),
-#                              ("csv", "long", None, self.datums_dict), ("json", "long", None, self.datums_dict)]:
-#             datum_sizes_add(Plugin.datum_to_format(datum_format[3], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1],
-#                             datum_format[2])
-#         for datum_format in [("dict", "long", "list", self.datums_dict), ("df", "wide (Decimal)", "list", self.datums_df),
-#                              ("csv", "wide", "csv", self.datums_df), ("json", "long", "json", self.datums_dict)]:
-#             datum_sizes_add(Plugin.datums_to_format(datum_format[3], datum_format[0], {}), datums_dict_count, datum_format[0], datum_format[1],
-#                             datum_format[2])
-#         print("Datum sizes:\n" + tabulate(datum_sizes_tmp, tablefmt='grid'))
 
 
 # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
@@ -896,8 +911,8 @@ class MockHttpResponseContent:
 
 # noinspection PyPep8Naming,PyUnusedLocal
 class MockDeferToThread:
-    def __init__(self, function, *arguments, **keyword_arguments):
-        self.function = function
+    def __init__(self, to_execute, *arguments, **keyword_arguments):
+        self.function = to_execute
         self.arguments = arguments
         self.keyword_arguments = keyword_arguments
 
@@ -930,7 +945,10 @@ FILE_CONFIG_BARE = DIR_ROOT + "anode/test/data/anode_bare.yaml"
 FILE_CONFIG_PLUGINS = DIR_ROOT + "anode/test/data/anode_plugins.yaml"
 FILE_CONFIG_PLUGINS_RUN = DIR_ROOT + "anode/test/data/anode_plugins_run.yaml"
 FILE_CONFIG_FRONIUS_DB = DIR_ROOT + "anode/test/data/anode_fronius_db.yaml"
-FILE_CONFIG_FRONIUS_REPEAT = DIR_ROOT + "anode/test/data/anode_fronius_repeat.yaml"
+FILE_CONFIG_FRONIUS_PUBLISH = DIR_ROOT + "anode/test/data/anode_fronius_publish.yaml"
+FILE_CONFIG_FRONIUS_REPEAT_NONE = DIR_ROOT + "anode/test/data/anode_fronius_repeat_none.yaml"
+FILE_CONFIG_FRONIUS_REPEAT_DAY = DIR_ROOT + "anode/test/data/anode_fronius_repeat_day.yaml"
+FILE_CONFIG_FRONIUS_REPEAT_PARTITION = DIR_ROOT + "anode/test/data/anode_fronius_repeat_partition.yaml"
 FILE_CONFIG_FRONIUS_BOUNDED_TICKS = DIR_ROOT + "anode/test/data/anode_fronius_bounded_ticks.yaml"
 FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS = DIR_ROOT + "anode/test/data/anode_fronius_bounded_partitions.yaml"
 FILE_CONFIG_FRONIUS_UNBOUNDED_DAY = DIR_ROOT + "anode/test/data/anode_fronius_unbounded_day.yaml"

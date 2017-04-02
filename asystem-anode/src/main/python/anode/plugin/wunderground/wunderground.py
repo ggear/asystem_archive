@@ -2,14 +2,14 @@
 
 from __future__ import print_function
 
-import calendar
-import datetime
 import json
 import logging
-from decimal import Decimal
 
+import calendar
+import datetime
 import dateutil.parser
 import treq
+from decimal import Decimal
 
 import anode
 from anode.plugin.plugin import Plugin
@@ -145,7 +145,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "lighthours",
+                    "day-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -157,7 +157,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "lighthours",
+                    "day-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -169,7 +169,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "lighthours",
+                    "day-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -181,7 +181,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "darkhours",
+                    "night-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -193,7 +193,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "darkhours",
+                    "night-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -205,7 +205,7 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "darkhours",
+                    "night-time",
                     data_bound_lower=0
                 )
                 self.datum_push(
@@ -283,7 +283,7 @@ class Wunderground(Plugin):
                     data_bound_upper=100,
                     data_bound_lower=0
                 )
-            self.datum_pop()
+            self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)

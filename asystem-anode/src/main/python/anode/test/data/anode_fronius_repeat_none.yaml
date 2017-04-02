@@ -6,8 +6,5 @@ plugin:
       buffer_ticks: 10
       history_partitions: 100000000000000
       history_ticks: 100000000000000
-      history_partition_seconds: 86400
-      repeat_seconds: 1
-      publish_ticks: -1
-      push_upstream: False
-
+      history_partition_seconds: 9999999999
+      repeat_seconds: -1

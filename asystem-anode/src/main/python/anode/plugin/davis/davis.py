@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import json
 import logging
+
 from decimal import Decimal
 
 import anode
@@ -111,20 +112,6 @@ class Davis(Plugin):
                     bin_timestamp,
                     1,
                     "day"
-                )
-                self.datum_push(
-                    "temperature.outdoor.apparent",
-                    "current", "point",
-                    None if self.datum_value(dict_content["packet"], ["appTemp"]) is None else self.datum_value(
-                        (dict_content["packet"]["appTemp"] - 32) * 5 / 9, factor=10),
-                    u"°C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_derived_max=True,
-                    data_derived_min=True
                 )
                 self.datum_push(
                     "temperature.outdoor.roof",
@@ -318,9 +305,9 @@ class Davis(Plugin):
                     "rain.outdoor.roof",
                     "current", "integral",
                     None if self.datum_value(dict_content["packet"], ["yearRain"]) is None else self.datum_value(
-                        dict_content["packet"]["yearRain"] * Decimal(2.54), factor=100),
-                    "cm",
-                    100,
+                        dict_content["packet"]["yearRain"] * Decimal(0.0254), factor=10000),
+                    "m",
+                    10000,
                     data_timestamp,
                     bin_timestamp,
                     1,
@@ -361,7 +348,7 @@ class Davis(Plugin):
                     data_bound_lower=0,
                     data_derived_min=True
                 )
-            self.datum_pop()
+            self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception, text_content), exception)

@@ -704,8 +704,8 @@
     function addRegexToken(token, regex, strictRegex) {
         //noinspection JSUnusedLocalSymbols
         regexes[token] = isFunction(regex) ? regex : function (isStrict, localeData) {
-                return (isStrict && strictRegex) ? strictRegex : regex;
-            };
+            return (isStrict && strictRegex) ? strictRegex : regex;
+        };
     }
 
     function getParseRegexForToken(token, config) {

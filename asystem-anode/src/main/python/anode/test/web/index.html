@@ -15,7 +15,7 @@
         }
         window.onload = function () {
             document.getElementById("graphs").innerHTML = div_graphs;
-            if (window.location.hash != '') {
+            if (window.location.hash !== '') {
                 setTimeout(function () {
                     window.scrollTo(0, document.getElementById(location.hash.substring(1, location.hash.length)).offsetTop);
                 }, 10)
