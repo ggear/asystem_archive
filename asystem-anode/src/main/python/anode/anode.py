@@ -20,10 +20,10 @@ from optparse import OptionParser
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet import reactor
 from twisted.internet import threads
+from twisted.internet.defer import fail
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 from twisted.internet.defer import succeed
-from twisted.internet.defer import fail
 from twisted.internet.endpoints import clientFromString
 from twisted.internet.task import LoopingCall
 from twisted.python import log
@@ -52,10 +52,10 @@ class ANode:
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
-        self.push_upstream = "push_host" in self.config and len(self.config["push_host"]) > 0 and \
-                             "push_port" in self.config and self.config["push_port"] > 0 and \
-                             "push_topic" in self.config and len(self.config["push_topic"]) > 0
-        self.push_upstream_plugin = False
+        self.publish_upstream = "publish_host" in self.config and len(self.config["publish_host"]) > 0 and \
+                                "publish_port" in self.config and self.config["publish_port"] > 0 and \
+                                "publish_topic" in self.config and len(self.config["publish_topic"]) > 0
+        self.publish_upstream_plugin = False
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             save_loopingcall = LoopingCall(self.store_state)
             save_loopingcall.clock = self.core_reactor
@@ -64,8 +64,9 @@ class ANode:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
-            self.push_upstream_plugin = self.push_upstream_plugin or \
-                                        "push_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["push_upstream"]
+            self.publish_upstream_plugin = self.publish_upstream_plugin or \
+                                           "publish_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name][
+                                               "publish_upstream"]
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
                 plugin_pollingcall = LoopingCall(self.plugins[plugin_name].poll)
                 plugin_pollingcall.clock = self.core_reactor
@@ -86,23 +87,23 @@ class ANode:
                 self.core_reactor.callLater(time_partition_next,
                                             lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
                                             plugin_partitioncall, time_partition)
-        push_mqtt = None
-        if self.push_upstream and self.push_upstream_plugin:
-            push_mqtt = MqttPublishService(
-                clientFromString(reactor, "tcp:" + self.config["push_host"] + ":" + str(self.config["push_port"])),
-                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["push_topic"],
-                (self.config["push_seconds"] * 2) if ("push_seconds" in self.config and self.config["push_seconds"] > 0) else
+        publish_mqtt = None
+        if self.publish_upstream and self.publish_upstream_plugin:
+            publish_mqtt = MqttPublishService(
+                clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
+                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"],
+                (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
                 KEEPALIVE_DEFAULT_SECONDS)
-            push_mqtt.startService()
+            publish_mqtt.startService()
         for plugin in self.plugins.itervalues():
-            plugin.config["push_upstream"] = self.push_upstream and "push_upstream" in self.config["plugin"][plugin.name] and \
-                                             self.config["plugin"][plugin.name]["push_upstream"]
-            if plugin.config["push_upstream"] and push_mqtt is not None:
-                plugin.config["push_service"] = push_mqtt
-        if self.push_upstream and self.push_upstream_plugin and "push_seconds" in self.config and self.config["push_seconds"] > 0:
+            plugin.config["publish_upstream"] = self.publish_upstream and "publish_upstream" in self.config["plugin"][plugin.name] and \
+                                                self.config["plugin"][plugin.name]["publish_upstream"]
+            if plugin.config["publish_upstream"] and publish_mqtt is not None:
+                plugin.config["publish_service"] = publish_mqtt
+        if self.publish_upstream and self.publish_upstream_plugin and "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
             plugin_pushcall = LoopingCall(self.publish_datums)
             plugin_pushcall.clock = self.core_reactor
-            plugin_pushcall.start(self.config["push_seconds"])
+            plugin_pushcall.start(self.config["publish_seconds"])
 
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
@@ -177,7 +178,7 @@ class MqttPublishService(ClientService):
         self.protocol.setWindowSize(1)
         self.protocol.setTimeout(MQTTBaseProtocol.TIMEOUT_MAX_INITIAL)
         try:
-            yield self.protocol.connect("TwistedMQTT-publish", keepalive=self.keepalive)
+            yield self.protocol.connect("TwistedMQTT-publish", username=None, password=None, keepalive=self.keepalive, cleanStart=True)
         except Exception as exception:
             Log(logging.WARN).log("Interface", "state", lambda: "[mqtt] connection error [{}]:\n".format(exception), exception)
         else:

@@ -242,7 +242,7 @@ class Netatmo(Plugin):
                     )
             self.publish()
         except Exception as exception:
-            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
                                          .format(self.name, exception, text_content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_devicelist)
 

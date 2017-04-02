@@ -216,9 +216,9 @@ class Plugin(object):
         )
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] dropped [{}] datums".format(self.name, self.datums_dropped))
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] pushed datums".format(self.name, self.datums_pushed))
-        if "push_service" in self.config and "push_upstream" in self.config and self.config["push_upstream"]:
-            push_service = self.config["push_service"]
-            if push_service is not None and push_service.isConnected():
+        if "publish_service" in self.config and "publish_upstream" in self.config and self.config["publish_upstream"]:
+            publish_service = self.config["publish_service"]
+            if publish_service is not None and publish_service.isConnected():
                 for datum_metric in self.datums:
                     for datum_type in self.datums[datum_metric]:
                         for datum_unit in self.datums[datum_metric][datum_type]:
@@ -229,7 +229,7 @@ class Plugin(object):
                                     datum_avro = datums_publish.popleft()
                                     anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] publishing datum [{}] datum [{}] of [{}]".format(
                                         self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), index + 1, datums_publish_len))
-                                    push_service.publishMessage(datum_avro, datums_publish, lambda failure, message, queue: (
+                                    publish_service.publishMessage(datum_avro, datums_publish, lambda failure, message, queue: (
                                         anode.Log(logging.WARN).log("Plugin", "state", lambda: "[{}] publish failed datum [{}] with reason {}".format(
                                             self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), str(failure).replace("\n", ""))),
                                         queue.appendleft(message)))
@@ -283,7 +283,7 @@ class Plugin(object):
                 datum_avro = self.datum_dict_to_avro(datum_dict)[0]
             except AvroTypeException as exception:
                 anode.Log(logging.ERROR).log("Plugin", "error",
-                                             lambda: "[{}] error serialising Avro object [{}]".format(self.name, exception), exception)
+                                             lambda: "[{}] error serialising Avro object [{}]".format(self.name, datum_dict), exception)
                 return
             if datum_dict["data_metric"] not in self.datums:
                 self.datums[datum_dict["data_metric"]] = {}
@@ -296,7 +296,7 @@ class Plugin(object):
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                     str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(
-                        maxlen=(None if "push_ticks" not in self.config or self.config["push_ticks"] < 1 else self.config["push_ticks"])),
+                        maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1 else self.config["publish_ticks"])),
                     DATUM_QUEUE_BUFFER: deque()
                 }
                 if not data_transient:
