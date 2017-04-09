@@ -20,38 +20,73 @@
 
     <repositories>
         <repository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>cloudera</id>
             <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
             <snapshots>
                 <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
             </snapshots>
         </repository>
         <repository>
-            <id>cloudera-framework</id>
-            <url>http://52.63.86.162:80/artifactory/libs-release-local</url>
+            <id>conjars</id>
+            <url>http://conjars.org/repo</url>
             <snapshots>
                 <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>bintray</id>
+            <url>https://jcenter.bintray.com</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>cloudera-framework-releases</id>
+            <url>http://52.63.86.162:80/artifactory/cloudera-framework-releases</url>
+            <snapshots>
+                <enabled>false</enabled>
             </snapshots>
         </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
-            <id>cloudera-framework-plugins</id>
-            <url>http://52.63.86.162:80/artifactory/plugins-release-local</url>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
             <snapshots>
                 <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
             </snapshots>
         </pluginRepository>
         <pluginRepository>
             <id>cloudera</id>
             <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
             <snapshots>
                 <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>cloudera-framework-releases</id>
+            <url>http://52.63.86.162:80/artifactory/cloudera-framework-releases</url>
+            <releases>
                 <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
@@ -63,11 +98,12 @@
         <maven.data-download.skip>true</maven.data-download.skip>
         <maven.package.skip>true</maven.package.skip>
         <maven.install.skip>true</maven.install.skip>
+        <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
 
         <slf4j.version>1.7.5</slf4j.version>
         <junit.version>4.12</junit.version>
 
-        <cloudera-framework.version>1.5.1-cdh5.9.0-SNAPSHOT</cloudera-framework.version>
+        <cloudera-framework.version>1.5.2-cdh5.10.1-SNAPSHOT</cloudera-framework.version>
 
         <parcel-plugin.version>0.7.8</parcel-plugin.version>
 
@@ -77,8 +113,10 @@
         <os-platform.version />
 
         <project.runtime.heap.max>1024</project.runtime.heap.max>
-        <project.runtime.perm.heap.max>256</project.runtime.perm.heap.max>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <cloudera-framework-module.repo>http://52.63.86.162:80/artifactory/cloudera-framework-releases</cloudera-framework-module.repo>
+        <cloudera-framework-parcel.repo>scp://graham:/Users/graham/.ssh/id_rsa.pem@52.63.86.162:22/var/www/html/tmph3l7m2vv103/apps/asystem-arouter/parcels</cloudera-framework-parcel.repo>
 
     </properties>
 
@@ -91,6 +129,7 @@
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>true</maven.package.skip>
                 <maven.install.skip>true</maven.install.skip>
+                <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
         <profile>
@@ -101,6 +140,7 @@
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>true</maven.package.skip>
                 <maven.install.skip>true</maven.install.skip>
+                <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
         <profile>
@@ -111,6 +151,7 @@
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>false</maven.package.skip>
                 <maven.install.skip>true</maven.install.skip>
+                <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
         <profile>
@@ -121,6 +162,7 @@
                 <maven.data-download.skip>false</maven.data-download.skip>
                 <maven.package.skip>false</maven.package.skip>
                 <maven.install.skip>false</maven.install.skip>
+                <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
     </profiles>
@@ -265,7 +307,6 @@
                     <configuration>
                         <argLine>
                             -Xmx${project.runtime.heap.max}m
-                            -XX:MaxPermSize=${project.runtime.perm.heap.max}m
                         </argLine>
                     </configuration>
                 </plugin>
