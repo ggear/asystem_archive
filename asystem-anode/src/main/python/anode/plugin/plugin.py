@@ -6,7 +6,6 @@ import logging
 import HTMLParser
 import StringIO
 import abc
-import avro
 import avro.io
 import avro.schema
 import avro.schema
@@ -37,6 +36,7 @@ from twisted.internet.task import Clock
 from uuid import getnode as get_mac
 
 import anode.plugin
+import avro
 
 
 # noinspection PyTypeChecker
@@ -67,7 +67,7 @@ class Plugin(object):
                                 if force and "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
                                     datum_bin_timestamp = self.get_time_period(datum_bin_timestamp, Plugin.get_seconds(
                                         self.config["history_partition_seconds"], "second"))
-                                if force or (datum_bin_timestamp - datum["bin_timestamp"]) >= (self.config["repeat_seconds"] - 5):
+                                if force or ((24 * 60 * 60) > (datum_bin_timestamp - datum["bin_timestamp"]) >= (self.config["repeat_seconds"] - 5)):
 
                                     def expired_max_min(max_or_min):
                                         if max_or_min in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
@@ -107,7 +107,6 @@ class Plugin(object):
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.repeat)
 
     def publish(self):
-        datums_published = 0
         matric_name = "anode." + self.name + "."
         time_now = self.get_time()
         metrics_count = sum(len(units)
@@ -189,7 +188,7 @@ class Plugin(object):
             data_transient=True
         )
         self.datum_push(
-            matric_name + "uptime",
+            matric_name + "up-time",
             "current", "point",
             self.datum_value((time_now - self.time_boot) / Decimal(24 * 60 * 60), factor=100),
             "d",
@@ -202,7 +201,7 @@ class Plugin(object):
             data_transient=True
         )
         self.datum_push(
-            matric_name + "lastseen",
+            matric_name + "last-seen",
             "current", "point",
             self.datum_value(self.time_seen),
             "scalor",
@@ -214,30 +213,31 @@ class Plugin(object):
             data_transient=True
 
         )
-        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] dropped [{}] datums".format(self.name, self.datums_dropped))
-        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] pushed datums".format(self.name, self.datums_pushed))
-        if "publish_service" in self.config and "publish_upstream" in self.config and self.config["publish_upstream"]:
-            publish_service = self.config["publish_service"]
-            if publish_service is not None and publish_service.isConnected():
-                for datum_metric in self.datums:
-                    for datum_type in self.datums[datum_metric]:
-                        for datum_unit in self.datums[datum_metric][datum_type]:
-                            for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
-                                datums_publish = self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_PUBLISH]
-                                datums_publish_len = len(datums_publish)
-                                for index in xrange(datums_publish_len):
-                                    datum_avro = datums_publish.popleft()
-                                    anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] publishing datum [{}] datum [{}] of [{}]".format(
-                                        self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), index + 1, datums_publish_len))
-                                    publish_service.publishMessage(datum_avro, datums_publish, lambda failure, message, queue: (
-                                        anode.Log(logging.WARN).log("Plugin", "state", lambda: "[{}] publish failed datum [{}] with reason {}".format(
-                                            self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), str(failure).replace("\n", ""))),
-                                        queue.appendleft(message)))
-                                    datums_published += 1
+        datums_publish_pending = 0
+        publish_service = self.config["publish_service"] \
+            if ("publish_service" in self.config and "publish_upstream" in self.config and self.config["publish_upstream"]) else None
+        for datum_metric in self.datums:
+            for datum_type in self.datums[datum_metric]:
+                for datum_unit in self.datums[datum_metric][datum_type]:
+                    for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
+                        datums_publish = self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_PUBLISH]
+                        datums_publish_len = len(datums_publish)
+                        if publish_service is not None and publish_service.isConnected():
+                            for index in xrange(datums_publish_len):
+                                datum_avro = datums_publish.popleft()
+                                anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] publishing datum [{}] datum [{}] of [{}]".format(
+                                    self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), index + 1, datums_publish_len))
+                                publish_service.publishMessage(datum_avro, datums_publish, lambda failure, message, queue: (
+                                    anode.Log(logging.WARN).log("Plugin", "state", lambda: "[{}] publish failed datum [{}] with reason {}".format(
+                                        self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]), str(failure).replace("\n", ""))),
+                                    queue.appendleft(message)))
+                        elif publish_service is None:
+                            datums_publish.clear()
+                        datums_publish_pending += len(datums_publish)
         self.datum_push(
             matric_name + "queue",
             "current", "point",
-            self.datum_value(self.datums_pushed - datums_published),
+            self.datum_value(datums_publish_pending),
             "datums",
             1,
             time_now,
@@ -247,9 +247,7 @@ class Plugin(object):
             data_bound_lower=0,
             data_transient=True
         )
-        self.datums_pushed = 0
-        self.datums_dropped = 0
-        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] published [{}] datums".format(self.name, datums_published))
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] published [{}] datums".format(self.name, datums_publish_pending))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
                    bin_unit, data_string=None, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
@@ -308,7 +306,11 @@ class Plugin(object):
                             datums_deref[DATUM_QUEUE_LAST]["data_unit"] != datum_dict["data_unit"] or \
                             datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"] or \
                     ("data_string" in datums_deref[DATUM_QUEUE_LAST] and
-                             datums_deref[DATUM_QUEUE_LAST]["data_string"] != datum_dict["data_string"]) or data_push_force:
+                             datums_deref[DATUM_QUEUE_LAST]["data_string"] != datum_dict["data_string"]) or \
+                    ("repeat_partition" in self.config and self.config["repeat_partition"] and
+                             self.get_time_period(datums_deref[DATUM_QUEUE_LAST]["bin_timestamp"], self.config["history_partition_seconds"]) !=
+                             self.get_time_period(datum_dict["bin_timestamp"], self.config["history_partition_seconds"])) or \
+                    data_push_force:
                 self.time_seen = self.get_time()
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 bin_timestamp_derived = self.get_time_period(datum_dict["bin_timestamp"],
@@ -348,7 +350,6 @@ class Plugin(object):
                                             else data_derived_period, datum_dict["bin_unit"] if datum_dict["data_type"] == "integral"
                                             else data_derived_unit, data_derived_force=data_derived_force, data_push_force=data_push_force,
                                             data_transient=data_transient)
-                    self.datums_pushed += 1
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
                                     "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
@@ -363,7 +364,6 @@ class Plugin(object):
                 anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
                 self.anode.push_datums({"dict": [datum_dict]})
             else:
-                self.datums_dropped += 1
                 anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] dropped datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.datum_push)
 
@@ -529,23 +529,27 @@ class Plugin(object):
 
     @staticmethod
     def datums_sort(datums):
-        return sorted(datums, key=lambda datum: (datum["data_metric"],
-                                                 "aaaaa" if datum["data_type"] == "point" else
-                                                 "bbbbb" if datum["data_type"] == "mean" else
-                                                 "ccccc" if datum["data_type"] == "integral" else
-                                                 "ddddd" if datum["data_type"] == "low" else
-                                                 "eeeee" if datum["data_type"] == "high" else
-                                                 datum["data_type"],
-                                                 "aaaaa" if datum["bin_unit"] == "second" else
-                                                 "bbbbb" if datum["bin_unit"] == "minute" else
-                                                 "ccccc" if datum["bin_unit"] == "hour" else
-                                                 "ddddd" if datum["bin_unit"] == "day-time" else
-                                                 "eeeee" if datum["bin_unit"] == "night-time" else
-                                                 "fffff" if datum["bin_unit"] == "day" else
-                                                 "ggggg" if datum["bin_unit"] == "month" else
-                                                 "hhhhh" if datum["bin_unit"] == "year" else
-                                                 "iiiii",
-                                                 datum["bin_width"]))
+        return sorted(datums, key=lambda datum: (
+            "aaaaa" if datum["data_unit"] == "$" else
+            "bbbbb" if datum["data_unit"] == "W" else
+            "zzzzz" + datum["data_unit"],
+            datum["data_metric"],
+            "aaaaa" if datum["data_type"] == "point" else
+            "bbbbb" if datum["data_type"] == "mean" else
+            "ccccc" if datum["data_type"] == "integral" else
+            "ddddd" if datum["data_type"] == "low" else
+            "eeeee" if datum["data_type"] == "high" else
+            datum["data_type"],
+            "aaaaa" if datum["bin_unit"] == "second" else
+            "bbbbb" if datum["bin_unit"] == "minute" else
+            "ccccc" if datum["bin_unit"] == "hour" else
+            "ddddd" if datum["bin_unit"] == "day-time" else
+            "eeeee" if datum["bin_unit"] == "night-time" else
+            "fffff" if datum["bin_unit"] == "day" else
+            "ggggg" if datum["bin_unit"] == "month" else
+            "hhhhh" if datum["bin_unit"] == "year" else
+            "iiiii",
+            datum["bin_width"]))
 
     @staticmethod
     def datum_dict_to_avro(datum_dict):
@@ -644,6 +648,7 @@ class Plugin(object):
                       context=Plugin.datum_to_format, off_thread=off_thread)
         return datums_formatted if not datum_to_format_iterate else Plugin.datum_to_format(datums_formatted, datum_format, off_thread)
 
+    # noinspection PyArgumentList
     @staticmethod
     def datums_csv_to_dict(datums_csv):
         datums_dict = {"dict": []}
@@ -718,7 +723,7 @@ class Plugin(object):
         datums_plot_colour = "white"
         datums_plot_colour_foreground = "0.5"
         datums_plot_colour_background = "black"
-        datums_plot_colour_lines = ["yellow", "lime", "red", "lightsteelblue", "orange", "magenta", "cyan", "bisque", "blue"]
+        datums_plot_colour_lines = ["yellow", "lime", "red", "orange", "magenta", "lightsteelblue", "cyan", "bisque", "blue"]
         datums_plot_title = datums_df.title if hasattr(datums_df, "title") else None
         datums_plot_buffer = StringIO.StringIO()
         datums_df = Plugin.datums_df_reindex(datums_df)
@@ -763,8 +768,11 @@ class Plugin(object):
         elif datums_axes_x_range <= (60 * 60 * 24 * 3 + 2):
             datums_axes.xaxis.set_major_locator(matplotlib.dates.HourLocator(byhour=[0, 8, 16], interval=1))
             datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
-        else:
+        elif datums_axes_x_range <= (60 * 60 * 24 * 14 + 2):
             datums_axes.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=1))
+            datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%a"))
+        else:
+            datums_axes.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=3))
             datums_axes.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%a"))
         datums_axes.xaxis.label.set_visible(False)
         datums_axes.xaxis.label.set_color(datums_plot_colour)
@@ -1055,14 +1063,17 @@ class Plugin(object):
                 if datum_df_column_old.startswith("data_value_scaled@"):
                     datum_df_columns_renames[datum_df_column_old] = \
                         " ".join([datum_df_column_new, datum_df_columns_renames_tokens[datum_df_column_old][4]])
+        for datum_df_columns_rename in datum_df_columns_renames:
+            datum_df_columns_renames[datum_df_columns_rename] = datum_df_columns_renames[datum_df_columns_rename]. \
+                replace("-", " ").replace("1 All Time", "All Time")
         datum_df.rename(columns=datum_df_columns_renames, inplace=True)
         datum_df_columns_reorder = []
         for datum_df_column_old in sorted(datum_df_columns_renames_order,
                                           key=lambda datum_df_column_sort: (datum_df_columns_renames_order[datum_df_column_sort])):
             datum_df_columns_reorder.append(datum_df_columns_renames[datum_df_column_old])
         datum_df = datum_df[datum_df_columns_reorder]
-        Plugin.datums_df_title(datum_df, " & ".join(datum_df_columns_renames_tokens_metric0).title() +
-                               " (" + ", ".join(datum_df_columns_renames_tokens_unit) + ")")
+        Plugin.datums_df_title(datum_df, (" & ".join(datum_df_columns_renames_tokens_metric0).title() +
+                                          " (" + ", ".join(datum_df_columns_renames_tokens_unit) + ")").replace("-", " "))
         return datum_df
 
     def datum_value(self, data, keys=None, default=None, factor=1):
@@ -1152,6 +1163,10 @@ class Plugin(object):
             return scalor * 60 * 60
         elif unit == "day":
             return scalor * 60 * 60 * 24
+        elif unit == "day-time":
+            return scalor * 60 * 60 * 24
+        elif unit == "night-time":
+            return scalor * 60 * 60 * 24
         elif unit == "month":
             return scalor * 60 * 60 * 24 * 30.42
         elif unit == "year":
@@ -1179,8 +1194,6 @@ class Plugin(object):
         self.config = config
         self.reactor = reactor
         self.datums = {}
-        self.datums_pushed = 0
-        self.datums_dropped = 0
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
@@ -1215,7 +1228,7 @@ DATUM_SCHEMA_METRICS = {DATUM_SCHEMA_JSON[2]["symbols"][i]: i * 10 for i in rang
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex")
-ID_BASE64 = base64.b64encode(ID_BYTE)
+ID_BASE64 = base64.b64encode(str(ID_BYTE))
 
 SVG_EMPTY = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"

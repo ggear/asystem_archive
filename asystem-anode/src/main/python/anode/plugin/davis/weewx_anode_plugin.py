@@ -56,7 +56,5 @@ class ANode(StdService):
         # noinspection PyBroadException
         try:
             requests.post(url, data=data)
-            if weewx.debug:
-                print "Push to [%s] successful with payload [%s]" % (url, data)
         except:
             pass

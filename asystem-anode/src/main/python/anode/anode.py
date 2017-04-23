@@ -52,10 +52,23 @@ class ANode:
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
+        self.publish_mqtt = None
+        self.publish_upstream_plugin = False
         self.publish_upstream = "publish_host" in self.config and len(self.config["publish_host"]) > 0 and \
                                 "publish_port" in self.config and self.config["publish_port"] > 0 and \
                                 "publish_topic" in self.config and len(self.config["publish_topic"]) > 0
-        self.publish_upstream_plugin = False
+        for plugin_name in self.config["plugin"]:
+            self.publish_upstream_plugin = self.publish_upstream_plugin or \
+                                           "publish_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name][
+                                               "publish_upstream"]
+        if self.publish_upstream and self.publish_upstream_plugin:
+            self.publish_mqtt = MqttPublishService(
+                clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
+                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"],
+                (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
+                KEEPALIVE_DEFAULT_SECONDS)
+            self.publish_mqtt.startService()
+
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             save_loopingcall = LoopingCall(self.store_state)
             save_loopingcall.clock = self.core_reactor
@@ -63,10 +76,12 @@ class ANode:
         for plugin_name in self.config["plugin"]:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
+            self.config["plugin"][plugin_name]["publish_upstream"] = self.publish_upstream and \
+                                                                     "publish_upstream" in self.config["plugin"][plugin_name] and \
+                                                                     self.config["plugin"][plugin_name]["publish_upstream"]
+            if self.config["plugin"][plugin_name]["publish_upstream"] and self.publish_mqtt is not None:
+                self.config["plugin"][plugin_name]["publish_service"] = self.publish_mqtt
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
-            self.publish_upstream_plugin = self.publish_upstream_plugin or \
-                                           "publish_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name][
-                                               "publish_upstream"]
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
                 plugin_pollingcall = LoopingCall(self.plugins[plugin_name].poll)
                 plugin_pollingcall.clock = self.core_reactor
@@ -87,24 +102,10 @@ class ANode:
                 self.core_reactor.callLater(time_partition_next,
                                             lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
                                             plugin_partitioncall, time_partition)
-        publish_mqtt = None
-        if self.publish_upstream and self.publish_upstream_plugin:
-            publish_mqtt = MqttPublishService(
-                clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
-                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"],
-                (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
-                KEEPALIVE_DEFAULT_SECONDS)
-            publish_mqtt.startService()
-        for plugin in self.plugins.itervalues():
-            plugin.config["publish_upstream"] = self.publish_upstream and "publish_upstream" in self.config["plugin"][plugin.name] and \
-                                                self.config["plugin"][plugin.name]["publish_upstream"]
-            if plugin.config["publish_upstream"] and publish_mqtt is not None:
-                plugin.config["publish_service"] = publish_mqtt
         if self.publish_upstream and self.publish_upstream_plugin and "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
             plugin_pushcall = LoopingCall(self.publish_datums)
             plugin_pushcall.clock = self.core_reactor
             plugin_pushcall.start(self.config["publish_seconds"])
-
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def get_datums(self, datum_filter, datums=None):
@@ -314,9 +315,9 @@ class Log:
         self.time_real_start = None
         self.time_user_start = None
 
+    # noinspection PyArgumentList, PyProtectedMember
     @staticmethod
     def configure(verbose, quiet):
-        # noinspection PyProtectedMember
         client._HTTP11ClientFactory.noisy = False
         if not logging.getLogger().handlers:
             logging_handler = logging.StreamHandler(sys.stdout)

@@ -1,0 +1,49 @@
+host: 0.0.0.0
+port: 8091
+#publish_host: 37.187.106.16
+#publish_port: 1883
+#publish_topic: asystem/anode/datum-test
+#publish_seconds: 5
+save_on_exit: False
+save_seconds: -1
+plugin:
+    fronius:
+      poll_seconds: 1
+      buffer_ticks: 5
+      history_partitions: 14
+      history_ticks: 5000000
+      history_partition_seconds: 86400
+      repeat_seconds: 10
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
+    davis:
+      poll_seconds: -1
+      buffer_ticks: 5
+      history_partitions: 14
+      history_ticks: 2000000
+      history_partition_seconds: 86400
+      repeat_seconds: 10
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
+    netatmo:
+      poll_seconds: 50
+      buffer_ticks: 5
+      history_partitions: 14
+      history_ticks: 200000
+      history_partition_seconds: 86400
+      repeat_seconds: 10
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
+    wunderground:
+      poll_seconds: 300
+      buffer_ticks: 5
+      history_partitions: 14
+      history_ticks: 200000
+      history_partition_seconds: 86400
+      repeat_seconds: 10
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True

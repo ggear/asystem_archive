@@ -133,7 +133,7 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "pressureabsolute" + module_name,
+                    "pressure-absolute" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "AbsolutePressure"]),
                     "mbar",
@@ -147,7 +147,7 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "carbondioxide" + module_name,
+                    "carbon-dioxide" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "CO2"]),
                     "ppm",
@@ -227,7 +227,7 @@ class Netatmo(Plugin):
                 )
                 if device["type"] == "NAModule4":
                     self.datum_push(
-                        "carbondioxide" + module_name,
+                        "carbon-dioxide" + module_name,
                         "current", "point",
                         self.datum_value(device, ["dashboard_data", "CO2"]),
                         "ppm",
@@ -257,7 +257,7 @@ class Netatmo(Plugin):
             self.netatmo_password = os.environ['NETATMO_PASSWORD']
             self.netatmo_client_id = os.environ['NETATMO_CLIENT_ID']
             self.netatmo_client_secret = os.environ['NETATMO_CLIENT_SECRET']
-        except KeyError, key_error:
+        except KeyError as key_error:
             self.disabled = True
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error getting Netatmo connection key [{}] from environment, disabling plugin".format(

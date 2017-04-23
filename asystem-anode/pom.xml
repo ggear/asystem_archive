@@ -14,12 +14,22 @@
     </parent>
 
     <properties>
+        <python.runtime>/usr/bin/python</python.runtime>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
         <integration.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</integration.test.anode.opts>
         <integration.test.anode.log>${project.build.directory}/anode-runtime/anode.log</integration.test.anode.log>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.janeandgraham.asystem</groupId>
+            <artifactId>asystem-amodel</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -70,7 +80,9 @@
                                 <resource>
                                     <directory>${dir.source.python}</directory>
                                     <excludes>
-                                        <exclude>anode/test/data/*</exclude>
+                                        <exclude>anode/test/config/*</exclude>
+                                        <exclude>anode/test/pickle/*</exclude>
+                                        <exclude>anode/test/template/*</exclude>
                                     </excludes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -89,7 +101,9 @@
                                 <resource>
                                     <directory>${dir.source.python}</directory>
                                     <includes>
-                                        <include>anode/test/data/*</include>
+                                        <include>anode/test/config/*</include>
+                                        <include>anode/test/pickle/*</include>
+                                        <include>anode/test/template/*</include>
                                     </includes>
                                     <filtering>false</filtering>
                                 </resource>
@@ -154,7 +168,7 @@
                         <phase>clean</phase>
                         <configuration>
                             <target unless="${maven.integration-test.skip}">
-                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="clean" />
                                 </exec>
@@ -175,7 +189,7 @@
                         <phase>test</phase>
                         <configuration>
                             <target unless="${maven.test.skip}">
-                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="trial" />
                                     <arg value="--reporter=text" />
@@ -191,7 +205,7 @@
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <target unless="${maven.integration-test.skip}">
-                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />
@@ -231,13 +245,13 @@
                                 </echo>
                                 <delete file="${project.basedir}/phantomjsdriver.log" />
                                 <delete file="${project.basedir}/../phantomjsdriver.log" />
-                                <exec executable="python" dir="${dir.output.python}" failonerror="false">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="false">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />
                                     <arg value="--uninstall" />
                                 </exec>
-                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="clean" />
                                 </exec>
@@ -252,7 +266,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target unless="${maven.package.skip}">
-                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="sdist" />
                                 </exec>
@@ -266,7 +280,7 @@
                         <id>python-run</id>
                         <configuration>
                             <target>
-                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />
@@ -274,11 +288,11 @@
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
                                 <copy todir="${dir.runtime.anode}">
-                                    <fileset dir="${dir.source.python}/anode/test/data" includes="**/*.pkl" />
+                                    <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="--verbose" />
-                                    <arg value="-c${dir.source.python}/anode/test/data/anode_plugins_run.yaml" />
+                                    <arg value="-c${dir.source.python}/anode/test/config/anode_plugins_run.yaml" />
                                     <arg value="-d${dir.runtime.anode}/" />
                                 </exec>
                             </target>
@@ -293,7 +307,7 @@
                         <configuration>
                             <target unless="${maven.install.skip}">
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/bin/python" />
+                                    <arg value="${python.runtime}" />
                                     <arg value="setup.py" />
                                     <arg value="install" />
                                 </exec>
@@ -329,7 +343,7 @@
                                     <arg value="anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="/usr/bin/python" />
+                                    <arg value="${python.runtime}" />
                                     <arg value="setup.py" />
                                     <arg value="clean" />
                                 </exec>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html>
 <head>
     <title>anode</title>
@@ -71,6 +72,9 @@
                                     }
                                     else if (plot == "week") {
                                         datumsPlotUri += "&partitions=7&period=3600&method=median&fill=linear"
+                                    }
+                                    else if (plot == "fortnight") {
+                                        datumsPlotUri += "&partitions=14&period=7200&method=median&fill=linear"
                                     }
                                     else {
                                         datumsPlotUri += "&period=7200&method=median&fill=linear"
@@ -244,11 +248,11 @@
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=energy.export&metrics=energy.consumption&bins=1day">energy</a>
+                        href="/?metrics=energy.export&metrics=energy.consumption.savings&metrics=energy.consumption.inverter&metrics=energy.consumption.cost&metrics=energy.consumption-peak.&metrics=energy.consumption-off-peak.&bins=1day">energy</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=energy&bins=1all-time">meters</a>
+                        href="/?metrics=energy.export.grid&metrics=energy.production.inverter&metrics=energy.consumption.grid&bins=1all-time">meters</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
@@ -256,7 +260,7 @@
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=carbondioxide">carbondioxide</a>
+                        href="/?metrics=carbon-dioxide">carbon-dioxide</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
@@ -303,6 +307,7 @@
                     href="#" onclick="addorReplaceLastUriParam('plot','today');return false;">today</a>.<a
                     href="#" onclick="addorReplaceLastUriParam('plot','3days');return false;">3days</a>.<a
                     href="#" onclick="addorReplaceLastUriParam('plot','week');return false;">week</a>.<a
+                    href="#" onclick="addorReplaceLastUriParam('plot','fortnight');return false;">fortnight</a>.<a
                     href="#" onclick="addorReplaceLastUriParam('plot','all');return false;">all</a></span>
             </div>
             <hr/>

@@ -37,7 +37,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "dewpoint.indoor.dining",
+                    "dew-point.indoor.dining",
                     "current", "point",
                     None if self.datum_value(dict_content["packet"], ["inDewpoint"]) is None else self.datum_value(
                         (dict_content["packet"]["inDewpoint"] - 32) * 5 / 9, factor=10),
@@ -128,7 +128,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "dewpoint.outdoor.roof",
+                    "dew-point.outdoor.roof",
                     "current", "point",
                     None if self.datum_value(dict_content["packet"], ["dewpoint"]) is None else self.datum_value(
                         (dict_content["packet"]["dewpoint"] - 32) * 5 / 9, factor=10),
@@ -157,7 +157,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "windbearing.outdoor.roof",
+                    "wind-bearing.outdoor.roof",
                     "current", "point",
                     self.datum_value(dict_content["packet"], ["windDir"]),
                     u"°",
@@ -171,7 +171,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "windgust.outdoor.roof",
+                    "wind-gust.outdoor.roof",
                     "current", "point",
                     None if self.datum_value(dict_content["packet"], ["windGust"]) is None else self.datum_value(
                         dict_content["packet"]["windGust"] * Decimal(1.60934)),
@@ -186,7 +186,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "windgustbearing.outdoor.roof",
+                    "wind-gust-bearing.outdoor.roof",
                     "current", "point",
                     self.datum_value(dict_content["packet"], ["windGustDir"]),
                     u"°",
@@ -200,7 +200,7 @@ class Davis(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "windchill.outdoor.roof",
+                    "wind-chill.outdoor.roof",
                     "current", "point",
                     None if self.datum_value(dict_content["packet"], ["windchill"]) is None else self.datum_value(
                         (dict_content["packet"]["windchill"] - 32) * 5 / 9, factor=10),
@@ -320,7 +320,7 @@ class Davis(Plugin):
                 bin_width = dict_content["record"]["interval"]
                 data_timestamp = dict_content["record"]["dateTime"]
                 self.datum_push(
-                    "rainrate.outdoor.roof",
+                    "rain-rate.outdoor.roof",
                     "current", "mean",
                     None if self.datum_value(dict_content["record"], ["rainRate"]) is None else self.datum_value(
                         dict_content["record"]["rainRate"] * Decimal(25.4), factor=10),

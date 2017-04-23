@@ -15,8 +15,9 @@ buildNumber.properties
 *.iml
 .pydevproject
 *.pyc
-*.egg*
+*egg-info
 dist/
 phantomjsdriver.log
 asystem-anode/src/main/python/anode/model/
 asystem-anode/src/main/python/anode/web/js/model/
+asystem-anode/src/main/python/config/*.pkl
