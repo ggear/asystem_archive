@@ -1112,7 +1112,7 @@ class ANodeTest(TestCase):
                         "/rest/?format=svg",
                         False, True)
 
-    #TODO: Re-enable once pickled datasets are rebaselined
+    # TODO: Re-enable once pickled datasets are rebaselined
     # def test_good_plots(self):
     #     self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
     #     anode = self.anode_init(False, False, False, False, period=1, iterations=0)
