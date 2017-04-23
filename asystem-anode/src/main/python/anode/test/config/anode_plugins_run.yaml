@@ -1,9 +1,9 @@
 host: 0.0.0.0
 port: 8091
-publish_host: 37.187.106.16
-publish_port: 1883
-publish_topic: asystem/anode/datum-test
-publish_seconds: 5
+#publish_host: 37.187.106.16
+#publish_port: 1883
+#publish_topic: asystem/anode/datum-test
+#publish_seconds: 5
 save_on_exit: False
 save_seconds: -1
 plugin:
@@ -14,6 +14,7 @@ plugin:
       history_ticks: 5000000
       history_partition_seconds: 86400
       repeat_seconds: 10
+      repeat_partition: True
       publish_ticks: -1
       publish_upstream: True
     davis:
@@ -23,6 +24,7 @@ plugin:
       history_ticks: 2000000
       history_partition_seconds: 86400
       repeat_seconds: 10
+      repeat_partition: True
       publish_ticks: -1
       publish_upstream: True
     netatmo:
@@ -32,6 +34,7 @@ plugin:
       history_ticks: 200000
       history_partition_seconds: 86400
       repeat_seconds: 10
+      repeat_partition: True
       publish_ticks: -1
       publish_upstream: True
     wunderground:
@@ -41,5 +44,6 @@ plugin:
       history_ticks: 200000
       history_partition_seconds: 86400
       repeat_seconds: 10
+      repeat_partition: True
       publish_ticks: -1
       publish_upstream: True

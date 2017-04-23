@@ -1,45 +1,49 @@
 host: 0.0.0.0
 port: 8091
-publish_host: 37.187.106.16
-publish_port: 1883
-publish_topic: asystem/anode/datum
-publish_seconds: 3613
+#publish_host: 37.187.106.16
+#publish_port: 1883
+#publish_topic: asystem/anode/datum
+#publish_seconds: 3613
 save_on_exit: True
 save_seconds: 86400
 plugin:
     fronius:
       poll_seconds: 1
       buffer_ticks: 60
-      history_partitions: 14
-      history_ticks: 5000000
+      history_partitions: 25
+      history_ticks: 6400000
       history_partition_seconds: 86400
       repeat_seconds: 101
+      repeat_partition: True
       publish_ticks: -1
-      publish_upstream: True
+      publish_upstream: False
     davis:
       poll_seconds: -1
       buffer_ticks: 30
-      history_partitions: 14
-      history_ticks: 900000
+      history_partitions: 25
+      history_ticks: 1720000
       history_partition_seconds: 86400
       repeat_seconds: 103
+      repeat_partition: True
       publish_ticks: -1
-      publish_upstream: True
+      publish_upstream: False
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
-      history_partitions: 14
-      history_ticks: 400000
+      history_partitions: 25
+      history_ticks: 820000
       history_partition_seconds: 86400
       repeat_seconds: 107
+      repeat_partition: True
       publish_ticks: -1
-      publish_upstream: True
+      publish_upstream: False
     wunderground:
       poll_seconds: 300
       buffer_ticks: 5
-      history_partitions: 14
-      history_ticks: 800000
+      history_partitions: 25
+      history_ticks: 1660000
       history_partition_seconds: 86400
       repeat_seconds: 111
+      repeat_partition: True
       publish_ticks: -1
-      publish_upstream: True
+      publish_upstream: False

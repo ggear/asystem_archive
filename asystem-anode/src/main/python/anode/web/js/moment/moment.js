@@ -5,6 +5,7 @@
 //! momentjs.com
 
 ;(function (global, factory) {
+    //noinspection JSUndefinedPropertyAssignment
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
             global.moment = factory()
@@ -30,6 +31,7 @@
     function isObject(input) {
         // IE8 will treat undefined and null as object if it wasn't for
         // input != null
+        //noinspection EqualityComparisonWithCoercionJS
         return input != null && Object.prototype.toString.call(input) === '[object Object]';
     }
 
@@ -65,7 +67,9 @@
 
     function extend(a, b) {
         for (var i in b) {
+            //noinspection JSUnfilteredForInLoop
             if (hasOwnProp(b, i)) {
+                //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
                 a[i] = b[i];
             }
         }
@@ -104,6 +108,7 @@
     }
 
     function getParsingFlags(m) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (m._pf == null) {
             m._pf = defaultParsingFlags();
         }
@@ -131,9 +136,11 @@
     var some$1 = some;
 
     function isValid(m) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (m._isValid == null) {
             var flags = getParsingFlags(m);
             var parsedParts = some$1.call(flags.parsedDateParts, function (i) {
+                //noinspection EqualityComparisonWithCoercionJS
                 return i != null;
             });
             var isNowValid = !isNaN(m._d.getTime()) &&
@@ -147,6 +154,7 @@
                     flags.bigHour === undefined;
             }
 
+            //noinspection EqualityComparisonWithCoercionJS
             if (Object.isFrozen == null || !Object.isFrozen(m)) {
                 m._isValid = isNowValid;
             }
@@ -159,6 +167,7 @@
 
     function createInvalid(flags) {
         var m = createUTC(NaN);
+        //noinspection EqualityComparisonWithCoercionJS
         if (flags != null) {
             extend(getParsingFlags(m), flags);
         }
@@ -229,6 +238,7 @@
 // Moment prototype object
     function Moment(config) {
         copyConfig(this, config);
+        //noinspection EqualityComparisonWithCoercionJS
         this._d = new Date(config._d != null ? config._d.getTime() : NaN);
         if (!this.isValid()) {
             this._d = new Date(NaN);
@@ -236,6 +246,7 @@
         // Prevent infinite loop in case updateOffset creates new moment
         // objects.
         if (updateInProgress === false) {
+            //noinspection JSUnusedAssignment
             updateInProgress = true;
             hooks.updateOffset(this);
             updateInProgress = false;
@@ -243,6 +254,7 @@
     }
 
     function isMoment(obj) {
+        //noinspection EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS
         return obj instanceof Moment || (obj != null && obj._isAMomentObject != null);
     }
 
@@ -292,6 +304,7 @@
         var firstTime = true;
 
         return extend(function () {
+            //noinspection EqualityComparisonWithCoercionJS
             if (hooks.deprecationHandler != null) {
                 hooks.deprecationHandler(null, msg);
             }
@@ -303,6 +316,7 @@
                     if (typeof arguments[i] === 'object') {
                         arg += '\n[' + i + '] ';
                         for (var key in arguments[0]) {
+                            //noinspection JSUnfilteredForInLoop
                             arg += key + ': ' + arguments[0][key] + ', ';
                         }
                         arg = arg.slice(0, -2); // Remove trailing comma and space
@@ -321,6 +335,7 @@
     var deprecations = {};
 
     function deprecateSimple(name, msg) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (hooks.deprecationHandler != null) {
             hooks.deprecationHandler(name, msg);
         }
@@ -340,8 +355,10 @@
     function set(config) {
         var prop, i;
         for (i in config) {
+            //noinspection JSUnfilteredForInLoop
             prop = config[i];
             if (isFunction(prop)) {
+                //noinspection JSUnfilteredForInLoop
                 this[i] = prop;
             } else {
                 this['_' + i] = prop;
@@ -356,22 +373,33 @@
     function mergeConfigs(parentConfig, childConfig) {
         var res = extend({}, parentConfig), prop;
         for (prop in childConfig) {
+            //noinspection JSUnfilteredForInLoop
             if (hasOwnProp(childConfig, prop)) {
+                //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
                 if (isObject(parentConfig[prop]) && isObject(childConfig[prop])) {
+                    //noinspection JSUnfilteredForInLoop
                     res[prop] = {};
+                    //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
                     extend(res[prop], parentConfig[prop]);
+                    //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
                     extend(res[prop], childConfig[prop]);
-                } else if (childConfig[prop] != null) {
-                    res[prop] = childConfig[prop];
-                } else {
-                    delete res[prop];
+                } else { //noinspection EqualityComparisonWithCoercionJS,JSUnfilteredForInLoop
+                    if (childConfig[prop] != null) {
+                        //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
+                        res[prop] = childConfig[prop];
+                    } else {
+                        //noinspection JSUnfilteredForInLoop
+                        delete res[prop];
+                    }
                 }
             }
         }
         for (prop in parentConfig) {
+            //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop,JSUnfilteredForInLoop
             if (hasOwnProp(parentConfig, prop) && !hasOwnProp(childConfig, prop) &&
                 isObject(parentConfig[prop])) {
                 // make sure changes to properties don't modify parent config
+                //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
                 res[prop] = extend({}, res[prop]);
             }
         }
@@ -379,6 +407,7 @@
     }
 
     function Locale(config) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (config != null) {
             this.set(config);
         }
@@ -392,7 +421,9 @@
         keys = function (obj) {
             var i, res = [];
             for (i in obj) {
+                //noinspection JSUnfilteredForInLoop
                 if (hasOwnProp(obj, i)) {
+                    //noinspection JSUnfilteredForInLoop
                     res.push(i);
                 }
             }
@@ -498,9 +529,12 @@
             prop;
 
         for (prop in inputObject) {
+            //noinspection JSUnfilteredForInLoop
             if (hasOwnProp(inputObject, prop)) {
+                //noinspection JSUnfilteredForInLoop
                 normalizedProp = normalizeUnits(prop);
                 if (normalizedProp) {
+                    //noinspection JSUnfilteredForInLoop
                     normalizedInput[normalizedProp] = inputObject[prop];
                 }
             }
@@ -518,6 +552,7 @@
     function getPrioritizedUnits(unitsObj) {
         var units = [];
         for (var u in unitsObj) {
+            //noinspection JSUnfilteredForInLoop,JSUnfilteredForInLoop
             units.push({unit: u, priority: priorities[u]});
         }
         units.sort(function (a, b) {
@@ -528,6 +563,7 @@
 
     function makeGetSet(unit, keepTime) {
         return function (value) {
+            //noinspection EqualityComparisonWithCoercionJS
             if (value != null) {
                 set$1(this, unit, value);
                 hooks.updateOffset(this, keepTime);
@@ -752,6 +788,7 @@
     }
 
     function addTimeToArrayFromToken(token, input, config) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (input != null && hasOwnProp(tokens, token)) {
             tokens[token](input, config._a, config, token);
         }
@@ -830,6 +867,7 @@
     addParseToken(['MMM', 'MMMM'], function (input, array, config, token) {
         var month = config._locale.monthsParse(input, token, config._strict);
         // if we didn't find a month name, mark the date as invalid.
+        //noinspection EqualityComparisonWithCoercionJS
         if (month != null) {
             array[MONTH] = month;
         } else {
@@ -965,6 +1003,7 @@
     }
 
     function getSetMonth(value) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (value != null) {
             setMonth(this, value);
             hooks.updateOffset(this, true);
@@ -1255,11 +1294,13 @@
 
     function getSetWeek(input) {
         var week = this.localeData().week(this);
+        //noinspection EqualityComparisonWithCoercionJS
         return input == null ? week : this.add((input - week) * 7, 'd');
     }
 
     function getSetISOWeek(input) {
         var week = weekOfYear(this, 1, 4).week;
+        //noinspection EqualityComparisonWithCoercionJS
         return input == null ? week : this.add((input - week) * 7, 'd');
     }
 
@@ -1311,6 +1352,7 @@
     addWeekParseToken(['dd', 'ddd', 'dddd'], function (input, week, config, token) {
         var weekday = config._locale.weekdaysParse(input, token, config._strict);
         // if we didn't get a weekday name, mark the date as invalid
+        //noinspection EqualityComparisonWithCoercionJS
         if (weekday != null) {
             week.d = weekday;
         } else {
@@ -1480,9 +1522,11 @@
 
     function getSetDayOfWeek(input) {
         if (!this.isValid()) {
+            //noinspection EqualityComparisonWithCoercionJS
             return input != null ? this : NaN;
         }
         var day = this._isUTC ? this._d.getUTCDay() : this._d.getDay();
+        //noinspection EqualityComparisonWithCoercionJS
         if (input != null) {
             input = parseWeekday(input, this.localeData());
             return this.add(input - day, 'd');
@@ -1493,14 +1537,17 @@
 
     function getSetLocaleDayOfWeek(input) {
         if (!this.isValid()) {
+            //noinspection EqualityComparisonWithCoercionJS
             return input != null ? this : NaN;
         }
         var weekday = (this.day() + 7 - this.localeData()._week.dow) % 7;
+        //noinspection EqualityComparisonWithCoercionJS
         return input == null ? weekday : this.add(input - weekday, 'd');
     }
 
     function getSetISODayOfWeek(input) {
         if (!this.isValid()) {
+            //noinspection EqualityComparisonWithCoercionJS
             return input != null ? this : NaN;
         }
 
@@ -1508,6 +1555,7 @@
         // as a getter, returns 7 instead of 0 (1-7 range instead of 0-6)
         // as a setter, sunday should belong to the previous week.
 
+        //noinspection EqualityComparisonWithCoercionJS
         if (input != null) {
             var weekday = parseIsoWeekday(input, this.localeData());
             return this.day(this.day() % 7 ? weekday : weekday - 7);
@@ -1856,6 +1904,7 @@
         if (config !== null) {
             var parentConfig = baseConfig;
             config.abbr = name;
+            //noinspection EqualityComparisonWithCoercionJS
             if (locales[name] != null) {
                 deprecateSimple('defineLocaleOverride',
                     'use moment.updateLocale(localeName, config) to change ' +
@@ -1863,18 +1912,21 @@
                     'config) should only be used for creating a new locale ' +
                     'See http://momentjs.com/guides/#/warnings/define-locale/ for more info.');
                 parentConfig = locales[name]._config;
-            } else if (config.parentLocale != null) {
-                if (locales[config.parentLocale] != null) {
-                    parentConfig = locales[config.parentLocale]._config;
-                } else {
-                    if (!localeFamilies[config.parentLocale]) {
-                        localeFamilies[config.parentLocale] = [];
+            } else { //noinspection EqualityComparisonWithCoercionJS
+                if (config.parentLocale != null) {
+                    //noinspection EqualityComparisonWithCoercionJS
+                    if (locales[config.parentLocale] != null) {
+                        parentConfig = locales[config.parentLocale]._config;
+                    } else {
+                        if (!localeFamilies[config.parentLocale]) {
+                            localeFamilies[config.parentLocale] = [];
+                        }
+                        localeFamilies[config.parentLocale].push({
+                            name: name,
+                            config: config
+                        });
+                        return null;
                     }
-                    localeFamilies[config.parentLocale].push({
-                        name: name,
-                        config: config
-                    });
-                    return null;
                 }
             }
             locales[name] = new Locale(mergeConfigs(parentConfig, config));
@@ -1900,9 +1952,11 @@
     }
 
     function updateLocale(name, config) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (config != null) {
             var locale, parentConfig = baseConfig;
             // MERGE
+            //noinspection EqualityComparisonWithCoercionJS
             if (locales[name] != null) {
                 parentConfig = locales[name]._config;
             }
@@ -1915,11 +1969,15 @@
             getSetGlobalLocale(name);
         } else {
             // pass null for config to unupdate, useful for tests
+            //noinspection EqualityComparisonWithCoercionJS
             if (locales[name] != null) {
+                //noinspection EqualityComparisonWithCoercionJS
                 if (locales[name].parentLocale != null) {
                     locales[name] = locales[name].parentLocale;
-                } else if (locales[name] != null) {
-                    delete locales[name];
+                } else { //noinspection EqualityComparisonWithCoercionJS
+                    if (locales[name] != null) {
+                        delete locales[name];
+                    }
                 }
             }
         }
@@ -2038,6 +2096,7 @@
                     break;
                 }
             }
+            //noinspection EqualityComparisonWithCoercionJS
             if (dateFormat == null) {
                 config._isValid = false;
                 return;
@@ -2050,11 +2109,13 @@
                         break;
                     }
                 }
+                //noinspection EqualityComparisonWithCoercionJS
                 if (timeFormat == null) {
                     config._isValid = false;
                     return;
                 }
             }
+            //noinspection EqualityComparisonWithCoercionJS
             if (!allowTime && timeFormat != null) {
                 config._isValid = false;
                 return;
@@ -2102,9 +2163,11 @@
 
 // Pick the first defined of two or three arguments.
     function defaults(a, b, c) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (a != null) {
             return a;
         }
+        //noinspection EqualityComparisonWithCoercionJS
         if (b != null) {
             return b;
         }
@@ -2134,6 +2197,7 @@
         currentDate = currentDateArray(config);
 
         //compute day of the year from weeks and weekdays
+        //noinspection EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS
         if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
             dayOfYearFromWeekInfo(config);
         }
@@ -2156,12 +2220,14 @@
         // * if day of month is given, default month and year
         // * if month is given, default only year
         // * if year is given, don't default anything
+        //noinspection EqualityComparisonWithCoercionJS
         for (i = 0; i < 3 && config._a[i] == null; ++i) {
             config._a[i] = input[i] = currentDate[i];
         }
 
         // Zero out whatever was not defaulted, including time
         for (; i < 7; i++) {
+            //noinspection EqualityComparisonWithCoercionJS
             config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
         }
 
@@ -2177,6 +2243,7 @@
         config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
         // Apply timezone offset from input. The actual utcOffset can be changed
         // with parseZone.
+        //noinspection EqualityComparisonWithCoercionJS
         if (config._tzm != null) {
             config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
         }
@@ -2190,6 +2257,7 @@
         var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
 
         w = config._w;
+        //noinspection EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS
         if (w.GG != null || w.W != null || w.E != null) {
             dow = 1;
             doy = 4;
@@ -2211,31 +2279,36 @@
             // Default to current week.
             week = defaults(w.w, curWeek.week);
 
+            //noinspection EqualityComparisonWithCoercionJS
             if (w.d != null) {
                 // weekday -- low day numbers are considered next week
                 weekday = w.d;
                 if (weekday < 0 || weekday > 6) {
                     weekdayOverflow = true;
                 }
-            } else if (w.e != null) {
-                // local weekday -- counting starts from begining of week
-                weekday = w.e + dow;
-                if (w.e < 0 || w.e > 6) {
-                    weekdayOverflow = true;
+            } else { //noinspection EqualityComparisonWithCoercionJS
+                if (w.e != null) {
+                    // local weekday -- counting starts from begining of week
+                    weekday = w.e + dow;
+                    if (w.e < 0 || w.e > 6) {
+                        weekdayOverflow = true;
+                    }
+                } else {
+                    // default to begining of week
+                    weekday = dow;
                 }
-            } else {
-                // default to begining of week
-                weekday = dow;
             }
         }
         if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
             getParsingFlags(config)._overflowWeeks = true;
-        } else if (weekdayOverflow != null) {
-            getParsingFlags(config)._overflowWeekday = true;
-        } else {
-            temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
-            config._a[YEAR] = temp.year;
-            config._dayOfYear = temp.dayOfYear;
+        } else { //noinspection EqualityComparisonWithCoercionJS
+            if (weekdayOverflow != null) {
+                getParsingFlags(config)._overflowWeekday = true;
+            } else {
+                temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
+                config._a[YEAR] = temp.year;
+                config._dayOfYear = temp.dayOfYear;
+            }
         }
     }
 
@@ -2315,25 +2388,29 @@
     function meridiemFixWrap(locale, hour, meridiem) {
         var isPm;
 
+        //noinspection EqualityComparisonWithCoercionJS
         if (meridiem == null) {
             // nothing to do
             return hour;
         }
+        //noinspection EqualityComparisonWithCoercionJS
         if (locale.meridiemHour != null) {
             return locale.meridiemHour(hour, meridiem);
-        } else if (locale.isPM != null) {
-            // Fallback
-            isPm = locale.isPM(meridiem);
-            if (isPm && hour < 12) {
-                hour += 12;
+        } else { //noinspection EqualityComparisonWithCoercionJS
+            if (locale.isPM != null) {
+                // Fallback
+                isPm = locale.isPM(meridiem);
+                if (isPm && hour < 12) {
+                    hour += 12;
+                }
+                if (!isPm && hour === 12) {
+                    hour = 0;
+                }
+                return hour;
+            } else {
+                // this is not supposed to happen
+                return hour;
             }
-            if (!isPm && hour === 12) {
-                hour = 0;
-            }
-            return hour;
-        } else {
-            // this is not supposed to happen
-            return hour;
         }
     }
 
@@ -2355,6 +2432,7 @@
         for (i = 0; i < config._f.length; i++) {
             currentScore = 0;
             tempConfig = copyConfig({}, config);
+            //noinspection EqualityComparisonWithCoercionJS
             if (config._useUTC != null) {
                 tempConfig._useUTC = config._useUTC;
             }
@@ -2373,6 +2451,7 @@
 
             getParsingFlags(tempConfig).score = currentScore;
 
+            //noinspection EqualityComparisonWithCoercionJS,JSUnusedAssignment,JSUnusedAssignment
             if (scoreToBeat == null || currentScore < scoreToBeat) {
                 scoreToBeat = currentScore;
                 bestMoment = tempConfig;
@@ -2692,8 +2771,10 @@
         var offset = this._offset || 0,
             localAdjust;
         if (!this.isValid()) {
+            //noinspection EqualityComparisonWithCoercionJS
             return input != null ? this : NaN;
         }
+        //noinspection EqualityComparisonWithCoercionJS
         if (input != null) {
             if (typeof input === 'string') {
                 input = offsetFromString(matchShortOffset, input);
@@ -2708,6 +2789,7 @@
             }
             this._offset = input;
             this._isUTC = true;
+            //noinspection EqualityComparisonWithCoercionJS
             if (localAdjust != null) {
                 this.add(localAdjust, 'm');
             }
@@ -2727,6 +2809,7 @@
     }
 
     function getSetZone(input, keepLocalTime) {
+        //noinspection EqualityComparisonWithCoercionJS
         if (input != null) {
             if (typeof input !== 'string') {
                 input = -input;
@@ -2757,10 +2840,12 @@
     }
 
     function setOffsetToParsedOffset() {
+        //noinspection EqualityComparisonWithCoercionJS
         if (this._tzm != null) {
             this.utcOffset(this._tzm);
         } else if (typeof this._i === 'string') {
             var tZone = offsetFromString(matchOffset, this._i);
+            //noinspection EqualityComparisonWithCoercionJS
             if (tZone != null) {
                 this.utcOffset(tZone);
             }
@@ -2870,14 +2955,16 @@
                 m: parseIso(match[7], sign),
                 s: parseIso(match[8], sign)
             };
-        } else if (duration == null) {// checks for null or undefined
-            duration = {};
-        } else if (typeof duration === 'object' && ('from' in duration || 'to' in duration)) {
-            diffRes = momentsDifference(createLocal(duration.from), createLocal(duration.to));
+        } else { //noinspection EqualityComparisonWithCoercionJS
+            if (duration == null) {// checks for null or undefined
+                duration = {};
+            } else if (typeof duration === 'object' && ('from' in duration || 'to' in duration)) {
+                diffRes = momentsDifference(createLocal(duration.from), createLocal(duration.to));
 
-            duration = {};
-            duration.ms = diffRes.milliseconds;
-            duration.M = diffRes.months;
+                duration = {};
+                duration.ms = diffRes.milliseconds;
+                duration.M = diffRes.months;
+            }
         }
 
         ret = new Duration(duration);
@@ -2961,6 +3048,7 @@
             return;
         }
 
+        //noinspection EqualityComparisonWithCoercionJS
         updateOffset = updateOffset == null ? true : updateOffset;
 
         if (milliseconds) {
@@ -3211,6 +3299,7 @@
             return this._locale._abbr;
         } else {
             newLocaleData = getLocale(key);
+            //noinspection EqualityComparisonWithCoercionJS
             if (newLocaleData != null) {
                 this._locale = newLocaleData;
             }
@@ -3424,6 +3513,7 @@
 
     function getSetWeekYearHelper(input, week, weekday, dow, doy) {
         var weeksTarget;
+        //noinspection EqualityComparisonWithCoercionJS
         if (input == null) {
             return weekOfYear(this, dow, doy).year;
         } else {
@@ -3467,6 +3557,7 @@
 // MOMENTS
 
     function getSetQuarter(input) {
+        //noinspection EqualityComparisonWithCoercionJS
         return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
     }
 
@@ -3523,6 +3614,7 @@
 
     function getSetDayOfYear(input) {
         var dayOfYear = Math.round((this.clone().startOf('day') - this.clone().startOf('year')) / 864e5) + 1;
+        //noinspection EqualityComparisonWithCoercionJS
         return input == null ? dayOfYear : this.add((input - dayOfYear), 'd');
     }
 
@@ -3814,6 +3906,7 @@
 
         format = format || '';
 
+        //noinspection EqualityComparisonWithCoercionJS
         if (index != null) {
             return get$1(format, index, field, 'month');
         }
@@ -3858,6 +3951,7 @@
         var locale = getLocale(),
             shift = localeSorted ? locale._week.dow : 0;
 
+        //noinspection EqualityComparisonWithCoercionJS
         if (index != null) {
             return get$1(format, (index + shift) % 7, field, 'day');
         }
@@ -4307,6 +4401,7 @@
     hooks.relativeTimeRounding = getSetRelativeTimeRounding;
     hooks.relativeTimeThreshold = getSetRelativeTimeThreshold;
     hooks.calendarFormat = getCalendarFormat;
+    //noinspection JSPotentiallyInvalidConstructorUsage
     hooks.prototype = proto;
 
     return hooks;

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<assembly>
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+
     <id>assembly</id>
     <formats>
         <format>tar.gz</format>
@@ -7,7 +8,7 @@
     <includeBaseDirectory>true</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <outputDirectory></outputDirectory>
+            <outputDirectory />
             <directory>src/main/assembly/root</directory>
             <excludes>
                 <exclude>**/*.sh</exclude>
@@ -17,7 +18,7 @@
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
-            <outputDirectory></outputDirectory>
+            <outputDirectory />
             <directory>src/main/assembly/root</directory>
             <includes>
                 <include>**/*.sh</include>
@@ -76,7 +77,7 @@
             </excludes>
         </dependencySet>
         <dependencySet>
-            <outputDirectory></outputDirectory>
+            <outputDirectory />
             <unpack>true</unpack>
             <includes>
                 <include>com.cloudera.framework:cloudera-framework-assembly:tar.gz:assembly</include>

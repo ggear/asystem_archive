@@ -103,7 +103,7 @@
         <slf4j.version>1.7.5</slf4j.version>
         <junit.version>4.12</junit.version>
 
-        <cloudera-framework.version>1.5.2-cdh5.10.1-SNAPSHOT</cloudera-framework.version>
+        <cloudera-framework.version>1.5.3-cdh5.11.0-SNAPSHOT</cloudera-framework.version>
 
         <parcel-plugin.version>0.7.8</parcel-plugin.version>
 
