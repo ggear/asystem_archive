@@ -457,7 +457,8 @@ class Fronius(Plugin):
                                                       energy_consumption_peak_morning_inverter["data_value"]
             elif energy_consumption_peak_morning_grid is not None and energy_consumption_peak_evening_grid is not None:
                 energy_consumption_savings_off_peak_day = energy_production_inverter_day - energy_export_grid_day - \
-                                                          energy_consumption_peak_evening_inverter["data_value"]
+                                                          energy_consumption_peak_evening_inverter["data_value"] + \
+                                                          energy_consumption_peak_morning_inverter["data_value"]
                 energy_consumption_savings_peak_day = energy_consumption_peak_evening_inverter["data_value"] - \
                                                       energy_consumption_peak_morning_inverter["data_value"]
             self.datum_push(
