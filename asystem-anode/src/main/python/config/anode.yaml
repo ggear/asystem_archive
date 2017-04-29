@@ -2,7 +2,7 @@ host: 0.0.0.0
 port: 8091
 #publish_host: 37.187.106.16
 #publish_port: 1883
-#publish_topic: asystem/anode/datum
+#publish_topic: asystem/datum
 #publish_seconds: 3613
 save_on_exit: True
 save_seconds: 86400

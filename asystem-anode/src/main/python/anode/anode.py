@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
 import logging.config
-import os
 import sys
 import time
 import urlparse
+from optparse import OptionParser
+
+import os
 import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
@@ -16,7 +17,6 @@ from mqtt.client import publisher
 from mqtt.client.base import MQTTBaseProtocol
 from mqtt.client.factory import MQTTFactory
 from mqtt.error import MQTTStateError
-from optparse import OptionParser
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet import reactor
 from twisted.internet import threads

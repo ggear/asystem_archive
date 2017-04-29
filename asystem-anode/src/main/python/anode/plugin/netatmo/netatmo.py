@@ -4,11 +4,11 @@ from __future__ import print_function
 
 import json
 import logging
+import time
+from decimal import Decimal
 
 import os
-import time
 import treq
-from decimal import Decimal
 
 import anode
 from anode.plugin.plugin import Plugin

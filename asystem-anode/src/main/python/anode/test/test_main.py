@@ -2,21 +2,21 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import json
-
 import calendar
 import datetime
-import ilio
+import json
 import os.path
 import os.path
-import pandas
 import shutil
 import sys
 import time
-import treq
 import urlparse
 from StringIO import StringIO
 from random import randint
+
+import ilio
+import pandas
+import treq
 from twisted.internet import threads
 from twisted.internet.defer import succeed
 from twisted.internet.task import Clock
