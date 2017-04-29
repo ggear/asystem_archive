@@ -3,6 +3,7 @@ package com.jag.asystem;
 import com.cloudera.framework.testing.server.DfsServer;
 import com.cloudera.framework.testing.server.FlumeServer;
 import com.cloudera.framework.testing.server.MqttServer;
+import com.jag.asystem.test.Flume;
 import org.junit.ClassRule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
@@ -12,6 +13,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ //
+  Flume.class
 })
 public class TestSuite {
 

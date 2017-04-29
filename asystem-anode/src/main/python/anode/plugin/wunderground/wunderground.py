@@ -2,14 +2,14 @@
 
 from __future__ import print_function
 
-import json
-import logging
-
 import calendar
 import datetime
+import json
+import logging
+from decimal import Decimal
+
 import dateutil.parser
 import treq
-from decimal import Decimal
 
 import anode
 from anode.plugin.plugin import Plugin

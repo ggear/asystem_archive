@@ -1,42 +1,42 @@
 from __future__ import print_function
 
-import json
-import logging
-
 import HTMLParser
 import StringIO
 import abc
-import avro.io
-import avro.schema
-import avro.schema
 import base64
 import calendar
 import datetime
 import decimal
-import io
-import matplotlib
-import matplotlib.pyplot as plot
+import json
+import logging
 import numbers
-import numpy
 import operator
-import os
-import pandas
 import re
 import time
 import urllib
-from avro.io import AvroTypeException
 from collections import deque
-from cycler import cycler
 from decimal import Decimal
 from functools import reduce
+from uuid import getnode as get_mac
+
+import avro
+import avro.io
+import avro.schema
+import avro.schema
+import io
+import matplotlib
+import matplotlib.pyplot as plot
+import numpy
+import os
+import pandas
+from avro.io import AvroTypeException
+from cycler import cycler
 from importlib import import_module
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from twisted.internet.task import Clock
-from uuid import getnode as get_mac
 
 import anode.plugin
-import avro
 
 
 # noinspection PyTypeChecker
