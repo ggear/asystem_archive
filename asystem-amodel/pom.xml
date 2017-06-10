@@ -2,45 +2,65 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.janeandgraham.asystem</groupId>
+    <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-amodel</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
     <parent>
-        <groupId>com.janeandgraham</groupId>
+        <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>com.cloudera.framework.library.thirdparty</groupId>
-            <artifactId>cloudera-framework-library-thirdparty-avro</artifactId>
+            <groupId>com.cloudera.framework.library.client</groupId>
+            <artifactId>cloudera-framework-library-client-core</artifactId>
             <version>${cloudera-framework.version}</version>
             <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework</groupId>
+            <artifactId>cloudera-framework-testing</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!--<plugin>-->
-                <!--<groupId>org.apache.avro</groupId>-->
-                <!--<artifactId>avro-maven-plugin</artifactId>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>schema</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<stringType>String</stringType>-->
-                            <!--<sourceDirectory>src/main/resources/avro/</sourceDirectory>-->
-                            <!--<outputDirectory>src/main/java/</outputDirectory>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.build.sourceDirectory}</directory>
+                            <includes>
+                                <include>**/avro/*.java</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schema</goal>
+                        </goals>
+                        <configuration>
+                            <stringType>String</stringType>
+                            <sourceDirectory>${project.basedir}/src/main/resources/avro/1/</sourceDirectory>
+                            <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

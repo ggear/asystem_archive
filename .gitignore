@@ -20,4 +20,5 @@ dist/
 phantomjsdriver.log
 asystem-anode/src/main/python/anode/model/
 asystem-anode/src/main/python/anode/web/js/model/
+asystem-amodel/src/main/java/com/jag/asystem/amodel/avro/*.java
 asystem-anode/src/main/python/config/*.pkl

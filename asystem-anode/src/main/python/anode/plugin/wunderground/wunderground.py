@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function
 
 import calendar
@@ -50,24 +48,25 @@ class Wunderground(Plugin):
                 day_index_start += 1
             for forecast_index in range(day_index_start, day_index_start + day_index_finish):
                 self.datum_push(
-                    "conditions.hills.forecast",
+                    "conditions__hills__forecast",
                     "forecast", "enumeration",
                     0,
-                    "",
+                    "__",
                     1,
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"]).lower(),
+                    data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"])
+                    .lower().encode("ascii", "ignore"),
                 )
                 self.datum_push(
-                    "temperature.hills.forecast",
+                    "temperature__hills__forecast",
                     "forecast", "point",
                     None if self.datum_value(dict_content,
                                              ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
                         self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
-                    u"°C",
+                    "_PC2_PB0C",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -75,12 +74,12 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "temperature.hills.forecast",
+                    "temperature__hills__forecast",
                     "forecast", "high",
                     None if self.datum_value(dict_content,
                                              ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"]) is None else int(
                         self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
-                    u"°C",
+                    "_PC2_PB0C",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -88,12 +87,12 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "temperature.hills.forecast",
+                    "temperature__hills__forecast",
                     "forecast", "low",
                     None if self.datum_value(dict_content,
                                              ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"]) is None else int(
                         self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "low", "celsius"])),
-                    u"°C",
+                    "_PC2_PB0C",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -101,7 +100,7 @@ class Wunderground(Plugin):
                     "day"
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
                     "mm",
@@ -113,7 +112,7 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
                     "mm",
@@ -125,7 +124,7 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
                     "mm",
@@ -137,7 +136,7 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
@@ -145,11 +144,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day-time",
+                    "day_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
@@ -157,11 +156,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day-time",
+                    "day_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
@@ -169,11 +168,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day-time",
+                    "day_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "integral",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
                     "mm",
@@ -181,11 +180,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "night-time",
+                    "night_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
                     "mm",
@@ -193,11 +192,11 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "night-time",
+                    "night_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "rain.hills.forecast",
+                    "rain__hills__forecast",
                     "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
                     "mm",
@@ -205,14 +204,14 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "night-time",
+                    "night_Dtime",
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind.hills.forecast",
+                    "wind__hills__forecast",
                     "forecast", "mean",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
-                    "km/h",
+                    "km_P2Fh",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -221,10 +220,10 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind.hills.forecast",
+                    "wind__hills__forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "maxwind", "kph"]),
-                    "km/h",
+                    "km_P2Fh",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -233,10 +232,10 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind.hills.forecast",
+                    "wind__hills__forecast",
                     "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
-                    "km/h",
+                    "km_P2Fh",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -245,10 +244,10 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "humidity.hills.forecast",
+                    "humidity__hills__forecast",
                     "forecast", "mean",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                    "%",
+                    "_P25",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -258,10 +257,10 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "humidity.hills.forecast",
+                    "humidity__hills__forecast",
                     "forecast", "high",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                    "%",
+                    "_P25",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -271,10 +270,10 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "humidity.hills.forecast",
+                    "humidity__hills__forecast",
                     "forecast", "low",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                    "%",
+                    "_P25",
                     1,
                     data_timestamp,
                     bin_timestamp,

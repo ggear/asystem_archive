@@ -1,0 +1,26 @@
+[
+  {
+    "namespace": "com.jag.asystem.amodel.avro",
+    "name": "DatumMetaData",
+    "type": "record",
+    "version": 1,
+    "fields": [
+      {
+        "name": "ingest_id",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "ingest_timestamp",
+        "type": [
+          "null",
+          "long"
+        ],
+        "default": null
+      }
+    ]
+  }
+]

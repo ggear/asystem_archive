@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.janeandgraham.asystem</groupId>
+    <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-ahub</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
     <parent>
-        <groupId>com.janeandgraham</groupId>
+        <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
