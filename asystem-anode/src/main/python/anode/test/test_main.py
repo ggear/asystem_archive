@@ -26,7 +26,6 @@ from twisted.trial.unittest import TestCase
 from anode.anode import MqttPublishService
 from anode.anode import Plugin
 from anode.anode import main
-from anode.plugin import plugin
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
