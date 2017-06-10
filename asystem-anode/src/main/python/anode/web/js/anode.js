@@ -2,25 +2,25 @@ function decodeDatumField(datumField) {
     var ESCAPE_SWAPS = {
         "_": ".",
         ".": "_"
-    }
+    };
     var ESCAPE_SEQUENCES = {
         "__": "_",
         "_X": ".",
         "_D": "-",
         "_P": "%"
-    }
-    var datumFields = datumField.split("__")
+    };
+    var datumFields = datumField.split("__");
     for (var i = 0; i < datumFields.length; i++) {
         for (var escaped in ESCAPE_SEQUENCES) {
             datumFields[i] = datumFields[i].replace(escaped, ESCAPE_SEQUENCES[escaped])
         }
     }
-    var datumFieldDecodedChars = datumFields.join("_").split('')
+    var datumFieldDecodedChars = datumFields.join("_").split('');
     for (var i = 0; i < datumFieldDecodedChars.length; i++) {
-        var swapped = false
+        var swapped = false;
         for (var swap in ESCAPE_SWAPS) {
             if (!swapped && datumFieldDecodedChars[i] == swap) {
-                datumFieldDecodedChars[i] = ESCAPE_SWAPS[swap]
+                datumFieldDecodedChars[i] = ESCAPE_SWAPS[swap];
                 swapped = true
             }
         }
