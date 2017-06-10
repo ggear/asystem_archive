@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.janeandgraham</groupId>
+    <groupId>com.jag</groupId>
     <artifactId>asystem</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
@@ -97,7 +97,7 @@
         <maven.integration-test.skip>true</maven.integration-test.skip>
         <maven.data-download.skip>true</maven.data-download.skip>
         <maven.package.skip>true</maven.package.skip>
-        <maven.install.skip>true</maven.install.skip>
+        <maven.install-python.skip>true</maven.install-python.skip>
         <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
 
         <avro.version>1.7.6</avro.version>
@@ -129,7 +129,7 @@
                 <maven.integration-test.skip>true</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>true</maven.package.skip>
-                <maven.install.skip>true</maven.install.skip>
+                <maven.install-python.skip>true</maven.install-python.skip>
                 <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
@@ -140,7 +140,7 @@
                 <maven.integration-test.skip>false</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>true</maven.package.skip>
-                <maven.install.skip>true</maven.install.skip>
+                <maven.install-python.skip>true</maven.install-python.skip>
                 <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
@@ -151,7 +151,7 @@
                 <maven.integration-test.skip>true</maven.integration-test.skip>
                 <maven.data-download.skip>true</maven.data-download.skip>
                 <maven.package.skip>false</maven.package.skip>
-                <maven.install.skip>true</maven.install.skip>
+                <maven.install-python.skip>true</maven.install-python.skip>
                 <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>
@@ -162,7 +162,7 @@
                 <maven.integration-test.skip>false</maven.integration-test.skip>
                 <maven.data-download.skip>false</maven.data-download.skip>
                 <maven.package.skip>false</maven.package.skip>
-                <maven.install.skip>false</maven.install.skip>
+                <maven.install-python.skip>false</maven.install-python.skip>
                 <maven.archetype-refresh.skip>true</maven.archetype-refresh.skip>
             </properties>
         </profile>

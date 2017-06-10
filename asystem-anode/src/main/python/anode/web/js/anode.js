@@ -1,3 +1,33 @@
+function decodeDatumField(datumField) {
+    var ESCAPE_SWAPS = {
+        "_": ".",
+        ".": "_"
+    }
+    var ESCAPE_SEQUENCES = {
+        "__": "_",
+        "_X": ".",
+        "_D": "-",
+        "_P": "%"
+    }
+    var datumFields = datumField.split("__")
+    for (var i = 0; i < datumFields.length; i++) {
+        for (var escaped in ESCAPE_SEQUENCES) {
+            datumFields[i] = datumFields[i].replace(escaped, ESCAPE_SEQUENCES[escaped])
+        }
+    }
+    var datumFieldDecodedChars = datumFields.join("_").split('')
+    for (var i =0; i<datumFieldDecodedChars.length; i++) {
+        var swapped = false
+        for (var swap in ESCAPE_SWAPS) {
+            if(!swapped && datumFieldDecodedChars[i] == swap) {
+                datumFieldDecodedChars[i] = ESCAPE_SWAPS[swap]
+                swapped = true
+            }
+        }
+    }
+    return decodeURIComponent(datumFieldDecodedChars.join(""))
+}
+
 function ANode(uri, onopen, onclose, onmessage) {
 
     if (!(this instanceof ANode)) {
@@ -16,19 +46,19 @@ function ANode(uri, onopen, onclose, onmessage) {
     this.metadata = this.metadataRequest();
     this.orderingIndexes = {};
     this.orderingIndexes["data_metric"] = {};
-    var data_metric = this.metadata[2]["symbols"];
+    var data_metric = this.metadata[1]["symbols"];
     for (var i = 1; i < data_metric.length; i++) {
-        this.orderingIndexes["data_metric"][data_metric[i]] = i * 100000;
+        this.orderingIndexes["data_metric"][decodeDatumField(data_metric[i])] = i * 100000;
     }
     this.orderingIndexes["data_type"] = {};
-    var data_type = this.metadata[4]["symbols"];
+    var data_type = this.metadata[3]["symbols"];
     for (var i = 1; i < data_type.length; i++) {
-        this.orderingIndexes["data_type"][data_type[i]] = i * 10000;
+        this.orderingIndexes["data_type"][decodeDatumField(data_type[i])] = i * 10000;
     }
     this.orderingIndexes["bin_unit"] = {};
-    var bin_unit = this.metadata[6]["symbols"];
+    var bin_unit = this.metadata[5]["symbols"];
     for (var i = 1; i < bin_unit.length; i++) {
-        this.orderingIndexes["bin_unit"][bin_unit[i]] = i * 1000;
+        this.orderingIndexes["bin_unit"][decodeDatumField(bin_unit[i])] = i * 1000;
     }
 
     this.connected = false;

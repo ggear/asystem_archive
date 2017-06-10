@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.janeandgraham.asystem</groupId>
+    <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-anode</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
     <parent>
-        <groupId>com.janeandgraham</groupId>
+        <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
@@ -24,7 +24,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.janeandgraham.asystem</groupId>
+            <groupId>com.jag.asystem</groupId>
             <artifactId>asystem-amodel</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -47,7 +47,7 @@
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                    <directory>../asystem-amodel/src/main/resources/avro/1</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -63,7 +63,7 @@
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                    <directory>../asystem-amodel/src/main/resources/avro/1</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -291,7 +291,7 @@
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
-                                    <arg value="--verbose" />
+                                    <arg value="--quiet" />
                                     <arg value="-c${dir.source.python}/anode/test/config/anode_plugins_run.yaml" />
                                     <arg value="-d${dir.runtime.anode}/" />
                                 </exec>
@@ -305,7 +305,7 @@
                         <id>python-install</id>
                         <phase>install</phase>
                         <configuration>
-                            <target unless="${maven.install.skip}">
+                            <target unless="${maven.install-python.skip}">
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
                                     <arg value="${python.runtime}" />
                                     <arg value="setup.py" />

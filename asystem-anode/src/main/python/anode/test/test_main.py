@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -23,7 +24,9 @@ from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
 
 from anode.anode import MqttPublishService
+from anode.anode import Plugin
 from anode.anode import main
+from anode.plugin import plugin
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
@@ -184,6 +187,43 @@ class ANodeTest(TestCase):
         if iterations > 0:
             self.clock_tick(anode, period, iterations)
         return anode
+
+    def test_encode(self):
+        for unescaped, escaped in {
+            "": "",
+            ".": "__",
+            "_": "_X",
+            "-": "_D",
+            "!": "_P21",
+            "*": "_P2A",
+            "(": "_P28",
+            ")": "_P29",
+            "#": "_P23",
+            "@": "_P40",
+            "_J": "_XJ",
+            "_D": "_XD",
+            ".D": "__D",
+            "_X": "_XX",
+            "_X.": "_XX__",
+            "_X._": "_XX___X",
+            "_P%": "_XP_P25",
+            "_X_X$\/..%_D_": "_XX_XX_P24_P5C_P2F_____P25_XD_X",
+            "$": "_P24",
+            "%": "_P25",
+            "m/s": "m_P2Fs",
+            "km/h": "km_P2Fh",
+            "mm/h": "mm_P2Fh",
+            "°": "_PC2_PB0",
+            "°C": "_PC2_PB0C",
+            "anode.fronius.metrics": "anode__fronius__metrics",
+            "energy.consumption-off-peak-morning.grid": "energy__consumption_Doff_Dpeak_Dmorning__grid"
+        }.iteritems():
+            self.assertEqual(unescaped, Plugin.datum_field_decode(escaped))
+            self.assertEqual(escaped, Plugin.datum_field_encode(unescaped))
+            self.assertEqual(escaped, Plugin.datum_field_encode(Plugin.datum_field_decode(escaped)))
+            self.assertEqual(unescaped, Plugin.datum_field_decode(Plugin.datum_field_encode(unescaped)))
+            self.assertEqual(unescaped, Plugin.datum_field_decode(Plugin.datum_field_encode(Plugin.datum_field_decode(escaped))))
+            self.assertEqual(escaped, Plugin.datum_field_encode(Plugin.datum_field_decode(Plugin.datum_field_encode(unescaped))))
 
     def test_bare(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-d" + DIR_ANODE, "-q"])
@@ -1158,12 +1198,12 @@ class ANodeTest(TestCase):
 
     def test_oneoff(self):
         period = 1
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
-        self.assertRest(1,
+        self.assertRest(0,
                         anode,
-                        "/rest/?metrics=power.consumption.grid&types=point&scope=history&format=csv&print=pretty&partitions=",
-                        False)
+                        "/rest/?units=°&print=pretty",
+                        False, True)
 
 
 # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal

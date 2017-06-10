@@ -107,14 +107,14 @@ class Plugin(object):
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.repeat)
 
     def publish(self):
-        matric_name = "anode." + self.name + "."
+        metric_name = "anode__" + self.name + "__"
         time_now = self.get_time()
         metrics_count = sum(len(units)
                             for metrics in self.datums.values()
                             for types in metrics.values()
                             for units in types.values())
         self.datum_push(
-            matric_name + "metrics",
+            metric_name + "metrics",
             "current", "point",
             self.datum_value(metrics_count),
             "scalor",
@@ -132,10 +132,10 @@ class Plugin(object):
                                   for units in types.values()
                                   for bins in units.values())
         self.datum_push(
-            matric_name + "buffer",
+            metric_name + "buffer",
             "current", "point",
             self.datum_value(0 if metrics_count == 0 else (float(datums_buffer_count) / (self.datums_buffer_batch * metrics_count) * 100)),
-            "%",
+            "_P25",
             1,
             time_now,
             time_now,
@@ -152,11 +152,11 @@ class Plugin(object):
                            for units in types.values()
                            for bins in units.values())
         self.datum_push(
-            matric_name + "history",
+            metric_name + "history",
             "current", "point",
             self.datum_value(0 if ("history_ticks" not in self.config or self.config["history_ticks"] < 1) else (
                 float(datums_count) / self.config["history_ticks"] * 100)),
-            "%",
+            "_P25",
             1,
             time_now,
             time_now,
@@ -166,18 +166,18 @@ class Plugin(object):
             data_bound_lower=0,
             data_transient=True
         )
-        partitions_count_max = max(0 if DATUM_QUEUE_HISTORY not in bins else (
+        partitions_count_max = 0 if len(self.datums) == 0 else (max(0 if DATUM_QUEUE_HISTORY not in bins else (
             len(bins[DATUM_QUEUE_HISTORY]))
-                                   for metrics in self.datums.values()
-                                   for types in metrics.values()
-                                   for units in types.values()
-                                   for bins in units.values())
+                                                                    for metrics in self.datums.values()
+                                                                    for types in metrics.values()
+                                                                    for units in types.values()
+                                                                    for bins in units.values()))
         self.datum_push(
-            matric_name + "partitions",
+            metric_name + "partitions",
             "current", "point",
             self.datum_value(0 if ("history_partitions" not in self.config or self.config["history_partitions"] < 1) else (
                 float(partitions_count_max) / self.config["history_partitions"] * 100)),
-            "%",
+            "_P25",
             1,
             time_now,
             time_now,
@@ -188,7 +188,7 @@ class Plugin(object):
             data_transient=True
         )
         self.datum_push(
-            matric_name + "up-time",
+            metric_name + "up_Dtime",
             "current", "point",
             self.datum_value((time_now - self.time_boot) / Decimal(24 * 60 * 60), factor=100),
             "d",
@@ -201,7 +201,7 @@ class Plugin(object):
             data_transient=True
         )
         self.datum_push(
-            matric_name + "last-seen",
+            metric_name + "last_Dseen",
             "current", "point",
             self.datum_value(self.time_seen),
             "scalor",
@@ -211,7 +211,6 @@ class Plugin(object):
             self.config["poll_seconds"],
             "second",
             data_transient=True
-
         )
         datums_publish_pending = 0
         publish_service = self.config["publish_service"] \
@@ -235,7 +234,7 @@ class Plugin(object):
                             datums_publish.clear()
                         datums_publish_pending += len(datums_publish)
         self.datum_push(
-            matric_name + "queue",
+            metric_name + "queue",
             "current", "point",
             self.datum_value(datums_publish_pending),
             "datums",
@@ -449,13 +448,26 @@ class Plugin(object):
         return datums
 
     @staticmethod
+    def datum_encode(datum_dict):
+        datum_dict_encoded = datum_dict.copy()
+        for field in ("data_source", "data_metric", "data_temporal", "data_type", "data_unit", "bin_unit"):
+            datum_dict_encoded[field] = Plugin.datum_field_encode(datum_dict_encoded[field])
+        return datum_dict_encoded
+
+    @staticmethod
+    def datum_decode(datum_dict):
+        datum_dict_decoded = datum_dict.copy()
+        for field in ("data_source", "data_metric", "data_temporal", "data_type", "data_unit", "bin_unit"):
+            datum_dict_decoded[field] = Plugin.datum_field_decode(datum_dict_decoded[field])
+        return datum_dict_decoded
+
+    @staticmethod
     def datum_tostring(datum_dict):
+        datum_dict = Plugin.datum_decode(datum_dict)
         return "{}.{}.{}.{}{}.{}={}{}{}".format(
-            datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"], datum_dict["bin_timestamp"],
-            datum_dict["bin_unit"].encode("utf-8"),
-            int(datum_dict["data_value"]) / Decimal(datum_dict["data_scale"]),
-            datum_dict["data_unit"].encode("utf-8"),
-            datum_dict["data_string"] if datum_dict["data_string"] is not None else ""
+            datum_dict["data_source"], datum_dict["data_metric"], datum_dict["data_type"], datum_dict["bin_width"],
+            datum_dict["bin_timestamp"], datum_dict["bin_unit"], int(datum_dict["data_value"]) / Decimal(datum_dict["data_scale"]),
+            datum_dict["data_unit"], datum_dict["data_string"] if datum_dict["data_string"] is not None else ""
         )
 
     def datum_get(self, datum_scope, data_metric, data_type, data_unit, bin_width, bin_unit, data_derived_period=None, data_derived_unit="day"):
@@ -475,7 +487,7 @@ class Plugin(object):
                 for datum_type in self.datums[datum_metric]:
                     if Plugin.is_fitlered(datum_filter, "types", datum_type):
                         for datum_unit in self.datums[datum_metric][datum_type]:
-                            if Plugin.is_fitlered(datum_filter, "units", datum_unit.encode("utf-8"), exact_match=True):
+                            if Plugin.is_fitlered(datum_filter, "units", datum_unit, exact_match=True):
                                 for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
                                     if Plugin.is_fitlered(datum_filter, "bins", datum_bin):
                                         datum_scopes = [DATUM_QUEUE_LAST] if "scope" not in datum_filter else datum_filter["scope"]
@@ -509,7 +521,7 @@ class Plugin(object):
         for datum in Plugin.datum_to_format(datums, "dict")["dict"]:
             if Plugin.is_fitlered(datum_filter, "metrics", datum["data_metric"]):
                 if Plugin.is_fitlered(datum_filter, "types", datum["data_type"]):
-                    if Plugin.is_fitlered(datum_filter, "units", datum["data_unit"].encode("utf-8"), exact_match=True):
+                    if Plugin.is_fitlered(datum_filter, "units", datum["data_unit"], exact_match=True):
                         if Plugin.is_fitlered(datum_filter, "bins", str(datum["bin_width"]) + datum["bin_unit"]):
                             if "dict" not in datums_filtered:
                                 datums_filtered["dict"] = []
@@ -522,15 +534,16 @@ class Plugin(object):
         if datum_filter_field not in datum_filter:
             return True
         for datum_filter_field_value in datum_filter[datum_filter_field]:
-            if exact_match and datum_field.lower() == datum_filter_field_value.lower() or \
-                            not exact_match and datum_field.lower().find(datum_filter_field_value.lower()) != -1:
+            datum_filter_field_value = Plugin.datum_field_encode(datum_filter_field_value)
+            if exact_match and datum_field == datum_filter_field_value or not exact_match and \
+                            datum_field.find(datum_filter_field_value) != -1:
                 return True
         return False
 
     @staticmethod
     def datums_sort(datums):
         return sorted(datums, key=lambda datum: (
-            "aaaaa" if datum["data_unit"] == "$" else
+            "aaaaa" if datum["data_unit"] == "_P24" else
             "bbbbb" if datum["data_unit"] == "W" else
             "zzzzz" + datum["data_unit"],
             datum["data_metric"],
@@ -543,8 +556,8 @@ class Plugin(object):
             "aaaaa" if datum["bin_unit"] == "second" else
             "bbbbb" if datum["bin_unit"] == "minute" else
             "ccccc" if datum["bin_unit"] == "hour" else
-            "ddddd" if datum["bin_unit"] == "day-time" else
-            "eeeee" if datum["bin_unit"] == "night-time" else
+            "ddddd" if datum["bin_unit"] == "day_Dtime" else
+            "eeeee" if datum["bin_unit"] == "night_Dtime" else
             "fffff" if datum["bin_unit"] == "day" else
             "ggggg" if datum["bin_unit"] == "month" else
             "hhhhh" if datum["bin_unit"] == "year" else
@@ -559,7 +572,7 @@ class Plugin(object):
 
     @staticmethod
     def datum_dict_to_json(datum_dict):
-        datum_dict = datum_dict.copy()
+        datum_dict = Plugin.datum_decode(datum_dict)
         if "anode_id" in datum_dict:
             datum_dict["anode_id"] = ID_HEX
         return [json.dumps(datum_dict, separators=(',', ':'))]
@@ -569,10 +582,10 @@ class Plugin(object):
         datum_dict = datum_dict.copy()
         datum_dict["anode_id"] = ID_BASE64
         if datum_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
-            DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]] = urllib.quote_plus(datum_dict["data_unit"].encode("utf-8"))
+            DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]] = urllib.quote_plus(datum_dict["data_unit"])
         datum_dict["data_unit"] = DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]]
         if datum_dict["bin_unit"] not in DATUM_SCHEMA_TO_ASCII:
-            DATUM_SCHEMA_TO_ASCII[datum_dict["bin_unit"]] = urllib.quote_plus(datum_dict["bin_unit"].encode("utf-8"))
+            DATUM_SCHEMA_TO_ASCII[datum_dict["bin_unit"]] = urllib.quote_plus(datum_dict["bin_unit"])
         datum_dict["bin_unit"] = DATUM_SCHEMA_TO_ASCII[datum_dict["bin_unit"]]
         return [','.join(str(datum_dict[datum_field]) for datum_field in DATUM_SCHEMA_MODEL.iterkeys())]
 
@@ -594,7 +607,8 @@ class Plugin(object):
 
     @staticmethod
     def datum_avro_to_dict(datum_avro):
-        return [avro.io.DatumReader(DATUM_SCHEMA_AVRO).read(avro.io.BinaryDecoder(io.BytesIO(datum_avro)))]
+        return [{datum_key.encode("utf-8"): (datum_value.encode("utf-8") if isinstance(datum_value, unicode) else datum_value)
+                 for datum_key, datum_value in avro.io.DatumReader(DATUM_SCHEMA_AVRO).read(avro.io.BinaryDecoder(io.BytesIO(datum_avro))).items()}]
 
     # noinspection PyUnusedLocal
     @staticmethod
@@ -657,13 +671,13 @@ class Plugin(object):
             datum_dict["data_value"] = long(datum_dict["data_value"])
             datum_dict["data_unit"] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
             if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_ASCII:
-                DATUM_SCHEMA_FROM_ASCII[datum_dict["data_unit"]] = urllib.unquote_plus(datum_dict["data_unit"]).decode("utf-8")
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["data_unit"]] = urllib.unquote_plus(datum_dict["data_unit"].encode("utf-8")).decode("utf-8")
             datum_dict["data_scale"] = float(datum_dict["data_scale"])
             datum_dict["data_timestamp"] = long(datum_dict["data_timestamp"])
             datum_dict["bin_timestamp"] = long(datum_dict["bin_timestamp"])
             datum_dict["bin_width"] = int(datum_dict["bin_width"])
             if datum_dict["bin_unit"] not in DATUM_SCHEMA_FROM_ASCII:
-                DATUM_SCHEMA_FROM_ASCII[datum_dict["bin_unit"]] = urllib.unquote_plus(datum_dict["bin_unit"]).decode("utf-8")
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["bin_unit"]] = urllib.unquote_plus(datum_dict["bin_unit"].encode("utf-8")).decode("utf-8")
             datums_dict["dict"].append(datum_dict)
         return datums_dict
 
@@ -831,18 +845,19 @@ class Plugin(object):
             log_timer_input = anode.Log(logging.DEBUG).start()
             datums_df_groups = {}
             for datums_df_dict in datums_df:
-                if datums_df_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
-                    DATUM_SCHEMA_TO_ASCII[datums_df_dict["data_unit"]] = urllib.quote_plus(datums_df_dict["data_unit"].encode("utf-8"))
+                datums_df_dict_decoded = Plugin.datum_decode(datums_df_dict)
+                if datums_df_dict_decoded["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
+                    DATUM_SCHEMA_TO_ASCII[datums_df_dict_decoded["data_unit"]] = urllib.quote_plus(datums_df_dict_decoded["data_unit"])
                 if datums_df_dict["bin_unit"] not in DATUM_SCHEMA_TO_ASCII:
-                    DATUM_SCHEMA_TO_ASCII[datums_df_dict["bin_unit"]] = urllib.quote_plus(datums_df_dict["bin_unit"].encode("utf-8"))
+                    DATUM_SCHEMA_TO_ASCII[datums_df_dict_decoded["bin_unit"]] = urllib.quote_plus(datums_df_dict_decoded["bin_unit"])
                 datum_name = "&".join(
-                    ["metrics=" + datums_df_dict["data_metric"],
-                     "types=" + datums_df_dict["data_type"],
-                     "bins=" + str(datums_df_dict["bin_width"]) + DATUM_SCHEMA_TO_ASCII[datums_df_dict["bin_unit"]],
-                     "unit=" + DATUM_SCHEMA_TO_ASCII[datums_df_dict["data_unit"]],
-                     "scale=" + str(datums_df_dict["data_scale"]),
-                     "temporal=" + datums_df_dict["data_temporal"],
-                     "source=" + datums_df_dict["data_source"],
+                    ["metrics=" + datums_df_dict_decoded["data_metric"],
+                     "types=" + datums_df_dict_decoded["data_type"],
+                     "bins=" + str(datums_df_dict_decoded["bin_width"]) + DATUM_SCHEMA_TO_ASCII[datums_df_dict_decoded["bin_unit"]],
+                     "unit=" + DATUM_SCHEMA_TO_ASCII[datums_df_dict_decoded["data_unit"]],
+                     "scale=" + str(datums_df_dict_decoded["data_scale"]),
+                     "temporal=" + datums_df_dict_decoded["data_temporal"],
+                     "source=" + datums_df_dict_decoded["data_source"],
                      "anode_id=" + ID_BASE64
                      ]
                 ).decode("utf-8")
@@ -1154,6 +1169,26 @@ class Plugin(object):
             ((timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset)
 
     @staticmethod
+    def datum_field_swap(field):
+        return "" if field is None else "".join([ESCAPE_SWAPS.get(field_char, field_char) for field_char in field])
+
+    @staticmethod
+    def datum_field_encode(field):
+        field_encoded = urllib.quote_plus(Plugin.datum_field_swap(field))
+        for escaped, unescaped in ESCAPE_SEQUENCES.iteritems():
+            field_encoded = field_encoded.replace(unescaped, escaped)
+        return field_encoded
+
+    @staticmethod
+    def datum_field_decode(field):
+        fields_decoded = field.split("__")
+        for index, field in enumerate(fields_decoded):
+            for escaped, unescaped in ESCAPE_SEQUENCES.iteritems():
+                fields_decoded[index] = fields_decoded[index].replace(escaped, unescaped)
+        field_decoded = urllib.unquote_plus(Plugin.datum_field_swap("_".join(fields_decoded)))
+        return field_decoded if isinstance(field_decoded, unicode) else field_decoded
+
+    @staticmethod
     def get_seconds(scalor, unit):
         if unit == "second":
             return scalor
@@ -1163,15 +1198,15 @@ class Plugin(object):
             return scalor * 60 * 60
         elif unit == "day":
             return scalor * 60 * 60 * 24
-        elif unit == "day-time":
+        elif unit == "day_Dtime":
             return scalor * 60 * 60 * 24
-        elif unit == "night-time":
+        elif unit == "night_Dtime":
             return scalor * 60 * 60 * 24
         elif unit == "month":
             return scalor * 60 * 60 * 24 * 30.42
         elif unit == "year":
             return scalor * 60 * 60 * 24 * 365
-        elif unit == "all-time":
+        elif unit == "all_Dtime":
             return scalor * -1
         else:
             raise Exception("Unknown time unit [{}]".format(unit))
@@ -1223,8 +1258,8 @@ DATUM_SCHEMA_FROM_ASCII = {}
 DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
 DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
-DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON[7]["fields"][i]["name"]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[7]["fields"]))}
-DATUM_SCHEMA_METRICS = {DATUM_SCHEMA_JSON[2]["symbols"][i]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[2]["symbols"]))}
+DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON[6]["fields"][i]["name"]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[6]["fields"]))}
+DATUM_SCHEMA_METRICS = {DATUM_SCHEMA_JSON[1]["symbols"][i]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[1]["symbols"]))}
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex")
@@ -1235,3 +1270,15 @@ SVG_EMPTY = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 </svg>"""
+
+ESCAPE_SWAPS = {
+    "_": ".",
+    ".": "_"
+}
+
+ESCAPE_SEQUENCES = {
+    "__": "_",
+    "_X": ".",
+    "_D": "-",
+    "_P": "%"
+}

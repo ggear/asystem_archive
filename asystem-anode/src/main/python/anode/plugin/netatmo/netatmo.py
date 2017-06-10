@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function
 
 import json
@@ -68,13 +66,13 @@ class Netatmo(Plugin):
             dict_content = json.loads(text_content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             for device in dict_content["body"]["devices"]:
-                module_name = ".indoor." + device["module_name"].lower()
+                module_name = "__indoor__" + device["module_name"].lower().encode("UTF-8")
                 data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     data_timestamp,
                     bin_timestamp,
@@ -85,7 +83,7 @@ class Netatmo(Plugin):
                     "temperature" + module_name,
                     "current", "high",
                     self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     device["dashboard_data"]["date_max_temp"],
                     bin_timestamp,
@@ -96,7 +94,7 @@ class Netatmo(Plugin):
                     "temperature" + module_name,
                     "current", "low",
                     self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     device["dashboard_data"]["date_min_temp"],
                     bin_timestamp,
@@ -107,7 +105,7 @@ class Netatmo(Plugin):
                     "humidity" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "Humidity"]),
-                    "%",
+                    "_P25",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -133,7 +131,7 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "pressure-absolute" + module_name,
+                    "pressure_Dabsolute" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "AbsolutePressure"]),
                     "mbar",
@@ -147,7 +145,7 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
                 self.datum_push(
-                    "carbon-dioxide" + module_name,
+                    "carbon_Ddioxide" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "CO2"]),
                     "ppm",
@@ -175,13 +173,13 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
             for device in dict_content["body"]["modules"]:
-                module_name = (".indoor." if device["type"] == "NAModule4" else ".outdoor.") + device["module_name"].lower()
+                module_name = (("__indoor__" if device["type"] == "NAModule4" else "__outdoor__") + device["module_name"].lower()).encode("UTF-8")
                 data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     data_timestamp,
                     bin_timestamp,
@@ -192,7 +190,7 @@ class Netatmo(Plugin):
                     "temperature" + module_name,
                     "current", "high",
                     self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     device["dashboard_data"]["date_max_temp"],
                     bin_timestamp,
@@ -203,7 +201,7 @@ class Netatmo(Plugin):
                     "temperature" + module_name,
                     "current", "low",
                     self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
-                    u"°C",
+                    "_PC2_PB0C",
                     10,
                     device["dashboard_data"]["date_min_temp"],
                     bin_timestamp,
@@ -214,7 +212,7 @@ class Netatmo(Plugin):
                     "humidity" + module_name,
                     "current", "point",
                     self.datum_value(device, ["dashboard_data", "Humidity"]),
-                    "%",
+                    "_P25",
                     1,
                     data_timestamp,
                     bin_timestamp,
@@ -227,7 +225,7 @@ class Netatmo(Plugin):
                 )
                 if device["type"] == "NAModule4":
                     self.datum_push(
-                        "carbon-dioxide" + module_name,
+                        "carbon_Ddioxide" + module_name,
                         "current", "point",
                         self.datum_value(device, ["dashboard_data", "CO2"]),
                         "ppm",
