@@ -1152,49 +1152,48 @@ class ANodeTest(TestCase):
                         "/rest/?format=svg",
                         False, True)
 
-    # TODO: Re-enable once pickled datasets are rebaselined
-    # def test_good_plots(self):
-    #     self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
-    #     anode = self.anode_init(False, False, False, False, period=1, iterations=0)
-    #     last_timestamp = self.assertRest(0, anode, "/rest/?&metrics=temperature.outdoor.roof&scope=history&format=csv",
-    #                                      False)[0]["bin_timestamp"].iloc[-1]
-    #     for parameters in [
-    #         ("&start=" + str(last_timestamp + 1) + "&period=1&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - 1) + "&period=1&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - 10) + "&period=1&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - 60) + "&period=5&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - 60 * 2) + "&period=5&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 - 100)) + "&period=5&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60)) + "&period=5&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 4)) + "&period=300&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 8)) + "&period=300&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 16)) + "&period=300&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24)) + "&period=300&method=max&fill=linear"),
-    #         "&partitions=1&period=300&method=max&fill=linear",
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 4)) + "&period=1800&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 8)) + "&period=1800&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 16)) + "&period=1800&method=max&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 24)) + "&period=1800&method=max&fill=linear"),
-    #         "&partitions=3&period=1800&method=max&fill=linear",
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 4)) + "&period=3600&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 8)) + "&period=3600&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 16)) + "&period=3600&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 24)) + "&period=3600&method=median&fill=linear"),
-    #         "&partitions=7&period=3600&method=median&fill=linear",
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 4)) + "&period=7200&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 8)) + "&period=7200&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 16)) + "&period=7200&method=median&fill=linear"),
-    #         ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 24)) + "&period=7200&method=median&fill=linear"),
-    #         "&period=7200&method=median&fill=linear"
-    #     ]:
-    #         self.assertRest(0,
-    #                         anode,
-    #                         "/rest/?metrics=temperature&bins=1day&bins=50s&bins=2s&scope=history&print=pretty&types=point&units=°C&format=svg" + parameters,
-    #                         False, True)
-    #         self.assertRest(0,
-    #                         anode,
-    #                         "/rest/?metrics=power&scope=history&print=pretty&types=point&units=W&format=svg" + parameters,
-    #                         False, True)
+    def test_good_plots(self):
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
+        anode = self.anode_init(False, False, False, False, period=1, iterations=0)
+        last_timestamp = self.assertRest(0, anode, "/rest/?&metrics=temperature.outdoor.roof&scope=history&format=csv",
+                                         False)[0]["bin_timestamp"].iloc[-1]
+        for parameters in [
+            ("&start=" + str(last_timestamp + 1) + "&period=1&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - 1) + "&period=1&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - 10) + "&period=1&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - 60) + "&period=5&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - 60 * 2) + "&period=5&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 - 100)) + "&period=5&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60)) + "&period=5&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 4)) + "&period=300&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 8)) + "&period=300&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 16)) + "&period=300&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24)) + "&period=300&method=max&fill=linear"),
+            "&partitions=1&period=300&method=max&fill=linear",
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 4)) + "&period=1800&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 8)) + "&period=1800&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 16)) + "&period=1800&method=max&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 24)) + "&period=1800&method=max&fill=linear"),
+            "&partitions=3&period=1800&method=max&fill=linear",
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 4)) + "&period=3600&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 8)) + "&period=3600&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 16)) + "&period=3600&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 24)) + "&period=3600&method=median&fill=linear"),
+            "&partitions=7&period=3600&method=median&fill=linear",
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 4)) + "&period=7200&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 8)) + "&period=7200&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 16)) + "&period=7200&method=median&fill=linear"),
+            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 24)) + "&period=7200&method=median&fill=linear"),
+            "&period=7200&method=median&fill=linear"
+        ]:
+            self.assertRest(0,
+                            anode,
+                            "/rest/?metrics=temperature&bins=1day&bins=50s&bins=2s&scope=history&print=pretty&types=point&units=°C&format=svg" + parameters,
+                            False, True)
+            self.assertRest(0,
+                            anode,
+                            "/rest/?metrics=power&scope=history&print=pretty&types=point&units=W&format=svg" + parameters,
+                            False, True)
 
     def test_oneoff(self):
         period = 1
