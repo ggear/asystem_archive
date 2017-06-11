@@ -19,7 +19,7 @@ function decodeDatumField(datumField) {
     for (var i = 0; i < datumFieldDecodedChars.length; i++) {
         var swapped = false;
         for (var swap in ESCAPE_SWAPS) {
-            if (!swapped && datumFieldDecodedChars[i] == swap) {
+            if (!swapped && datumFieldDecodedChars[i] === swap) {
                 datumFieldDecodedChars[i] = ESCAPE_SWAPS[swap];
                 swapped = true
             }
