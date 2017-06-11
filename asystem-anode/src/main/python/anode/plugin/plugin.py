@@ -1238,29 +1238,6 @@ class Plugin(object):
         self.datums_load()
 
 
-BUFFER_BATCH_DEFAULT = 60
-
-SERIALISATION_BATCH = 1000
-SERIALISATION_BATCH_SLEEP = 0.3
-
-DATUM_TIMESTAMP_MIN = -2211753600
-DATUM_TIMESTAMP_MAX = 32500915200
-
-DATUM_QUEUE_MIN = "min"
-DATUM_QUEUE_MAX = "max"
-DATUM_QUEUE_LAST = "last"
-DATUM_QUEUE_PUBLISH = "publish"
-DATUM_QUEUE_BUFFER = "buffer"
-DATUM_QUEUE_HISTORY = "history"
-
-DATUM_SCHEMA_TO_ASCII = {}
-DATUM_SCHEMA_FROM_ASCII = {}
-DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
-DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
-DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
-DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON[6]["fields"][i]["name"]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[6]["fields"]))}
-DATUM_SCHEMA_METRICS = {DATUM_SCHEMA_JSON[1]["symbols"][i]: i * 10 for i in range(len(DATUM_SCHEMA_JSON[1]["symbols"]))}
-
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex")
 ID_BASE64 = base64.b64encode(str(ID_BYTE))
@@ -1282,3 +1259,28 @@ ESCAPE_SEQUENCES = {
     "_D": "-",
     "_P": "%"
 }
+
+BUFFER_BATCH_DEFAULT = 60
+
+SERIALISATION_BATCH = 1000
+SERIALISATION_BATCH_SLEEP = 0.3
+
+DATUM_TIMESTAMP_MIN = -2211753600
+DATUM_TIMESTAMP_MAX = 32500915200
+
+DATUM_QUEUE_MIN = "min"
+DATUM_QUEUE_MAX = "max"
+DATUM_QUEUE_LAST = "last"
+DATUM_QUEUE_PUBLISH = "publish"
+DATUM_QUEUE_BUFFER = "buffer"
+DATUM_QUEUE_HISTORY = "history"
+
+DATUM_SCHEMA_TO_ASCII = {}
+DATUM_SCHEMA_FROM_ASCII = {}
+DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../model/datum.avsc", "rb").read()
+DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
+DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
+DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON[6]["fields"][i]["name"].encode("utf-8"): i * 10 for i in range(len(DATUM_SCHEMA_JSON[6]["fields"]))}
+DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON[1]["symbols"][i].encode("utf-8")):
+                            i * 10 for i in range(len(DATUM_SCHEMA_JSON[1]["symbols"]))}
+
