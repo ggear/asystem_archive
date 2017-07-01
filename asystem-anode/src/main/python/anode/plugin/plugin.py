@@ -7,31 +7,31 @@ import base64
 import calendar
 import datetime
 import decimal
+import io
 import json
 import logging
 import numbers
 import operator
+import os
 import re
 import time
 import urllib
 from collections import deque
 from decimal import Decimal
 from functools import reduce
+from importlib import import_module
 from uuid import getnode as get_mac
 
 import avro
 import avro.io
 import avro.schema
 import avro.schema
-import io
 import matplotlib
 import matplotlib.pyplot as plot
 import numpy
-import os
 import pandas
 from avro.io import AvroTypeException
 from cycler import cycler
-from importlib import import_module
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from twisted.internet.task import Clock
@@ -1283,4 +1283,3 @@ DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON[6]["fields"][i]["name"].encode("utf-8"): i * 10 for i in range(len(DATUM_SCHEMA_JSON[6]["fields"]))}
 DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON[1]["symbols"][i].encode("utf-8")):
                             i * 10 for i in range(len(DATUM_SCHEMA_JSON[1]["symbols"]))}
-

@@ -25,7 +25,7 @@ public class MetadataSerializer implements SequenceFileSerializer {
   @Override
   public Iterable<Record> serialize(Event event) {
     return Collections.singletonList(new Record(
-      DatumFactory.getDatumMetadataDefault(event.getHeaders().get(MetadataInterceptor.HEADER_INGEST_ID), System.currentTimeMillis()),
+      DatumFactory.getDatumMetadata(event.getHeaders().get(MetadataInterceptor.HEADER_INGEST_ID), System.currentTimeMillis()),
       new BytesWritable(event.getBody())));
   }
 
