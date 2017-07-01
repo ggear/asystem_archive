@@ -104,7 +104,8 @@
         <slf4j.version>1.7.5</slf4j.version>
         <junit.version>4.12</junit.version>
 
-        <cloudera-framework.version>1.5.3-cdh5.11.0-SNAPSHOT</cloudera-framework.version>
+        <cloudera-framework.version>1.5.4-cdh5.11.1-SNAPSHOT</cloudera-framework.version>
+        <cdh-kudu.version>1.3.0-1.cdh5.11.1.p0.27</cdh-kudu.version>
 
         <parcel-plugin.version>0.7.8</parcel-plugin.version>
 
@@ -172,8 +173,9 @@
         <module>asystem-amodel</module>
         <module>asystem-anode</module>
         <module>asystem-arouter</module>
-        <module>asystem-ahub</module>
-        <module>asystem-aweb</module>
+        <module>asystem-astore</module>
+        <module>asystem-astream</module>
+        <module>asystem-ascience</module>
     </modules>
 
     <build>

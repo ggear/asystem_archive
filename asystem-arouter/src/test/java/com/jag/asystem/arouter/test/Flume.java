@@ -34,11 +34,17 @@ public class Flume implements TestConstants {
 
   @ClassRule
   public static final MqttServer mqttServer = MqttServer.getInstance();
+
   @ClassRule
   public static final DfsServer dfsServer = DfsServer.getInstance();
+
   @ClassRule
   public static final FlumeServer flumeServer = FlumeServer.getInstance();
+
+  private static final DatumFactory DATUM_FACTORY = new DatumFactory();
+
   private static final Logger LOG = LoggerFactory.getLogger(Flume.class);
+
   private final Map<String, String> FLUME_SUBSTITUTIONS =
     new Builder<String, String>()
       .put("FLUME_AGENT_NAME", "arouter")
@@ -67,7 +73,7 @@ public class Flume implements TestConstants {
   @SuppressWarnings("unused")
   private void mqttClientSendMessage(Integer iteration) {
     try {
-      client.publish(FLUME_SUBSTITUTIONS.get("MQTT_TOPIC_NAME"), DatumFactory.serializeDatum(DatumFactory.getDatumRandom()), 0, false);
+      client.publish(FLUME_SUBSTITUTIONS.get("MQTT_TOPIC_NAME"), DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
     } catch (MqttException e) {
       throw new RuntimeException("Could not publish message", e);
     }
@@ -79,7 +85,7 @@ public class Flume implements TestConstants {
   }
 
   @Test
-  public void testFlume() throws MqttException, InterruptedException, IOException, EventDeliveryException {
+  public void testPipeline() throws MqttException, InterruptedException, IOException, EventDeliveryException {
     assertEquals(1,
       flumeServer.crankPipeline(FLUME_SUBSTITUTIONS,
         "flume/flume-conf.properties", Collections.emptyMap(), Collections.emptyMap(),

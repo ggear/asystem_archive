@@ -15,14 +15,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.cloudera.framework</groupId>
-            <artifactId>cloudera-framework-common</artifactId>
-            <version>${cloudera-framework.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.jag.asystem</groupId>
             <artifactId>asystem-amodel</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework</groupId>
+            <artifactId>cloudera-framework-common</artifactId>
+            <version>${cloudera-framework.version}</version>
         </dependency>
         <dependency>
             <groupId>com.cloudera.framework.library.client</groupId>
@@ -62,6 +62,20 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>

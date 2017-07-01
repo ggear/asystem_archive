@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.jag.asystem</groupId>
+    <artifactId>asystem-astream</artifactId>
+    <packaging>jar</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <parent>
+        <groupId>com.jag</groupId>
+        <artifactId>asystem</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.cloudera.framework.library.client</groupId>
+            <artifactId>cloudera-framework-library-client-kudu</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework.library.client</groupId>
+            <artifactId>cloudera-framework-library-client-kafka</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework.library.client</groupId>
+            <artifactId>cloudera-framework-library-client-spark2</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework.library.runtime</groupId>
+            <artifactId>cloudera-framework-library-runtime-scala_2.11</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.framework</groupId>
+            <artifactId>cloudera-framework-testing</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.cloudera.framework.library.runtime</groupId>
+                    <artifactId>cloudera-framework-library-runtime-scala_2.10</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.cloudera.parcel</groupId>
+                <artifactId>cloudera-parcel-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>explode</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>explode</goal>
+                        </goals>
+                        <configuration>
+                            <parcels>
+                                <parcel>
+                                    <groupId>com.cloudera.parcel</groupId>
+                                    <artifactId>KUDU</artifactId>
+                                    <version>${cdh-kudu.version}</version>
+                                    <classifier>${os-platform.version}</classifier>
+                                    <repositoryUrl>http://52.63.86.162/tmph3l7m2vv103/sbin/kudu/parcels</repositoryUrl>
+                                    <linkDirectory>${project.build.directory}/runtime-kudu</linkDirectory>
+                                </parcel>
+                            </parcels>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

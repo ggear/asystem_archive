@@ -1,11 +1,11 @@
 import logging
 import logging.config
+import os
 import sys
 import time
 import urlparse
 from optparse import OptionParser
 
-import os
 import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
