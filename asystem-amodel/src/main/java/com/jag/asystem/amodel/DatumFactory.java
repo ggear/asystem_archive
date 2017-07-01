@@ -113,12 +113,7 @@ public class DatumFactory {
 
   private DatumWriter<SpecificRecordBase> getDatumWriter(Schema schema) {
     if (datumWriters == null) {
-      datumWriters = new ThreadLocal<Map<String, DatumWriter<SpecificRecordBase>>>() {
-        @Override
-        public Map<String, DatumWriter<SpecificRecordBase>> initialValue() {
-          return new HashMap<>();
-        }
-      };
+      datumWriters = ThreadLocal.withInitial(() -> new HashMap<>());
     }
     if (!datumWriters.get().containsKey(schema.toString())) {
       datumWriters.get().put(schema.toString(), new GenericDatumWriter<>(schema));
