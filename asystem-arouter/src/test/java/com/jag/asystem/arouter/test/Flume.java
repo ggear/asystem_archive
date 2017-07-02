@@ -51,7 +51,7 @@ public class Flume implements TestConstants {
       .put("MQTT_USER_NAME", "admin")
       .put("MQTT_PASSWORD_FILE", ABS_DIR_CLASSES_TEST + "/.mqtt_broker")
       .put("MQTT_BROKER_HOST", "localhost")
-      .put("MQTT_BROKER_PORT", "1883")
+      .put("MQTT_BROKER_PORT", "2883")
       .put("MQTT_TOPIC_NAME", "test/asystem/anode/datum/1")
       .put("MQTT_BACK_OFF", "100")
       .put("MQTT_MAX_BACK_OFF", "100")
