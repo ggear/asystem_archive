@@ -18,34 +18,34 @@ public class TestDatumFactory implements TestConstants {
   @Test
   public void testDatumMetadataUnion() throws Exception {
     testDatum("indexed-1", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(1)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.fronius.metrics", "getDataUnit", "s");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.fronius.metrics", "getDataUnit", "s");
     testDatum("indexed-13", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(13)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.davis.up-time", "getDataUnit", "mbar");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.davis.up-time", "getDataUnit", "mbar");
     testDatum("indexed-14", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(14)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.davis.last-seen", "getDataUnit", "$");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.davis.last-seen", "getDataUnit", "$");
     testDatum("indexed-15", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(15)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.metrics", "getDataUnit", "%");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.metrics", "getDataUnit", "%");
     testDatum("indexed-16", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(16)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.queue", "getDataUnit", "m/s");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.queue", "getDataUnit", "m/s");
     testDatum("indexed-17", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(17)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.buffer", "getDataUnit", "km/h");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.buffer", "getDataUnit", "km/h");
     testDatum("indexed-18", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(18)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.history", "getDataUnit", "mm/h");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.history", "getDataUnit", "mm/h");
     testDatum("indexed-19", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(19)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.partitions", "getDataUnit", "°");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.partitions", "getDataUnit", "°");
     testDatum("indexed-20", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(20)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "anode.netatmo.up-time", "getDataUnit", "°C");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "anode.netatmo.up-time", "getDataUnit", "°C");
     testDatum("indexed-50", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(50)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "energy.consumption-off-peak-morning.grid", "getDataUnit", "d");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "energy.consumption-off-peak-morning.grid", "getDataUnit", "d");
     testDatum("indexed-2147483647", DatumFactory.getDatumMetadataUnion(DatumFactory.getDatumMetadata("one", 1L), DatumFactory.getDatumIndexed(2147483647)),
-      "getIngestId", "one", "getIngestTimestamp", 1L, "getDataMetric", "humidity.indoor.dining", "getDataUnit", "W");
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L), "getDataMetric", "humidity.indoor.dining", "getDataUnit", "W");
   }
 
   @Test
   public void testDatumMetadata() throws Exception {
     testDatum("default", DatumFactory.getDatumMetadata());
     testDatum("default", DatumFactory.getDatumMetadata("one", 1L),
-      "getIngestId", "one", "getIngestTimestamp", 1L);
+      "getIngestId", "one", "getIngestTimestamp", new Long(1L));
   }
 
   @Test
