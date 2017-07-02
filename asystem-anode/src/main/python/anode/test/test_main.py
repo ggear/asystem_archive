@@ -1154,8 +1154,11 @@ class ANodeTest(TestCase):
     def test_good_plots(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
-        last_timestamp = self.assertRest(0, anode, "/rest/?&metrics=temperature.outdoor.roof&scope=history&format=csv",
-                                         False)[0]["bin_timestamp"].iloc[-2]
+        last_timestamp = \
+            self.assertRest(0, anode,
+                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C&types=point&" +
+                            "types=integral&types=mean&scope=history&format=csv",
+                            False)[0]["bin_timestamp"].iloc[-2]
         for parameters in [
             ("&start=" + str(last_timestamp + 1) + "&finish=" + str(last_timestamp) +
                  "&period=1&method=max&fill=linear"),
@@ -1210,11 +1213,8 @@ class ANodeTest(TestCase):
         ]:
             self.assertRest(0,
                             anode,
-                            "rest/?metrics=temperature.outdoor.roof&units=°C&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
-                            False, True)
-            self.assertRest(0,
-                            anode,
-                            "rest/?metrics=temperature&units=°C&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
+                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C&types=point&" +
+                            "types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
                             False, True)
 
     def test_oneoff(self):
