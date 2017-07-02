@@ -18,7 +18,8 @@ from anode.plugin.plugin import Plugin
 HTTP_TIMEOUT = 5
 POLL_METER_ITERATIONS = 5
 
-FEE_ACCESS = 0.4859888
+FEE_ACCESS_OLD = 0.485989
+FEE_ACCESS_NEW = 0.949058
 TARIFF_FEED_IN = 0.000007135
 TARIFF_PEAK = 0.000055
 TARIFF_OFF_PEAK = 0.00001485
@@ -478,7 +479,7 @@ class Fronius(Plugin):
             self.datum_push(
                 "energy__consumption__cost_Dhome",
                 "current", "integral",
-                self.datum_value(Decimal(FEE_ACCESS) + energy_consumption_grid_day * Decimal(TARIFF_FLAT), factor=100),
+                self.datum_value(Decimal(FEE_ACCESS_NEW) + energy_consumption_grid_day * Decimal(TARIFF_FLAT), factor=100),
                 "_P24",
                 100,
                 data_timestamp,
@@ -490,7 +491,7 @@ class Fronius(Plugin):
             self.datum_push(
                 "energy__consumption__cost_Dsolar",
                 "current", "integral",
-                self.datum_value(Decimal(FEE_ACCESS) + energy_consumption_grid_peak_day *
+                self.datum_value(Decimal(FEE_ACCESS_OLD) + energy_consumption_grid_peak_day *
                                  Decimal(TARIFF_PEAK if datetime.datetime.fromtimestamp(bin_timestamp).weekday() < 5 else TARIFF_OFF_PEAK) +
                                  energy_consumption_grid_off_peak_day * Decimal(TARIFF_OFF_PEAK), factor=100),
                 "_P24",

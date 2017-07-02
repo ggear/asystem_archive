@@ -78,36 +78,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>archetype-refresh</id>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <target unless="${maven.archetype-refresh.skip}">
-                                <mkdir dir="target/archetype" />
-                                <exec executable="mvn" dir="target/archetype">
-                                    <arg value="archetype:generate" />
-                                    <arg value="-B" />
-                                    <arg value="-DarchetypeRepository=${cloudera-framework-module.repo}" />
-                                    <arg value="-DarchetypeGroupId=com.cloudera.framework" />
-                                    <arg value="-DarchetypeArtifactId=cloudera-framework-archetype" />
-                                    <arg value="-DarchetypeVersion=${cloudera-framework.version}" />
-                                    <arg value="-DgroupId=${project.groupId}" />
-                                    <arg value="-DartifactId=${project.artifactId}" />
-                                    <arg value="-Dversion=${project.version}" />
-                                    <arg value="-Dpackage=com.jag.asystem" />
-                                </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xmx1024m</argLine>
@@ -166,7 +136,7 @@
                                     <artifactId>${project.artifactId}</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>el7</classifier>
-                                    <distributionRepositoryUrl>${cloudera-framework-parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
+                                    <distributionRepositoryUrl>${parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
                                 </parcel>
                             </parcels>
                         </configuration>
@@ -184,7 +154,7 @@
                                     <artifactId>${project.artifactId}</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>el7</classifier>
-                                    <distributionRepositoryUrl>${cloudera-framework-parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
+                                    <distributionRepositoryUrl>${parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
                                 </parcel>
                             </parcels>
                         </configuration>
