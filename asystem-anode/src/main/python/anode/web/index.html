@@ -103,7 +103,7 @@
                                 },
                                 "detail": {
                                     "value": "",
-                                    "unit": (datum.data_unit == "scalor" || datum.data_type == "enumeration") ? null : datum.data_unit,
+                                    "unit": (datum.data_unit == "scalar" || datum.data_type == "enumeration") ? null : datum.data_unit,
                                     "trend": "",
                                     "low": "",
                                     "high": ""
@@ -121,8 +121,8 @@
                                         if (datumGroupsFields[datumGroup][datumField] != null) {
                                             var datumFieldSpan = document.createElement("span");
                                             datumFieldSpan.id = ((datumField == "low" || datumField == "high") ?
-                                                    (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" || datum.data_type == "integral" ?
-                                                        (datum.bin_width + "_" + datum.bin_unit) : "1_day")) : datum.ui_id) + "_" + datumField;
+                                                (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" || datum.data_type == "integral" ?
+                                                    (datum.bin_width + "_" + datum.bin_unit) : "1_day")) : datum.ui_id) + "_" + datumField;
                                             datumFieldSpan.className = "datum-detail-" + datumField;
                                             datumFieldSpan.innerHTML = datumGroupsFields[datumGroup][datumField];
                                             datumGroupDiv.appendChild(datumFieldSpan);
@@ -193,6 +193,7 @@
                     }
                 });
         };
+
         function toggleLinks() {
             if (document.getElementById("datums_header_links").style.display == "block") {
                 document.getElementById("datums_header_links").style.display = "none";
@@ -203,6 +204,7 @@
                 document.getElementById("datums_header_status").innerHTML = "«"
             }
         }
+
         function styleTick(element, delta) {
             element.classList.remove("datum-detail-up");
             element.classList.remove("datum-detail-down");
@@ -213,6 +215,7 @@
                 element.classList.add("datum-detail-down");
             }
         }
+
         function addorReplaceLastUriParam(name, value) {
             var uri = window.location.href;
             if (uri.indexOf("metrics=") > 0) {
@@ -244,7 +247,7 @@
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
-                        href="/?metrics=power.export&metrics=power.consumption&metrics=power.utlisation">power</a>
+                        href="/?metrics=power.export&metrics=power.consumption&metrics=power.utilisation">power</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
@@ -271,23 +274,23 @@
                         href="/?metrics=noise">noise</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck">temperature</a>
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck">temperature</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
                         href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
                         href="/?metrics=wind&bins=2second&bins=1day">wind</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
                         href="/?metrics=pressure">pressure</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.hills.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
+                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=forecast">weather</a>.<a
                         href="/?metrics=forecast">forecast</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a

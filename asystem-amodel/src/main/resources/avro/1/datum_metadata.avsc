@@ -1,10 +1,15 @@
 [
   {
     "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumMetaData",
+    "name": "DatumMetadata",
     "type": "record",
     "version": 1,
     "fields": [
+      {
+        "name": "asystem_version",
+        "type": "int",
+        "default": 0
+      },
       {
         "name": "ingest_id",
         "type": [
@@ -20,6 +25,78 @@
           "long"
         ],
         "default": null
+      },
+      {
+        "name": "anode_id",
+        "type": {
+          "name": "DatumAnodeId",
+          "type": "fixed",
+          "size": 6
+        },
+        "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+      },
+      {
+        "name": "data_source",
+        "type": "string",
+        "default": "."
+      },
+      {
+        "name": "data_metric",
+        "type": "string",
+        "default": "."
+      },
+      {
+        "name": "data_temporal",
+        "type": "string",
+        "default": "."
+      },
+      {
+        "name": "data_type",
+        "type": "string",
+        "default": "."
+      },
+      {
+        "name": "data_value",
+        "type": "long",
+        "default": 0
+      },
+      {
+        "name": "data_unit",
+        "type": "string",
+        "default": "."
+      },
+      {
+        "name": "data_scale",
+        "type": "float",
+        "default": 1
+      },
+      {
+        "name": "data_string",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "data_timestamp",
+        "type": "long",
+        "default": 0
+      },
+      {
+        "name": "bin_timestamp",
+        "type": "long",
+        "default": 0
+      },
+      {
+        "name": "bin_width",
+        "type": "int",
+        "default": 0
+      },
+      {
+        "name": "bin_unit",
+        "type": "string",
+        "default": "."
       }
     ]
   }

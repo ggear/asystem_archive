@@ -21,16 +21,10 @@ class CleanCommand(Command):
         os.system("rm -vrf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info {}/bin/{}".format(site.USER_BASE, NAME))
 
 
-def readme():
-    with open("README.rst") as f:
-        return f.read()
-
-
 setup(
     name=NAME,
     version="${project.version}".replace("-SNAPSHOT", ".dev0").replace("${project.version}", "0.0.0.dev0"),
     description=" asystem anode",
-    long_description=readme(),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: Other/Proprietary License",
@@ -45,7 +39,9 @@ setup(
         "clean": CleanCommand,
     },
     packages=find_packages(),
+    package_data={"": ["*.properties"]},
     install_requires=[
+        'python-dateutil',
         "twisted",
         "twisted-mqtt",
         "autobahn[twisted]",
@@ -54,6 +50,7 @@ setup(
         "avro",
         "ilio",
         "pyyaml",
+        "cycler",
         "pandas",
         "numpy",
         "matplotlib"

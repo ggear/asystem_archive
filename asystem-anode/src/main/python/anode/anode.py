@@ -91,7 +91,8 @@ class ANode:
         for plugin in self.plugins.itervalues():
             if "history_partition_seconds" in self.config["plugin"][plugin.name] and \
                             self.config["plugin"][plugin.name]["history_partition_seconds"] > 0 and \
-                            "repeat_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["repeat_seconds"] >= 0:
+                            "repeat_seconds" in self.config["plugin"][plugin_name] and \
+                            self.config["plugin"][plugin_name]["repeat_seconds"] >= 0:
                 time_current = plugin.get_time()
                 time_partition = self.config["plugin"][plugin.name]["history_partition_seconds"]
                 time_partition_next = time_partition - (time_current - plugin.get_time_period(time_current, time_partition))
@@ -100,7 +101,8 @@ class ANode:
                 self.core_reactor.callLater(time_partition_next,
                                             lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
                                             plugin_partitioncall, time_partition)
-        if self.publish_upstream and self.publish_upstream_plugin and "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
+        if self.publish_upstream and self.publish_upstream_plugin and \
+                        "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
             plugin_pushcall = LoopingCall(self.publish_datums)
             plugin_pushcall.clock = self.core_reactor
             plugin_pushcall.start(self.config["publish_seconds"])
@@ -365,9 +367,9 @@ class Log:
             elif self.level == logging.ERROR:
                 logger = logging.getLogger().error
             else:
-                raise Exception("Unkown logging level [{}]".format(self.level))
+                raise Exception("Unknown logging level [{}]".format(self.level))
             if not hasattr(message, '__call__'):
-                raise Exception("Non callabled object [{}] passed as message".format(message))
+                raise Exception("Non callable object [{}] passed as message".format(message))
             logger(" ".join(filter(None, [".".join([source, intonation]), message(),
                                           "" if context is None else "in [{}]".format(context.__name__),
                                           "" if not self.time_tracked else ("off-thread" if off_thread else "on-thread"),

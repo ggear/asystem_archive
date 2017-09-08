@@ -12,13 +12,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.cloudera.framework.common.Driver;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.jag.asystem.amodel.avro.Datum;
 import com.jag.asystem.amodel.avro.DatumAnodeId;
 import com.jag.asystem.amodel.avro.DatumBinUnit;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
-import com.jag.asystem.amodel.avro.DatumMetaData;
-import com.jag.asystem.amodel.avro.DatumMetadataUnion;
 import com.jag.asystem.amodel.avro.DatumMetric;
 import com.jag.asystem.amodel.avro.DatumSource;
 import com.jag.asystem.amodel.avro.DatumTemporal;
@@ -33,40 +32,23 @@ import org.apache.avro.specific.SpecificRecordBase;
 @SuppressWarnings("unused")
 public class DatumFactory {
 
-  public static DatumMetadataUnion getDatumMetadataUnion() {
-    return DatumMetadataUnion.newBuilder().build();
-  }
-
-  public static DatumMetadataUnion getDatumMetadataUnion(DatumMetaData metadata, Datum datum) {
-    return DatumMetadataUnion.newBuilder()
-      .setIngestId(metadata.getIngestId())
-      .setIngestTimestamp(metadata.getIngestTimestamp())
-      .setAnodeId(datum.getAnodeId())
-      .setDataSource(decode(datum.getDataSource()))
-      .setDataMetric(decode(datum.getDataMetric()))
-      .setDataTemporal(decode(datum.getDataTemporal()))
-      .setDataType(decode(datum.getDataType()))
-      .setDataValue(datum.getDataValue())
-      .setDataUnit(decode(datum.getDataUnit()))
-      .setDataScale(datum.getDataScale())
-      .setDataString(datum.getDataString())
-      .setDataTimestamp(datum.getDataTimestamp())
-      .setBinTimestamp(datum.getBinTimestamp())
-      .setBinWidth(datum.getBinWidth())
-      .setBinUnit(decode(datum.getDataUnit()))
+  private static final Map<String, String> ESCAPE_SWAPS =
+    new Builder<String, String>()
+      .put("_", ".")
+      .put(".", "_")
       .build();
-  }
 
-  public static DatumMetaData getDatumMetadata() {
-    return DatumMetaData.newBuilder().build();
-  }
-
-  public static DatumMetaData getDatumMetadata(String ingestId, Long ingestTimestamp) {
-    return DatumMetaData.newBuilder()
-      .setIngestId(ingestId == null ? UUID.randomUUID().toString() : ingestId)
-      .setIngestTimestamp(ingestTimestamp == null ? System.currentTimeMillis() : ingestTimestamp)
+  private static final Map<String, String> ESCAPE_SEQUENCES =
+    new Builder<String, String>()
+      .put("__", "_")
+      .put("_X", ".")
+      .put("_D", "-")
+      .put("_P", "%")
       .build();
-  }
+
+  private transient ThreadLocal<BinaryEncoder> datumEncoder;
+
+  private transient ThreadLocal<Map<String, DatumWriter<SpecificRecordBase>>> datumWriters;
 
   public static Datum getDatum() {
     return Datum.newBuilder().build();
@@ -76,6 +58,7 @@ public class DatumFactory {
     byte[] anodeId = new byte[6];
     ThreadLocalRandom.current().nextBytes(anodeId);
     return Datum.newBuilder()
+      .setAsystemVersion(Integer.parseInt(Driver.getApplicationProperty("APP_VERSION_NUMERIC")))
       .setAnodeId(new DatumAnodeId(anodeId))
       .setDataSource(getEnumRandom(DatumSource.class))
       .setDataMetric(getEnumRandom(DatumMetric.class))
@@ -95,6 +78,7 @@ public class DatumFactory {
   @SuppressWarnings("SameParameterValue")
   public static Datum getDatumIndexed(int index) {
     return Datum.newBuilder()
+      .setAsystemVersion(Integer.parseInt(Driver.getApplicationProperty("APP_VERSION_NUMERIC")) + index)
       .setAnodeId(new DatumAnodeId(ByteBuffer.allocate(6).putInt(index).array()))
       .setDataSource(getEnumIndexed(DatumSource.class, index))
       .setDataMetric(getEnumIndexed(DatumMetric.class, index))
@@ -111,9 +95,37 @@ public class DatumFactory {
       .build();
   }
 
+  private static String swap(String string, String target, String replacement) {
+    return Arrays.stream(string.split(Pattern.quote(target), -1)).map(s ->
+      s.replaceAll(Pattern.quote(replacement), target)).collect(Collectors.joining(replacement));
+  }
+
+  private static String decode(Enum field) {
+    String decoded;
+    try {
+      String[] decodes = field.toString().split("__");
+      IntStream.range(0, decodes.length).forEach(i ->
+        ESCAPE_SEQUENCES.forEach((escaped, unescaped) ->
+          ESCAPE_SWAPS.forEach((swap, swapped) ->
+            decodes[i] = swap(decodes[i].replace(escaped, unescaped), swap, swapped))));
+      decoded = URLDecoder.decode(String.join(".", Arrays.asList(decodes)), "UTF-8");
+    } catch (Exception e) {
+      throw new RuntimeException("Could not decode [" + field + "]", e);
+    }
+    return decoded;
+  }
+
+  private static <T extends Enum<?>> T getEnumRandom(Class<T> clazz) {
+    return clazz.getEnumConstants()[ThreadLocalRandom.current().nextInt(clazz.getEnumConstants().length - 1) + 1];
+  }
+
+  private static <T extends Enum<?>> T getEnumIndexed(Class<T> clazz, int index) {
+    return clazz.getEnumConstants()[index % clazz.getEnumConstants().length];
+  }
+
   private DatumWriter<SpecificRecordBase> getDatumWriter(Schema schema) {
     if (datumWriters == null) {
-      datumWriters = ThreadLocal.withInitial(() -> new HashMap<>());
+      datumWriters = ThreadLocal.withInitial(HashMap::new);
     }
     if (!datumWriters.get().containsKey(schema.toString())) {
       datumWriters.get().put(schema.toString(), new GenericDatumWriter<>(schema));
@@ -140,51 +152,6 @@ public class DatumFactory {
       throw new RuntimeException("Could not serialise record", e);
     }
     return outputStream.toByteArray();
-  }
-
-  private transient ThreadLocal<BinaryEncoder> datumEncoder;
-  private transient ThreadLocal<Map<String, DatumWriter<SpecificRecordBase>>> datumWriters;
-
-  private static String swap(String string, String target, String replacement) {
-    return Arrays.stream(string.split(Pattern.quote(target), -1)).map(s ->
-      s.replaceAll(Pattern.quote(replacement), target)).collect(Collectors.joining(replacement));
-  }
-
-  private static String decode(Enum field) {
-    String decoded;
-    try {
-      String[] decodeds = field.toString().split("__");
-      IntStream.range(0, decodeds.length).forEach(i ->
-        ESCAPE_SEQUENCES.forEach((escaped, unescaped) ->
-          ESCAPE_SWAPS.forEach((swap, swapped) ->
-            decodeds[i] = swap(decodeds[i].replace(escaped, unescaped), swap, swapped))));
-      decoded = URLDecoder.decode(String.join(".", Arrays.asList(decodeds)), "UTF-8");
-    } catch (Exception e) {
-      throw new RuntimeException("Could not decode [" + field + "]", e);
-    }
-    return decoded;
-  }
-
-  private static final Map<String, String> ESCAPE_SWAPS =
-    new Builder<String, String>()
-      .put("_", ".")
-      .put(".", "_")
-      .build();
-
-  private static final Map<String, String> ESCAPE_SEQUENCES =
-    new Builder<String, String>()
-      .put("__", "_")
-      .put("_X", ".")
-      .put("_D", "-")
-      .put("_P", "%")
-      .build();
-
-  private static <T extends Enum<?>> T getEnumRandom(Class<T> clazz) {
-    return clazz.getEnumConstants()[ThreadLocalRandom.current().nextInt(clazz.getEnumConstants().length - 1) + 1];
-  }
-
-  private static <T extends Enum<?>> T getEnumIndexed(Class<T> clazz, int index) {
-    return clazz.getEnumConstants()[index % clazz.getEnumConstants().length];
   }
 
 }

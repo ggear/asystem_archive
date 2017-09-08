@@ -1,275 +1,273 @@
-[
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumSource",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "davis",
-      "fronius",
-      "netatmo",
-      "wunderground"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumMetric",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "anode__fronius__metrics",
-      "anode__fronius__queue",
-      "anode__fronius__buffer",
-      "anode__fronius__history",
-      "anode__fronius__partitions",
-      "anode__fronius__up_Dtime",
-      "anode__fronius__last_Dseen",
-      "anode__davis__metrics",
-      "anode__davis__queue",
-      "anode__davis__buffer",
-      "anode__davis__history",
-      "anode__davis__partitions",
-      "anode__davis__up_Dtime",
-      "anode__davis__last_Dseen",
-      "anode__netatmo__metrics",
-      "anode__netatmo__queue",
-      "anode__netatmo__buffer",
-      "anode__netatmo__history",
-      "anode__netatmo__partitions",
-      "anode__netatmo__up_Dtime",
-      "anode__netatmo__last_Dseen",
-      "anode__wunderground__metrics",
-      "anode__wunderground__queue",
-      "anode__wunderground__buffer",
-      "anode__wunderground__history",
-      "anode__wunderground__partitions",
-      "anode__wunderground__up_Dtime",
-      "anode__wunderground__last_Dseen",
-      "power__export__grid",
-      "power__consumption__inverter",
-      "power__consumption__grid",
-      "power__production__inverter",
-      "power__utlisation__array",
-      "power__utlisation__inverter",
-      "power__utlisation__grid",
-      "energy__export__yield",
-      "energy__consumption__savings",
-      "energy__consumption__cost_Dsolar",
-      "energy__consumption__cost_Dhome",
-      "energy__export__grid",
-      "energy__production__inverter",
-      "energy__consumption__inverter",
-      "energy__consumption_Dpeak_Dmorning__inverter",
-      "energy__consumption_Dpeak_Devening__inverter",
-      "energy__consumption__grid",
-      "energy__consumption_Dpeak__grid",
-      "energy__consumption_Dpeak_Dmorning__grid",
-      "energy__consumption_Dpeak_Devening__grid",
-      "energy__consumption_Doff_Dpeak__grid",
-      "energy__consumption_Doff_Dpeak_Dmorning__grid",
-      "energy__consumption_Doff_Dpeak_Devening__grid",
-      "sun__outdoor__rise",
-      "sun__outdoor__set",
-      "sun__outdoor__azimuth",
-      "sun__outdoor__altitude",
-      "conditions__hills__forecast",
-      "temperature__indoor__lounge",
-      "temperature__indoor__dining",
-      "temperature__indoor__parents",
-      "temperature__indoor__edwin",
-      "temperature__indoor__office",
-      "temperature__outdoor__deck",
-      "temperature__outdoor__roof",
-      "temperature__hills__forecast",
-      "heatindex__outdoor__roof",
-      "humidity__indoor__lounge",
-      "humidity__indoor__dining",
-      "humidity__indoor__parents",
-      "humidity__indoor__edwin",
-      "humidity__indoor__office",
-      "humidity__outdoor__deck",
-      "humidity__outdoor__roof",
-      "humidity__hills__forecast",
-      "carbon_Ddioxide__indoor__lounge",
-      "carbon_Ddioxide__indoor__parents",
-      "carbon_Ddioxide__indoor__edwin",
-      "carbon_Ddioxide__indoor__office",
-      "noise__indoor__office",
-      "pressure__indoor__office",
-      "pressure_Dabsolute__indoor__office",
-      "pressure__outdoor__roof",
-      "dew_Dpoint__indoor__dining",
-      "dew_Dpoint__outdoor__roof",
-      "wind__outdoor__roof",
-      "wind_Dbearing__outdoor__roof",
-      "wind_Dgust__outdoor__roof",
-      "wind_Dgust_Dbearing__outdoor__roof",
-      "wind_Dchill__outdoor__roof",
-      "wind__hills__forecast",
-      "cloud__outdoor__base",
-      "rain_Drate__outdoor__roof",
-      "rain__outdoor__roof",
-      "rain__hills__forecast"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumTemporal",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "repeat",
-      "derived",
-      "current",
-      "forecast"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumType",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "point",
-      "mean",
-      "low",
-      "high",
-      "epoch",
-      "integral",
-      "enumeration"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumDataUnit",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "s",
-      "m",
-      "h",
-      "d",
-      "W",
-      "Wh",
-      "mm",
-      "cm",
-      "km",
-      "dB",
-      "kWh",
-      "ppm",
-      "mbar",
-      "_P24",
-      "_P25",
-      "m_P2Fs",
-      "km_P2Fh",
-      "mm_P2Fh",
-      "_PC2_PB0",
-      "_PC2_PB0C",
-      "scalor",
-      "datums"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "DatumBinUnit",
-    "type": "enum",
-    "version": 1,
-    "symbols": [
-      "__",
-      "second",
-      "minute",
-      "hour",
-      "day",
-      "day_Dtime",
-      "night_Dtime",
-      "month",
-      "year",
-      "all_Dtime"
-    ]
-  },
-  {
-    "namespace": "com.jag.asystem.amodel.avro",
-    "name": "Datum",
-    "type": "record",
-    "version": 1,
-    "fields": [
-      {
-        "name": "anode_id",
-        "type": {
-          "name": "DatumAnodeId",
-          "type": "fixed",
-          "size": 6
-        },
-        "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+{
+  "namespace": "com.jag.asystem.amodel.avro",
+  "name": "Datum",
+  "version": 1,
+  "type": "record",
+  "fields": [
+    {
+      "name": "asystem_version",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "anode_id",
+      "type": {
+        "name": "DatumAnodeId",
+        "type": "fixed",
+        "size": 6
       },
-      {
-        "name": "data_source",
-        "type": "DatumSource",
-        "default": "__"
+      "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+    },
+    {
+      "name": "data_source",
+      "type": {
+        "name": "DatumSource",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "davis",
+          "fronius",
+          "netatmo",
+          "wunderground"
+        ]
       },
-      {
-        "name": "data_metric",
-        "type": "DatumMetric",
-        "default": "__"
+      "default": "__"
+    },
+    {
+      "name": "data_metric",
+      "type": {
+        "name": "DatumMetric",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "anode__fronius__metrics",
+          "anode__fronius__queue",
+          "anode__fronius__buffer",
+          "anode__fronius__history",
+          "anode__fronius__partitions",
+          "anode__fronius__up_Dtime",
+          "anode__fronius__last_Dseen",
+          "anode__davis__metrics",
+          "anode__davis__queue",
+          "anode__davis__buffer",
+          "anode__davis__history",
+          "anode__davis__partitions",
+          "anode__davis__up_Dtime",
+          "anode__davis__last_Dseen",
+          "anode__netatmo__metrics",
+          "anode__netatmo__queue",
+          "anode__netatmo__buffer",
+          "anode__netatmo__history",
+          "anode__netatmo__partitions",
+          "anode__netatmo__up_Dtime",
+          "anode__netatmo__last_Dseen",
+          "anode__wunderground__metrics",
+          "anode__wunderground__queue",
+          "anode__wunderground__buffer",
+          "anode__wunderground__history",
+          "anode__wunderground__partitions",
+          "anode__wunderground__up_Dtime",
+          "anode__wunderground__last_Dseen",
+          "power__export__grid",
+          "power__consumption__inverter",
+          "power__consumption__grid",
+          "power__production__inverter",
+          "power__utilisation__array",
+          "power__utilisation__inverter",
+          "power__utilisation__grid",
+          "energy__export__yield",
+          "energy__consumption__savings",
+          "energy__consumption__cost_Dsolar",
+          "energy__consumption__cost_Dhome",
+          "energy__export__grid",
+          "energy__production__inverter",
+          "energy__production_Dforecast__inverter",
+          "energy__production_Dforecast_Da__inverter",
+          "energy__production_Dforecast_Db__inverter",
+          "energy__consumption__inverter",
+          "energy__consumption_Dpeak_Dmorning__inverter",
+          "energy__consumption_Dpeak_Devening__inverter",
+          "energy__consumption__grid",
+          "energy__consumption_Dpeak__grid",
+          "energy__consumption_Dpeak_Dmorning__grid",
+          "energy__consumption_Dpeak_Devening__grid",
+          "energy__consumption_Doff_Dpeak__grid",
+          "energy__consumption_Doff_Dpeak_Dmorning__grid",
+          "energy__consumption_Doff_Dpeak_Devening__grid",
+          "sun__outdoor__rise",
+          "sun__outdoor__set",
+          "sun__outdoor__azimuth",
+          "sun__outdoor__altitude",
+          "conditions__forecast__glen_Dforrest",
+          "conditions__forecast_Dwu__glen_Dforrest",
+          "conditions__forecast_Dbom__glen_Dforrest",
+          "temperature__indoor__lounge",
+          "temperature__indoor__dining",
+          "temperature__indoor__parents",
+          "temperature__indoor__edwin",
+          "temperature__indoor__office",
+          "temperature__outdoor__deck",
+          "temperature__outdoor__roof",
+          "temperature__forecast__glen_Dforrest",
+          "temperature__forecast_Dwu__glen_Dforrest",
+          "temperature__forecast_Dbom__glen_Dforrest",
+          "heatindex__outdoor__roof",
+          "humidity__indoor__lounge",
+          "humidity__indoor__dining",
+          "humidity__indoor__parents",
+          "humidity__indoor__edwin",
+          "humidity__indoor__office",
+          "humidity__outdoor__deck",
+          "humidity__outdoor__roof",
+          "humidity__forecast__glen_Dforrest",
+          "humidity__forecast_Dwu__glen_Dforrest",
+          "humidity__forecast_Dbom__glen_Dforrest",
+          "carbon_Ddioxide__indoor__lounge",
+          "carbon_Ddioxide__indoor__parents",
+          "carbon_Ddioxide__indoor__edwin",
+          "carbon_Ddioxide__indoor__office",
+          "noise__indoor__office",
+          "pressure__indoor__office",
+          "pressure_Dabsolute__indoor__office",
+          "pressure__outdoor__roof",
+          "dew_Dpoint__indoor__dining",
+          "dew_Dpoint__outdoor__roof",
+          "wind__outdoor__roof",
+          "wind_Dbearing__outdoor__roof",
+          "wind_Dgust__outdoor__roof",
+          "wind_Dgust_Dbearing__outdoor__roof",
+          "wind_Dchill__outdoor__roof",
+          "wind__forecast__glen_Dforrest",
+          "wind__forecast_Dwu__glen_Dforrest",
+          "wind__forecast_Dbom__glen_Dforrest",
+          "cloud__outdoor__base",
+          "rain_Drate__outdoor__roof",
+          "rain__outdoor__roof",
+          "rain__forecast__glen_Dforrest",
+          "rain__forecast_Dwu__glen_Dforrest",
+          "rain__forecast_Dbom__glen_Dforrest"
+        ]
       },
-      {
-        "name": "data_temporal",
-        "type": "DatumTemporal",
-        "default": "__"
+      "default": "__"
+    },
+    {
+      "name": "data_temporal",
+      "type": {
+        "name": "DatumTemporal",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "repeat",
+          "derived",
+          "current",
+          "forecast"
+        ]
       },
-      {
-        "name": "data_type",
-        "type": "DatumType",
-        "default": "__"
+      "default": "__"
+    },
+    {
+      "name": "data_type",
+      "type": {
+        "name": "DatumType",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "point",
+          "mean",
+          "low",
+          "high",
+          "epoch",
+          "integral",
+          "enumeration"
+        ]
       },
-      {
-        "name": "data_value",
-        "type": "long",
-        "default": 0
+      "default": "__"
+    },
+    {
+      "name": "data_value",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "data_unit",
+      "type": {
+        "name": "DatumDataUnit",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "s",
+          "m",
+          "h",
+          "d",
+          "W",
+          "Wh",
+          "mm",
+          "cm",
+          "km",
+          "dB",
+          "kWh",
+          "ppm",
+          "mbar",
+          "_P24",
+          "_P25",
+          "m_P2Fs",
+          "km_P2Fh",
+          "mm_P2Fh",
+          "_PC2_PB0",
+          "_PC2_PB0C",
+          "scalar",
+          "datums"
+        ]
       },
-      {
-        "name": "data_unit",
-        "type": "DatumDataUnit",
-        "default": "__"
+      "default": "__"
+    },
+    {
+      "name": "data_scale",
+      "type": "float",
+      "default": 1
+    },
+    {
+      "name": "data_string",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "data_timestamp",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "bin_timestamp",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "bin_width",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "bin_unit",
+      "type": {
+        "name": "DatumBinUnit",
+        "type": "enum",
+        "symbols": [
+          "__",
+          "second",
+          "minute",
+          "hour",
+          "day",
+          "day_Dtime",
+          "night_Dtime",
+          "month",
+          "year",
+          "all_Dtime"
+        ]
       },
-      {
-        "name": "data_scale",
-        "type": "float",
-        "default": 1
-      },
-      {
-        "name": "data_string",
-        "type": [
-          "null",
-          "string"
-        ],
-        "default": null
-      },
-      {
-        "name": "data_timestamp",
-        "type": "long",
-        "default": 0
-      },
-      {
-        "name": "bin_timestamp",
-        "type": "long",
-        "default": 0
-      },
-      {
-        "name": "bin_width",
-        "type": "int",
-        "default": 0
-      },
-      {
-        "name": "bin_unit",
-        "type": "DatumBinUnit",
-        "default": "__"
-      }
-    ]
-  }
-]
+      "default": "__"
+    }
+  ]
+}

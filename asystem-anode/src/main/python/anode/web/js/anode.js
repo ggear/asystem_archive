@@ -40,23 +40,23 @@ function ANode(uri, onopen, onclose, onmessage) {
     var uriParameters = uriBase.substring(uriBase.indexOf("/") + 1, uriBase.length);
 
     this.restfulUri = "http://" + uriHostPort + "/rest/";
-    this.metadataUri = "http://" + uriHostPort + "/js/model/datum.avsc";
+    this.metadataUri = "http://" + uriHostPort + "/js/avro/datum.avsc";
     this.webSocketUri = "ws://" + uriHostPort + "/ws/" + uriParameters;
 
     this.metadata = this.metadataRequest();
     this.orderingIndexes = {};
     this.orderingIndexes["data_metric"] = {};
-    var data_metric = this.metadata[1]["symbols"];
+    var data_metric = this.metadata["fields"][3]["type"]["symbols"];
     for (var i = 1; i < data_metric.length; i++) {
         this.orderingIndexes["data_metric"][decodeDatumField(data_metric[i])] = i * 100000;
     }
     this.orderingIndexes["data_type"] = {};
-    var data_type = this.metadata[3]["symbols"];
+    var data_type = this.metadata["fields"][5]["type"]["symbols"];
     for (var i = 1; i < data_type.length; i++) {
         this.orderingIndexes["data_type"][decodeDatumField(data_type[i])] = i * 10000;
     }
     this.orderingIndexes["bin_unit"] = {};
-    var bin_unit = this.metadata[5]["symbols"];
+    var bin_unit = this.metadata["fields"][13]["type"]["symbols"];
     for (var i = 1; i < bin_unit.length; i++) {
         this.orderingIndexes["bin_unit"][decodeDatumField(bin_unit[i])] = i * 1000;
     }
@@ -122,7 +122,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                     if (datum.bin_unit == "day") {
                         //noinspection EqualityComparisonWithCoercionJS
                         if (datum.bin_width == 2) {
-                            datum.data_timeliness += "tommorrow";
+                            datum.data_timeliness += "tomorrow";
                         } else { //noinspection EqualityComparisonWithCoercionJS
                             if (datum.bin_width == 3) {
                                 datum.data_timeliness += "ubermorrow";
@@ -132,7 +132,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                         if (datum.bin_unit == "day-time") {
                             //noinspection EqualityComparisonWithCoercionJS
                             if (datum.bin_width == 2) {
-                                datum.data_timeliness += "tommorrow day time";
+                                datum.data_timeliness += "tomorrow day time";
                             } else { //noinspection EqualityComparisonWithCoercionJS
                                 if (datum.bin_width == 3) {
                                     datum.data_timeliness += "ubermorrow day time";
@@ -142,7 +142,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                             if (datum.bin_unit == "night-time") {
                                 //noinspection EqualityComparisonWithCoercionJS
                                 if (datum.bin_width == 2) {
-                                    datum.data_timeliness += "tommorrow night time";
+                                    datum.data_timeliness += "tomorrow night time";
                                 } else { //noinspection EqualityComparisonWithCoercionJS
                                     if (datum.bin_width == 3) {
                                         datum.data_timeliness += "ubermorrow night time";

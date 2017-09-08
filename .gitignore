@@ -18,7 +18,9 @@ buildNumber.properties
 *egg-info
 dist/
 phantomjsdriver.log
-asystem-anode/src/main/python/anode/model/
-asystem-anode/src/main/python/anode/web/js/model/
-asystem-amodel/src/main/java/com/jag/asystem/amodel/avro/*.java
+asystem-arouter/src/main/resources/avro
+asystem-anode/src/main/python/anode/avro
 asystem-anode/src/main/python/config/*.pkl
+asystem-anode/src/main/python/anode/web/js/avro
+asystem-anode/src/main/python/anode/application.properties
+asystem-amodel/src/main/java/com/jag/asystem/amodel/avro/*.java

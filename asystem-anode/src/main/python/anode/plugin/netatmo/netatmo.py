@@ -28,7 +28,8 @@ class Netatmo(Plugin):
                 self.http_post("https://api.netatmo.com/oauth2/token", {'grant_type': 'refresh_token',
                                                                         'refresh_token': self.token_refresh,
                                                                         'client_id': os.environ['NETATMO_CLIENT_ID'],
-                                                                        'client_secret': os.environ['NETATMO_CLIENT_SECRET']}, self.cache_tokens)
+                                                                        'client_secret': os.environ['NETATMO_CLIENT_SECRET']},
+                               self.cache_tokens)
             else:
                 self.http_post("https://api.netatmo.com/api/devicelist", {'access_token': self.token_access}, self.push_devicelist)
 
@@ -37,8 +38,9 @@ class Netatmo(Plugin):
         connection_pool = self.config["pool"] if "pool" in self.config else None
         treq.post(url, data, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
             lambda response, url=url, callback=callback: self.http_response(response, url, callback),
-            errback=lambda error, url=url: anode.Log(logging.ERROR)
-                .log("Plugin", "error", lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(self.name, url, error.getErrorMessage())))
+            errback=lambda error, url=url: anode.Log(logging.ERROR).log("Plugin", "error",
+                                                                        lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(
+                                                                            self.name, url, error.getErrorMessage())))
 
     def http_response(self, response, url, callback):
         if response.code == 200:
@@ -173,7 +175,8 @@ class Netatmo(Plugin):
                     data_derived_min=True
                 )
             for device in dict_content["body"]["modules"]:
-                module_name = (("__indoor__" if device["type"] == "NAModule4" else "__outdoor__") + device["module_name"].lower()).encode("UTF-8")
+                module_name = (("__indoor__" if device["type"] == "NAModule4" else "__outdoor__") + device["module_name"].lower()).encode(
+                    "UTF-8")
                 data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,

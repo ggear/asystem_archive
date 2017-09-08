@@ -5,30 +5,25 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-arouter</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>10.000.0000-SNAPSHOT</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>10.000.0000-SNAPSHOT</version>
     </parent>
+
+    <properties>
+        <tar.build.skip>${maven.package.skip}</tar.build.skip>
+        <parcel.build.skip>${maven.package.skip}</parcel.build.skip>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.jag.asystem</groupId>
             <artifactId>asystem-amodel</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.cloudera.framework</groupId>
-            <artifactId>cloudera-framework-common</artifactId>
-            <version>${cloudera-framework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.cloudera.framework.library.client</groupId>
-            <artifactId>cloudera-framework-library-client-mqtt</artifactId>
-            <version>${cloudera-framework.version}</version>
-            <type>pom</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.cloudera.framework.library.client</groupId>
@@ -46,11 +41,8 @@
         </dependency>
         <dependency>
             <groupId>com.cloudera.framework</groupId>
-            <artifactId>cloudera-framework-assembly</artifactId>
+            <artifactId>cloudera-framework-common</artifactId>
             <version>${cloudera-framework.version}</version>
-            <type>tar.gz</type>
-            <classifier>assembly</classifier>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.cloudera.framework</groupId>
@@ -63,247 +55,28 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>copy-model</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>test-jar</goal>
+                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-Xmx1024m</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.groovy.maven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <source>
-                                import org.apache.commons.lang.StringUtils
-
-                                project.properties["parcel.name"] = StringUtils.upperCase(project.artifactId).replaceAll('-', '_') + "-" + project.version
-                            </source>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.cloudera.parcel</groupId>
-                <artifactId>cloudera-parcel-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>prepare</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>prepare</goal>
-                        </goals>
-                        <configuration>
-                            <parcels>
-                                <parcel>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>el7</classifier>
-                                </parcel>
-                            </parcels>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                        <configuration>
-                            <parcels>
-                                <parcel>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>el7</classifier>
-                                    <distributionRepositoryUrl>${parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
-                                </parcel>
-                            </parcels>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                        <configuration>
-                            <parcels>
-                                <parcel>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>el7</classifier>
-                                    <distributionRepositoryUrl>${parcel.repo}/asystem-arouter/parcels</distributionRepositoryUrl>
-                                </parcel>
-                            </parcels>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>package-tar</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/assembly.xml</descriptor>
-                            </descriptors>
-                            <tarLongFileMode>gnu</tarLongFileMode>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>parcel-dependency</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}/parcel/${parcel.name}/lib/jar</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>parcel-dependencies</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <excludeTypes>pom</excludeTypes>
-                            <includeScope>runtime</includeScope>
-                            <excludeTransitive>false</excludeTransitive>
-                            <outputDirectory>${project.build.directory}/parcel/${parcel.name}/lib/jar</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>parcel-dependency-flume</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}/parcel/${parcel.name}/lib/flume/asystem-arouter/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>parcel-dependencies-flume</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <excludeTypes>pom</excludeTypes>
-                            <includeScope>runtime</includeScope>
-                            <excludeTransitive>false</excludeTransitive>
-                            <outputDirectory>${project.build.directory}/parcel/${parcel.name}/lib/flume/asystem-arouter/libext</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>parcel-avro-schemas-flume</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.jag.asystem</groupId>
-                                    <artifactId>asystem-amodel</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                            <includes>**/*.avsc</includes>
-                            <outputDirectory>${project.build.directory}/parcel/${parcel.name}/lib/flume/asystem-arouter/libext</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>parcel-assembly</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.cloudera.framework</groupId>
-                                    <artifactId>cloudera-framework-assembly</artifactId>
-                                    <version>${cloudera-framework.version}</version>
-                                    <type>tar.gz</type>
-                                    <classifier>assembly</classifier>
-                                    <outputDirectory>${project.build.directory}/parcel/${parcel.name}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>unpack-assembly</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                    <classifier>assembly</classifier>
-                                    <type>tar.gz</type>
-                                    <outputDirectory>${project.build.directory}/assembly</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                            <outputDirectory>${project.basedir}/src/main/resources/avro</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
 
 </project>
