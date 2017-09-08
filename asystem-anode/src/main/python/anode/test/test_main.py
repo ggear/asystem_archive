@@ -34,7 +34,8 @@ class ANodeTest(TestCase):
         self.patch(treq, "get", lambda url, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "post", lambda url, data, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "text_content", lambda response: MockHttpResponseContent(response))
-        self.patch(threads, "deferToThread", lambda to_execute, *arguments, **keyword_arguments: to_execute(*arguments, **keyword_arguments))
+        self.patch(threads, "deferToThread",
+                   lambda to_execute, *arguments, **keyword_arguments: to_execute(*arguments, **keyword_arguments))
         self.patch(MqttPublishService, "startService", lambda myself: None)
         self.patch(MqttPublishService, "isConnected", lambda myself: True)
         self.patch(MqttPublishService, "publishMessage", lambda myself, message, queue, on_failure: succeed(None))
@@ -97,12 +98,12 @@ class ANodeTest(TestCase):
             .replace("\"${-FLOATINGPOINT}\"", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str)
 
     @staticmethod
-    def unwrap_defered(defered):
-        return getattr(defered, 'result', "")
+    def unwrap_deferred(deferred):
+        return getattr(deferred, 'result', "")
 
     @staticmethod
     def rest(anode, url):
-        return ANodeTest.unwrap_defered(anode.web_rest.get(MockRequest(url)))
+        return ANodeTest.unwrap_deferred(anode.web_rest.get(MockRequest(url)))
 
     @staticmethod
     def rest_json(anode, url):
@@ -131,7 +132,8 @@ class ANodeTest(TestCase):
         response_csv = ANodeTest.rest_csv(anode, url.replace("format=svg", "format=csv"))
         response_svg_file = DIR_ANODE_TEST + "anode_" + str(test_svg_counter) + ".svg"
         file(response_svg_file, "w").write(response_svg)
-        return response_csv[0], response_csv[1], "file://" + FILE_SVG_HTML + "?dir=" + DIR_ANODE_TEST + "&count=" + str(test_svg_counter + 1) + \
+        return response_csv[0], response_csv[1], "file://" + FILE_SVG_HTML + "?dir=" + DIR_ANODE_TEST + "&count=" + str(
+            test_svg_counter + 1) + \
                "#" + str(test_svg_counter)
 
     def metrics_count(self, anode):
@@ -161,7 +163,8 @@ class ANodeTest(TestCase):
             exception_raised = exception
         if log or (assertions and assertion != response[1]):
             print("RESTful [{}] {} response:\n{}".format(url, response_format.upper(), "" if response is None else response[2]))
-            print("RESTful [{}] {} response includes [{}] datums".format(url, response_format.upper(), 0 if response is None else response[1]))
+            print("RESTful [{}] {} response includes [{}] datums".format(url, response_format.upper(),
+                                                                         0 if response is None else response[1]))
         if exception_raised is not None:
             raise exception_raised
         if assertions:
@@ -383,21 +386,24 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=power&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
-                                    anode,
-                                    "/rest/?something=else" +
-                                    (("&format=" + filter_format) if filter_format is not None else "") +
-                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
-                                    anode,
-                                    "/rest/?something=else&print=pretty" +
-                                    (("&format=" + filter_format) if filter_format is not None else "") +
-                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
-                                    anode,
-                                    "/rest/?" +
-                                    (("&format=" + filter_format) if filter_format is not None else "") +
-                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(
+                        0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                        anode,
+                        "/rest/?something=else" +
+                        (("&format=" + filter_format) if filter_format is not None else "") +
+                        (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(
+                        0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                        anode,
+                        "/rest/?something=else&print=pretty" +
+                        (("&format=" + filter_format) if filter_format is not None else "") +
+                        (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(
+                        0 if (filter_scope == "publish") else (metrics if filter_scope != "history" else (metrics - metrics_anode)),
+                        anode,
+                        "/rest/?" +
+                        (("&format=" + filter_format) if filter_format is not None else "") +
+                        (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
 
     def test_wide(self):
         metrics_period10 = 407
@@ -980,7 +986,8 @@ class ANodeTest(TestCase):
             self.assertEquals(4,
                               self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
                                               anode,
-                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv"
+                                              "&print=pretty",
                                               True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
             global test_repeats
             test_repeats = True
@@ -996,7 +1003,8 @@ class ANodeTest(TestCase):
             self.assertEquals(0,
                               self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
                                               anode,
-                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv"
+                                              "&print=pretty",
                                               True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
             self.clock_tick(anode, 1, 1, skip_all=True)
             self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
@@ -1010,7 +1018,8 @@ class ANodeTest(TestCase):
             self.assertEquals(0,
                               self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 2),
                                               anode,
-                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv"
+                                              "&print=pretty",
                                               True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
             self.clock_tick(anode, 1, period - 1, skip_all=True)
             self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 3),
@@ -1024,7 +1033,8 @@ class ANodeTest(TestCase):
             self.assertEquals(0,
                               self.assertRest(iterations + (1 if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else 3),
                                               anode,
-                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv&print=pretty",
+                                              "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv"
+                                              "&print=pretty",
                                               True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
 
     def test_filter(self):
@@ -1128,11 +1138,13 @@ class ANodeTest(TestCase):
                         False, True)
         self.assertRest(0,
                         anode,
-                        "/rest/?format=svg&metrics=power&scope=history&print=pretty&types=point&partition=1&period=10&method=max&fill=zeros",
+                        "/rest/?format=svg&metrics=power&scope=history&print=pretty&types=point&partition=1&period=10&method=max&fill"
+                        "=zeros",
                         False, True)
         self.assertRest(0,
                         anode,
-                        "/rest/?format=svg&metrics=power&scope=history&print=pretty&types=point&partition=1&period=10&method=max&fill=linear",
+                        "/rest/?format=svg&metrics=power&scope=history&print=pretty&types=point&partition=1&period=10&method=max&fill"
+                        "=linear",
                         False, True)
         self.assertRest(0,
                         anode,
@@ -1156,8 +1168,8 @@ class ANodeTest(TestCase):
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
         last_timestamp = \
             self.assertRest(0, anode,
-                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C&types=point&" +
-                            "types=integral&types=mean&scope=history&format=csv",
+                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
+                            "&types=point&types=integral&types=mean&scope=history&format=csv",
                             False)[0]["bin_timestamp"].iloc[-2]
         for parameters in [
             ("&start=" + str(last_timestamp + 1) + "&finish=" + str(last_timestamp) +
@@ -1191,30 +1203,12 @@ class ANodeTest(TestCase):
                  "&period=1800&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 24)) + "&finish=" + str(last_timestamp) +
                  "&period=1800&method=max&fill=linear"),
-            "&partitions=3&period=1800&method=max&fill=linear",
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 4)) + "&finish=" + str(last_timestamp) +
-                 "&period=3600&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 8)) + "&finish=" + str(last_timestamp) +
-                 "&period=3600&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 16)) + "&finish=" + str(last_timestamp) +
-                 "&period=3600&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 6 + 60 * 60 * 24)) + "&finish=" + str(last_timestamp) +
-                 "&period=3600&method=median&fill=linear"),
-            "&partitions=7&period=3600&method=median&fill=linear",
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 4)) + "&finish=" + str(last_timestamp) +
-                 "&period=7200&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 8)) + "&finish=" + str(last_timestamp) +
-                 "&period=7200&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 16)) + "&finish=" + str(last_timestamp) +
-                 "&period=7200&method=median&fill=linear"),
-            ("&start=" + str(last_timestamp - (60 * 60 * 24 * 13 + 60 * 60 * 24)) + "&finish=" + str(last_timestamp) +
-                 "&period=7200&method=median&fill=linear"),
-            "&period=7200&method=median&fill=linear"
+            "&partitions=3&period=1800&method=max&fill=linear"
         ]:
             self.assertRest(0,
                             anode,
-                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C&types=point&" +
-                            "types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
+                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
+                            "&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
                             False, True)
 
     def test_oneoff(self):
@@ -1319,9 +1313,9 @@ HTTP_GETS = {
         ilio.read(DIR_ROOT + "anode/test/template/web_netatmo_token_template.json"),
     "https://api.netatmo.com/api/devicelist":
         ilio.read(DIR_ROOT + "anode/test/template/web_netatmo_weather_template.json"),
-    "http://10.0.1.203/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
+    "http://10.0.0.151/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
         ilio.read(DIR_ROOT + "anode/test/template/web_fronius_flow_template.json"),
-    "http://10.0.1.203/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System":
+    "http://10.0.0.151/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System":
         ilio.read(DIR_ROOT + "anode/test/template/web_fronius_meter_template.json"),
     "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
         ilio.read(DIR_ROOT + "anode/test/template/web_wunderground_10dayforecast_template.json")

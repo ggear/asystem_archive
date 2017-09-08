@@ -5,15 +5,16 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-anode</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>10.000.0000-SNAPSHOT</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>10.000.0000-SNAPSHOT</version>
     </parent>
 
     <properties>
+        <tar.build.skip>true</tar.build.skip>
         <python.runtime>/usr/bin/python</python.runtime>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
@@ -37,17 +38,38 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>copy-application-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${dir.source.python}/anode</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/classes</directory>
+                                    <includes>
+                                        <include>application.properties</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-model-python</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${dir.source.python}/anode/model</outputDirectory>
+                            <outputDirectory>${dir.source.python}/anode/avro</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro/1</directory>
+                                    <directory>../asystem-amodel/src/main/resources/avro/${asystem-model.version}</directory>
+                                    <filtering>true</filtering>
                                 </resource>
                             </resources>
                         </configuration>
@@ -59,11 +81,12 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${dir.source.python}/anode/web/js/model</outputDirectory>
+                            <outputDirectory>${dir.source.python}/anode/web/js/avro</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro/1</directory>
+                                    <directory>../asystem-amodel/src/main/resources/avro/${asystem-model.version}</directory>
+                                    <filtering>true</filtering>
                                 </resource>
                             </resources>
                         </configuration>
@@ -124,7 +147,7 @@
                 </executions>
                 <configuration>
                     <version>2.1.1</version>
-                    <skip>${maven.integration-test.skip}</skip>
+                    <skip>${maven.system-test.skip}</skip>
                 </configuration>
             </plugin>
             <plugin>
@@ -139,13 +162,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skipJasmineTests>${maven.integration-test.skip}</skipJasmineTests>
+                    <skipJasmineTests>${maven.system-test.skip}</skipJasmineTests>
                     <webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
                     <webDriverCapabilities>
-                        <capability>
-                            <name>phantomjs.binary.path</name>
-                            <value>${phantomjs.binary}</value>
-                        </capability>
                         <capability>
                             <name>phantomjs.cli.args</name>
                             <list>
@@ -167,7 +186,7 @@
                         <id>python-clean</id>
                         <phase>clean</phase>
                         <configuration>
-                            <target unless="${maven.integration-test.skip}">
+                            <target unless="${maven.system-test.skip}">
                                 <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="clean" />
@@ -204,7 +223,7 @@
                         <id>python-integration-test-pre</id>
                         <phase>pre-integration-test</phase>
                         <configuration>
-                            <target unless="${maven.integration-test.skip}">
+                            <target unless="${maven.system-test.skip}">
                                 <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
@@ -232,7 +251,7 @@
                         <id>python-integration-test-post</id>
                         <phase>post-integration-test</phase>
                         <configuration>
-                            <target unless="${maven.integration-test.skip}">
+                            <target unless="${maven.system-test.skip}">
                                 <echo>
 
                                 </echo>

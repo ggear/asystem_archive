@@ -3264,7 +3264,7 @@
     function from(time, withoutSuffix) {
         if (this.isValid() &&
             ((isMoment(time) && time.isValid()) ||
-            createLocal(time).isValid())) {
+                createLocal(time).isValid())) {
             return createDuration({to: this, from: time}).locale(this.locale()).humanize(!withoutSuffix);
         } else {
             return this.localeData().invalidDate();
@@ -3278,7 +3278,7 @@
     function to(time, withoutSuffix) {
         if (this.isValid() &&
             ((isMoment(time) && time.isValid()) ||
-            createLocal(time).isValid())) {
+                createLocal(time).isValid())) {
             return createDuration({from: this, to: time}).locale(this.locale()).humanize(!withoutSuffix);
         } else {
             return this.localeData().invalidDate();
@@ -4057,7 +4057,7 @@
         // if we have a mix of positive and negative values, bubble down first
         // check: https://github.com/moment/moment/issues/2166
         if (!((milliseconds >= 0 && days >= 0 && months >= 0) ||
-            (milliseconds <= 0 && days <= 0 && months <= 0))) {
+                (milliseconds <= 0 && days <= 0 && months <= 0))) {
             milliseconds += absCeil(monthsToDays(months) + days) * 864e5;
             days = 0;
             months = 0;
