@@ -19,8 +19,8 @@
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
-        <integration.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</integration.test.anode.opts>
-        <integration.test.anode.log>${project.build.directory}/anode-runtime/anode.log</integration.test.anode.log>
+        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</system.test.anode.opts>
+        <system.test.anode.log>${project.build.directory}/anode-runtime/anode.log</system.test.anode.log>
     </properties>
 
     <dependencies>
@@ -193,7 +193,7 @@
                                 </exec>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop" />
+                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
                                 <delete file="${project.basedir}/phantomjsdriver.log" />
                                 <delete file="${project.basedir}/../phantomjsdriver.log" />
@@ -236,7 +236,7 @@
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode start" />
+                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode start" />
                                 </exec>
                                 <echo>
 
@@ -257,7 +257,7 @@
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${integration.test.anode.opts}' ANODE_LOG_FILE='${integration.test.anode.log}' ${dir.source.python}/script/anode stop" />
+                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
                                 <echo>
 
@@ -310,8 +310,8 @@
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
-                                    <arg value="--quiet" />
-                                    <arg value="-c${dir.source.python}/anode/test/config/anode_plugins_run.yaml" />
+                                    <arg value="--verbose" />
+                                    <arg value="-c${dir.source.python}/config/anode.yaml" />
                                     <arg value="-d${dir.runtime.anode}/" />
                                 </exec>
                             </target>

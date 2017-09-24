@@ -2,9 +2,6 @@
     var anodeConnector = tableau.makeConnector();
     anodeConnector.getSchema = function (schemaCallback) {
         var anodeColumns = [{
-            id: "anode_id",
-            dataType: tableau.dataTypeEnum.string
-        }, {
             id: "data_source",
             dataType: tableau.dataTypeEnum.string
         }, {

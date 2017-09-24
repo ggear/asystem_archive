@@ -14,7 +14,7 @@
     </parent>
 
     <properties>
-        <asystem-model.version>1</asystem-model.version>
+        <asystem-model.version>1000</asystem-model.version>
         <cloudera-framework.version>1.5.6-cdh5.12.0-SNAPSHOT</cloudera-framework.version>
         <maven.install-python.skip>true</maven.install-python.skip>
     </properties>

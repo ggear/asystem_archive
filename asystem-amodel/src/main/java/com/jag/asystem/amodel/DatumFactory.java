@@ -2,9 +2,10 @@ package com.jag.asystem.amodel;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,7 +16,6 @@ import java.util.stream.IntStream;
 import com.cloudera.framework.common.Driver;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.jag.asystem.amodel.avro.Datum;
-import com.jag.asystem.amodel.avro.DatumAnodeId;
 import com.jag.asystem.amodel.avro.DatumBinUnit;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
 import com.jag.asystem.amodel.avro.DatumMetric;
@@ -55,11 +55,9 @@ public class DatumFactory {
   }
 
   public static Datum getDatumRandom() {
-    byte[] anodeId = new byte[6];
-    ThreadLocalRandom.current().nextBytes(anodeId);
     return Datum.newBuilder()
       .setAsystemVersion(Integer.parseInt(Driver.getApplicationProperty("APP_VERSION_NUMERIC")))
-      .setAnodeId(new DatumAnodeId(anodeId))
+      .setDataVersion(0)
       .setDataSource(getEnumRandom(DatumSource.class))
       .setDataMetric(getEnumRandom(DatumMetric.class))
       .setDataTemporal(getEnumRandom(DatumTemporal.class))
@@ -79,7 +77,7 @@ public class DatumFactory {
   public static Datum getDatumIndexed(int index) {
     return Datum.newBuilder()
       .setAsystemVersion(Integer.parseInt(Driver.getApplicationProperty("APP_VERSION_NUMERIC")) + index)
-      .setAnodeId(new DatumAnodeId(ByteBuffer.allocate(6).putInt(index).array()))
+      .setDataVersion(0)
       .setDataSource(getEnumIndexed(DatumSource.class, index))
       .setDataMetric(getEnumIndexed(DatumMetric.class, index))
       .setDataTemporal(getEnumIndexed(DatumTemporal.class, index))
@@ -95,22 +93,44 @@ public class DatumFactory {
       .build();
   }
 
-  private static String swap(String string, String target, String replacement) {
-    return Arrays.stream(string.split(Pattern.quote(target), -1)).map(s ->
-      s.replaceAll(Pattern.quote(replacement), target)).collect(Collectors.joining(replacement));
+  protected static String decode(int encoded, String raw, int base, int... dividers) {
+    String key = new StringBuilder().append(encoded).append("_").append(raw).append("_").
+      append(base).append("_").append(Arrays.toString(dividers)).toString();
+    String decoded = ENCODING_CACHE.get(key);
+    if (decoded == null) {
+      try {
+        if (encoded == 0) {
+          decoded = "";
+        } else {
+          StringBuilder decodedBuilder = new StringBuilder("" +
+            (Math.abs(encoded) + (("" + base).length() == raw.replaceAll("[\\D]", "").length() ? (base - 1) : 0)));
+          for (int divider : dividers) {
+            decodedBuilder.insert(divider, ".");
+          }
+          decoded = decodedBuilder.append(encoded > 0 ? "" : "-SNAPSHOT").toString();
+        }
+        ENCODING_CACHE.put(key, decoded);
+      } catch (Exception e) {
+        throw new RuntimeException("Could not decode [" + encoded + "]", e);
+      }
+    }
+    return decoded;
   }
 
-  private static String decode(Enum field) {
-    String decoded;
-    try {
-      String[] decodes = field.toString().split("__");
-      IntStream.range(0, decodes.length).forEach(i ->
-        ESCAPE_SEQUENCES.forEach((escaped, unescaped) ->
-          ESCAPE_SWAPS.forEach((swap, swapped) ->
-            decodes[i] = swap(decodes[i].replace(escaped, unescaped), swap, swapped))));
-      decoded = URLDecoder.decode(String.join(".", Arrays.asList(decodes)), "UTF-8");
-    } catch (Exception e) {
-      throw new RuntimeException("Could not decode [" + field + "]", e);
+  protected static String decode(Enum encoded) {
+    String decoded = ENCODING_CACHE.get(encoded);
+    if (decoded == null) {
+      try {
+        String[] decodes = encoded.toString().split("__");
+        IntStream.range(0, decodes.length).forEach(i ->
+          ESCAPE_SEQUENCES.forEach((escaped, unescaped) ->
+            ESCAPE_SWAPS.forEach((swap, swapped) ->
+              decodes[i] = Arrays.stream(decodes[i].replace(escaped, unescaped).split(Pattern.quote(swap), -1)).map(s ->
+                s.replaceAll(Pattern.quote(swapped), swap)).collect(Collectors.joining(swapped)))));
+        decoded = URLDecoder.decode(String.join(".", Arrays.asList(decodes)), "UTF-8");
+      } catch (Exception e) {
+        throw new RuntimeException("Could not decode [" + encoded + "]", e);
+      }
     }
     return decoded;
   }
@@ -153,5 +173,12 @@ public class DatumFactory {
     }
     return outputStream.toByteArray();
   }
+
+  private static Map<Object, String> ENCODING_CACHE = Collections.synchronizedMap(new LinkedHashMap<Object, String>() {
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Object, String> eldest) {
+      return size() > 100000;
+    }
+  });
 
 }

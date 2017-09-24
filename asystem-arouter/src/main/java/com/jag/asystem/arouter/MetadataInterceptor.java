@@ -27,6 +27,7 @@ public class MetadataInterceptor implements Interceptor {
 
   private final int batchSize;
   private final String avroSchemaUrl;
+
   private int batchCount;
   private long batchTimestamp;
 

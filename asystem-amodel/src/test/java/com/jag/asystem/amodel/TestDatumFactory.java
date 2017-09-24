@@ -1,6 +1,9 @@
 package com.jag.asystem.amodel;
 
+import static junit.framework.TestCase.assertEquals;
+
 import com.cloudera.framework.testing.TestConstants;
+import com.jag.asystem.amodel.avro.DatumBinUnit;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
 import com.jag.asystem.amodel.avro.DatumMetric;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -16,15 +19,87 @@ public class TestDatumFactory implements TestConstants {
   private static final DatumFactory DATUM_FACTORY = new DatumFactory();
 
   @Test
+  public void testDecode() {
+    assertEquals("",
+      DatumFactory.decode(0, "1000", 1000));
+    assertEquals("",
+      DatumFactory.decode(0, "1000", 1000));
+    assertEquals("1000",
+      DatumFactory.decode(1, "1000", 1000));
+    assertEquals("1000",
+      DatumFactory.decode(1, "1000", 1000));
+    assertEquals("1066",
+      DatumFactory.decode(67, "1000", 1000));
+    assertEquals("1066",
+      DatumFactory.decode(67, "1000", 1000));
+    assertEquals("1000-SNAPSHOT",
+      DatumFactory.decode(-1, "1000-SNAPSHOT", 1000));
+    assertEquals("1000-SNAPSHOT",
+      DatumFactory.decode(-1, "1000-SNAPSHOT", 1000));
+    assertEquals("6899-SNAPSHOT",
+      DatumFactory.decode(-5900, "1000-SNAPSHOT", 1000));
+    assertEquals("6899-SNAPSHOT",
+      DatumFactory.decode(-5900, "1000-SNAPSHOT", 1000));
+    assertEquals("",
+      DatumFactory.decode(0, "10.000.0000", 100000000, 2, 6));
+    assertEquals("",
+      DatumFactory.decode(0, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.000.0000",
+      DatumFactory.decode(1, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.000.0000",
+      DatumFactory.decode(1, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.000.0098",
+      DatumFactory.decode(99, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.000.0098",
+      DatumFactory.decode(99, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.156.5119",
+      DatumFactory.decode(1565120, "10.000.0000", 100000000, 2, 6));
+    assertEquals("10.156.5119",
+      DatumFactory.decode(1565120, "10.000.0000", 100000000, 2, 6));
+    assertEquals("15.651.20",
+      DatumFactory.decode(1565120, "1.5.6-cdh5.12.0", 100000000, 2, 6));
+    assertEquals("15.651.20",
+      DatumFactory.decode(1565120, "1.5.6-cdh5.12.0", 100000000, 2, 6));
+    assertEquals("10.000.0000-SNAPSHOT",
+      DatumFactory.decode(-1, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("10.000.0000-SNAPSHOT",
+      DatumFactory.decode(-1, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("10.156.5119-SNAPSHOT",
+      DatumFactory.decode(-1565120, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("10.156.5119-SNAPSHOT",
+      DatumFactory.decode(-1565120, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("15.651.20-SNAPSHOT",
+      DatumFactory.decode(-1565120, "1.5.6-cdh5.12.0-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("15.651.20-SNAPSHOT",
+      DatumFactory.decode(-1565120, "1.5.6-cdh5.12.0-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("38.999.9999-SNAPSHOT",
+      DatumFactory.decode(-290000000, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("38.999.9999-SNAPSHOT",
+      DatumFactory.decode(-290000000, "10.000.0000-SNAPSHOT", 100000000, 2, 6));
+    assertEquals("°C",
+      DatumFactory.decode(DatumDataUnit._PC2_PB0C));
+    assertEquals("°C",
+      DatumFactory.decode(DatumDataUnit._PC2_PB0C));
+    assertEquals("km/h",
+      DatumFactory.decode(DatumDataUnit.km_P2Fh));
+    assertEquals("km/h",
+      DatumFactory.decode(DatumDataUnit.km_P2Fh));
+    assertEquals("ping.internet.new-york-city",
+      DatumFactory.decode(DatumMetric.ping__internet__new_Dyork_Dcity));
+    assertEquals("ping.internet.new-york-city",
+      DatumFactory.decode(DatumMetric.ping__internet__new_Dyork_Dcity));
+  }
+
+  @Test
   public void testDatum() throws Exception {
     testDatum("default", DatumFactory.getDatum(),
       "getDataUnit", DatumDataUnit.__, "getDataMetric", DatumMetric.__);
     testDatum("indexed-1", DatumFactory.getDatumIndexed(1),
       "getDataUnit", DatumDataUnit.s, "getDataMetric", DatumMetric.anode__fronius__metrics);
     testDatum("indexed-50", DatumFactory.getDatumIndexed(50),
-      "getDataUnit", DatumDataUnit.d, "getDataMetric", DatumMetric.energy__consumption_Dpeak_Dmorning__grid);
+      "getDataUnit", DatumDataUnit._PC2_PB0, "getDataMetric", DatumMetric.energy__production_Dforecast_Da__inverter);
     testDatum("indexed-2147483647", DatumFactory.getDatumIndexed(21474836),
-      "getDataUnit", DatumDataUnit.ppm, "getDataMetric", DatumMetric.energy__production_Dforecast_Da__inverter);
+      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.anode__netatmo__up_Dtime);
     testDatum("random", DatumFactory.getDatumRandom());
   }
 

@@ -65,19 +65,19 @@
                                         datumsPlotUri += "&start=" + Math.floor((new Date).getTime() / 1000 - (60 * 60)) + "&period=5&method=max&fill=linear"
                                     }
                                     else if (plot == "today") {
-                                        datumsPlotUri += "&partitions=1&period=300&method=max&fill=linear"
+                                        datumsPlotUri += "&partitions=1&period=300&method=min&fill=linear"
                                     }
                                     else if (plot == "3days") {
-                                        datumsPlotUri += "&partitions=3&period=1800&method=max&fill=linear"
+                                        datumsPlotUri += "&partitions=3&period=1800&method=min&fill=linear"
                                     }
                                     else if (plot == "week") {
-                                        datumsPlotUri += "&partitions=7&period=3600&method=median&fill=linear"
+                                        datumsPlotUri += "&partitions=7&period=3600&method=min&fill=linear"
                                     }
                                     else if (plot == "fortnight") {
-                                        datumsPlotUri += "&partitions=14&period=7200&method=median&fill=linear"
+                                        datumsPlotUri += "&partitions=14&period=7200&method=min&fill=linear"
                                     }
                                     else {
-                                        datumsPlotUri += "&period=7200&method=median&fill=linear"
+                                        datumsPlotUri += "&period=7200&method=min&fill=linear"
                                     }
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
                                         "<div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
@@ -256,6 +256,10 @@
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=power&metrics=energy">utilities</a>.<a
                         href="/?metrics=energy.export.grid&metrics=energy.production.inverter&metrics=energy.consumption.grid&bins=1all-time">meters</a>
+                </span></div>
+                <div class="datum"><span class="datum-detail"><a
+                        href="/?metrics=internet">internet</a>.<a
+                        href="/?metrics=perth">perth</a>
                 </span></div>
                 <div class="datum"><span class="datum-detail"><a
                         href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a

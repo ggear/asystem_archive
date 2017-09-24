@@ -47,10 +47,10 @@ class Plugin(object):
             self._poll()
             log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.poll)
 
-    def push(self, text_content):
+    def push(self, content, targets=None):
         if self.has_push:
             log_timer = anode.Log(logging.DEBUG).start()
-            self._push(text_content)
+            self._push(content, targets)
             log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push)
 
     def repeat(self, force=False):
@@ -261,8 +261,8 @@ class Plugin(object):
         log_timer = anode.Log(logging.DEBUG).start()
         if data_value is not None:
             datum_dict = {
-                "asystem_version": anode.APP_CONF_VERSION_NUMERIC,
-                "anode_id": ID_BYTE,
+                "asystem_version": anode.anode.APP_CONF_VERSION_NUMERIC,
+                "data_version": 0,
                 "data_source": self.name,
                 "data_metric": data_metric,
                 "data_temporal": data_temporal,
@@ -300,12 +300,8 @@ class Plugin(object):
                     self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]]:
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                     str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
-                    DATUM_QUEUE_PUBLISH: deque(
-                        maxlen=(
-                            None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1 else self.config[
-                                "publish_ticks"])),
-                    DATUM_QUEUE_BUFFER: deque()
-                }
+                    DATUM_QUEUE_PUBLISH: deque(maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1
+                                                       else self.config["publish_ticks"])), DATUM_QUEUE_BUFFER: deque()}
                 if not data_transient:
                     self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                         str(datum_dict["bin_width"]) + datum_dict["bin_unit"]][DATUM_QUEUE_HISTORY] = {}
@@ -563,6 +559,9 @@ class Plugin(object):
         return sorted(datums, key=lambda datum: (
             "aaaaa" if datum["data_unit"] == "_P24" else
             "bbbbb" if datum["data_unit"] == "W" else
+            "ccccc" if datum["data_unit"] == "ms" else
+            "ddddd" if datum["data_unit"] == "MB_P2Fs" else
+            "eeeee" if datum["data_unit"] == "KB_P2Fs" else
             "zzzzz" + datum["data_unit"],
             datum["data_metric"],
             "aaaaa" if datum["data_type"] == "point" else
@@ -591,14 +590,11 @@ class Plugin(object):
     @staticmethod
     def datum_dict_to_json(datum_dict):
         datum_dict = Plugin.datum_decode(datum_dict)
-        if "anode_id" in datum_dict:
-            datum_dict["anode_id"] = ID_HEX
         return [json.dumps(datum_dict, separators=(',', ':'))]
 
     @staticmethod
     def datum_dict_to_csv(datum_dict):
         datum_dict = datum_dict.copy()
-        datum_dict["anode_id"] = ID_BASE64
         if datum_dict["data_unit"] not in DATUM_SCHEMA_TO_ASCII:
             DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]] = urllib.quote_plus(datum_dict["data_unit"])
         datum_dict["data_unit"] = DATUM_SCHEMA_TO_ASCII[datum_dict["data_unit"]]
@@ -687,7 +683,6 @@ class Plugin(object):
     def datums_csv_to_dict(datums_csv):
         datums_dict = {"dict": []}
         for datum_dict in datums_csv:
-            datum_dict["anode_id"] = base64.b64decode(datum_dict["anode_id"])
             datum_dict["data_value"] = long(datum_dict["data_value"])
             datum_dict["data_unit"] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
             if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_ASCII:
@@ -1131,8 +1126,8 @@ class Plugin(object):
             if value is None:
                 value = default
                 anode.Log(logging.WARN).log("Plugin", "state",
-                                            lambda: "[{}] setting value {} to default [{}] from response [{}]".format(self.name, keys,
-                                                                                                                      default, data))
+                                            lambda: "[{}] setting value {} to default [{}] from response [{}]".format(
+                                                self.name, keys, default, data))
             return value if not isinstance(value, numbers.Number) else int(value * factor)
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error",
@@ -1275,7 +1270,7 @@ class Plugin(object):
 
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
-ID_HEX = ID_BYTE.encode("hex")
+ID_HEX = ID_BYTE.encode("hex").upper()
 ID_BASE64 = base64.b64encode(str(ID_BYTE))
 
 SVG_EMPTY = """<?xml version="1.0" encoding="utf-8" standalone="no"?>

@@ -51,7 +51,7 @@ public class Flume implements TestConstants {
 
   private static final Logger LOG = LoggerFactory.getLogger(Flume.class);
 
-  private static final String HDFS_DIR = "/asystem";
+  private static final String HDFS_DIR = "/data";
 
   private static final String FLUME_CONFIG = "flume/flume-conf.properties";
 
@@ -59,7 +59,7 @@ public class Flume implements TestConstants {
   private static final String MODEL_1_SOURCE = "mqtt_model_1";
   private static final String MODEL_1_TOPIC = "asystem/anode/datum/1";
 
-  private static final int DATUMS_COUNT = 20;
+  private static final int DATUMS_COUNT = 50;
 
   private MqttClient client;
 
@@ -70,6 +70,8 @@ public class Flume implements TestConstants {
       .put("MQTT_BROKER_PORT", "2883")
       .put("MQTT_BACK_OFF", "100")
       .put("MQTT_MAX_BACK_OFF", "100")
+      .put("MQTT_BATCHSIZE", "10")
+      .put("HDFS_BATCHSIZE", "1")
       .put("AVRO_SCHEMA_URL", Flume.class.getResource("/avro").toString())
       .put("FLUME_MQTT_CHECKPOINT_DIR", ABS_DIR_FLUME + "/flume/file_channel/checkpoint")
       .put("FLUME_MQTT_DATA_DIRS", ABS_DIR_FLUME + "/flume/file_channel/data")
@@ -104,7 +106,7 @@ public class Flume implements TestConstants {
             "PARTITIONED BY (ingest_id STRING, ingest_timestamp BIGINT) " +
             "STORED AS AVRO " +
             "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/ingest_id")) + "' " +
-            "TBLPROPERTIES ('avro.schema.url'='" + Flume.class.getResource("/avro/1/datum.avsc").toString() + "') "
+            "TBLPROPERTIES ('avro.schema.url'='" + Flume.class.getResource("/avro/1000/datum.avsc").toString() + "') "
         );
         hiveServer.execute("MSCK REPAIR TABLE datum_" + (partitions.size() - 1));
       }

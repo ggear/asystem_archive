@@ -1,5 +1,5 @@
 WEB_PORT = 8091;
-ANODE_WARMUP_PERIOD = 5000;
+ANODE_WARMUP_PERIOD = 6000;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 
@@ -72,14 +72,21 @@ describe('ANode', function () {
         messageTest(done, connectionUri("something=else"), metrics)
     });
 
+    it('message publish', function (done) {
+        restTest(done, connectionUri("scope=publish", true), 0)
+    });
+
     it('message', function (done) {
         messageTest(done, connectionUri(""), metrics)
     });
 
+
 });
 
-connectionUri = function (parameters) {
-    return "http://localhost:" + WEB_PORT + "/" + (parameters ? ("?" + parameters) : "");
+connectionUri = function (parameters, isRest) {
+    return "http://localhost:" + WEB_PORT +
+        ((typeof(isRest) === 'undefined' || !isRest) ? "/" : "/rest/") +
+        (parameters ? ("?" + parameters) : "");
 };
 
 
@@ -106,3 +113,19 @@ messageTest = function (done, url, messagesExpected) {
                 done();
         });
 };
+
+restTest = function (done, url, messagesExpected) {
+    var request = new XMLHttpRequest();
+    request.open("GET", url);
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            if (request.status === 200) {
+                if (JSON.parse(request.responseText).length === messagesExpected)
+                    done();
+            }
+        }
+    };
+    request.send();
+};
+
+
