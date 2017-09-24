@@ -38,7 +38,7 @@
           "usec": 514000
         },
         "main_device": "70:ee:50:19:43:7c",
-        "module_name": "Parents",
+        "module_name": "Dining",
         "type": "NAModule4",
         "firmware": 44,
         "last_message": 1479982102,
@@ -68,7 +68,7 @@
           "usec": 820000
         },
         "main_device": "70:ee:50:19:43:7c",
-        "module_name": "Edwin",
+        "module_name": "Pantry",
         "type": "NAModule4",
         "firmware": 44,
         "last_message": 1479982102,

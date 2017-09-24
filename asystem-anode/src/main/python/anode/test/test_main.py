@@ -1174,7 +1174,7 @@ class ANodeTest(TestCase):
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
         last_timestamp = \
             self.assertRest(0, anode,
-                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
+                            "/rest/?metrics=temperature.indoor.shed&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
                             "&types=point&types=integral&types=mean&scope=history&format=csv",
                             False)[0]["bin_timestamp"].iloc[-2]
         for parameters in [
@@ -1213,7 +1213,7 @@ class ANodeTest(TestCase):
         ]:
             self.assertRest(0,
                             anode,
-                            "/rest/?metrics=temperature.indoor.dining&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
+                            "/rest/?metrics=temperature.indoor.shed&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
                             "&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
                             False, True)
 
