@@ -9,11 +9,12 @@ from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
 
+# noinspection PyUnusedLocal
 class Davis(Plugin):
-    def _push(self, text_content):
+    def _push(self, content, targets):
         # noinspection PyBroadException
         try:
-            dict_content = json.loads(text_content, parse_float=Decimal)
+            dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             if "packet" in dict_content:
                 bin_unit = "second"
@@ -348,8 +349,7 @@ class Davis(Plugin):
             self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
-                                         .format(self.name, exception, text_content), exception)
+                                         .format(self.name, exception, content), exception)
 
     def __init__(self, parent, name, config, reactor):
         super(Davis, self).__init__(parent, name, config, reactor)
-        self.last_push = self.get_time()

@@ -6,11 +6,6 @@
     "version": 1,
     "fields": [
       {
-        "name": "asystem_version",
-        "type": "int",
-        "default": 0
-      },
-      {
         "name": "ingest_id",
         "type": [
           "null",
@@ -27,33 +22,34 @@
         "default": null
       },
       {
-        "name": "anode_id",
-        "type": {
-          "name": "DatumAnodeId",
-          "type": "fixed",
-          "size": 6
-        },
-        "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+        "name": "asystem_version",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "data_version",
+        "type": "string",
+        "default": ""
       },
       {
         "name": "data_source",
         "type": "string",
-        "default": "."
+        "default": ""
       },
       {
         "name": "data_metric",
         "type": "string",
-        "default": "."
+        "default": ""
       },
       {
         "name": "data_temporal",
         "type": "string",
-        "default": "."
+        "default": ""
       },
       {
         "name": "data_type",
         "type": "string",
-        "default": "."
+        "default": ""
       },
       {
         "name": "data_value",
@@ -63,7 +59,7 @@
       {
         "name": "data_unit",
         "type": "string",
-        "default": "."
+        "default": ""
       },
       {
         "name": "data_scale",
@@ -96,7 +92,7 @@
       {
         "name": "bin_unit",
         "type": "string",
-        "default": "."
+        "default": ""
       }
     ]
   }

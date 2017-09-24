@@ -10,13 +10,9 @@
       "default": 0
     },
     {
-      "name": "anode_id",
-      "type": {
-        "name": "DatumAnodeId",
-        "type": "fixed",
-        "size": 6
-      },
-      "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+      "name": "data_version",
+      "type": "int",
+      "default": 0
     },
     {
       "name": "data_source",
@@ -28,6 +24,7 @@
           "davis",
           "fronius",
           "netatmo",
+          "speedtest",
           "wunderground"
         ]
       },
@@ -61,6 +58,13 @@
           "anode__netatmo__partitions",
           "anode__netatmo__up_Dtime",
           "anode__netatmo__last_Dseen",
+          "anode__speedtest__metrics",
+          "anode__speedtest__queue",
+          "anode__speedtest__buffer",
+          "anode__speedtest__history",
+          "anode__speedtest__partitions",
+          "anode__speedtest__up_Dtime",
+          "anode__speedtest__last_Dseen",
           "anode__wunderground__metrics",
           "anode__wunderground__queue",
           "anode__wunderground__buffer",
@@ -94,6 +98,15 @@
           "energy__consumption_Doff_Dpeak__grid",
           "energy__consumption_Doff_Dpeak_Dmorning__grid",
           "energy__consumption_Doff_Dpeak_Devening__grid",
+          "ping__internet__perth",
+          "ping__internet__london",
+          "ping__internet__new_Dyork_Dcity",
+          "download__internet__perth",
+          "download__internet__london",
+          "download__internet__new_Dyork_Dcity",
+          "upload__internet__perth",
+          "upload__internet__london",
+          "upload__internet__new_Dyork_Dcity",
           "sun__outdoor__rise",
           "sun__outdoor__set",
           "sun__outdoor__azimuth",
@@ -200,7 +213,9 @@
           "h",
           "d",
           "W",
+          "B",
           "Wh",
+          "ms",
           "mm",
           "cm",
           "km",
@@ -213,6 +228,8 @@
           "m_P2Fs",
           "km_P2Fh",
           "mm_P2Fh",
+          "KB_P2Fs",
+          "MB_P2Fs",
           "_PC2_PB0",
           "_PC2_PB0C",
           "scalar",

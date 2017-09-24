@@ -61,7 +61,8 @@ class ANodeTest(TestCase):
     @staticmethod
     def clock_tock(anode):
         for source in HTTP_POSTS:
-            anode.put_datums({"sources": [source]}, ANodeTest.template_populate(HTTP_POSTS[source]))
+            for target in HTTP_POSTS[source]:
+                anode.put_datums({"sources": [source], "targets": [target]}, ANodeTest.template_populate(HTTP_POSTS[source][target]))
 
     @staticmethod
     def template_populate(template):
@@ -233,27 +234,27 @@ class ANodeTest(TestCase):
         self.assertRest(0, anode, "/rest", False)
 
     def test_null(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, True, False)
         self.assertRest(0, anode, "/rest", False)
 
     def test_corrupt(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, True)
-        self.assertRest(0, anode, "/rest", False)
+        self.assertRest(9, anode, "/rest/?metrics=internet&types=point")
 
     def test_random(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-v"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-v"])
         anode = self.anode_init(True, True, False, False, iterations=5)
         self.assertRest(0, anode, "/rest", False)
 
     def test_all(self):
         for arguments in [
-            ["anode", "--config=" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE],
-            ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-v"],
-            ["anode", "--config=" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "--verbose"],
-            ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"],
-            ["anode", "--config=" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "--quiet"]
+            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE],
+            ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-v"],
+            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "--verbose"],
+            ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"],
+            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "--quiet"]
         ]:
             self.patch(sys, "argv", arguments)
             anode = self.anode_init(False, True, False, False)
@@ -364,6 +365,11 @@ class ANodeTest(TestCase):
                     self.assertRest(0 if filter_scope == "publish" else 3,
                                     anode,
                                     "/rest/?metrics=wind-gust-bearing.outdoor.roof&units=°" +
+                                    (("&format=" + filter_format) if filter_format is not None else "") +
+                                    (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    self.assertRest(0 if filter_scope == "publish" else 6,
+                                    anode,
+                                    "/rest/?metrics=internet&types=point&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
                     self.assertRest(0 if filter_scope == "publish" else 20,
@@ -527,7 +533,7 @@ class ANodeTest(TestCase):
     def test_temporal(self):
         period = 1
         iterations = 3
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         self.assertRest(1,
                         anode,
@@ -831,9 +837,9 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 10
         iterations_repeat = 15
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(1276, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1312, anode, "/rest/?scope=history", True)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,
@@ -1164,7 +1170,7 @@ class ANodeTest(TestCase):
                         False, True)
 
     def test_good_plots(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS_RUN, "-d" + DIR_ANODE_DB, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB, "-q"])
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
         last_timestamp = \
             self.assertRest(0, anode,
@@ -1213,11 +1219,11 @@ class ANodeTest(TestCase):
 
     def test_oneoff(self):
         period = 1
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_PLUGINS, "-d" + DIR_ANODE, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.assertRest(0,
                         anode,
-                        "/rest/?units=°&print=pretty",
+                        "/rest/?metrics=ping.internet.perth&types=point",
                         False, True)
 
 
@@ -1283,9 +1289,8 @@ DIR_ANODE = DIR_TARGET + "anode-runtime/"
 DIR_ANODE_TEST = DIR_TARGET + "anode-tests/"
 DIR_ANODE_DB = DIR_ROOT + "anode/test/pickle"
 
+FILE_CONFIG_ALL = DIR_ROOT + "anode/test/config/anode_all.yaml"
 FILE_CONFIG_BARE = DIR_ROOT + "anode/test/config/anode_bare.yaml"
-FILE_CONFIG_PLUGINS = DIR_ROOT + "anode/test/config/anode_plugins.yaml"
-FILE_CONFIG_PLUGINS_RUN = DIR_ROOT + "anode/test/config/anode_plugins_run.yaml"
 FILE_CONFIG_FRONIUS_DB = DIR_ROOT + "anode/test/config/anode_fronius_db.yaml"
 FILE_CONFIG_FRONIUS_PUBLISH = DIR_ROOT + "anode/test/config/anode_fronius_publish.yaml"
 FILE_CONFIG_FRONIUS_REPEAT_NONE = DIR_ROOT + "anode/test/config/anode_fronius_repeat_none.yaml"
@@ -1301,8 +1306,14 @@ FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION = DIR_ROOT + "anode/test/co
 FILE_SVG_HTML = DIR_ROOT + "anode/test/web/index.html"
 
 HTTP_POSTS = {
-    "davis":
-        ilio.read(DIR_ROOT + "anode/test/template/web_davis_record_packet_template.json")
+    "davis": {
+        "": ilio.read(DIR_ROOT + "anode/test/template/davis_record_packet_template.json")
+    },
+    "speedtest": {
+        "2627": ilio.read(DIR_ROOT + "anode/test/template/speedtest_latency_perth_template.json"),
+        "5029": ilio.read(DIR_ROOT + "anode/test/template/speedtest_latency_throughput_newyork_template.json"),
+        "4078": ilio.read(DIR_ROOT + "anode/test/template/speedtest_throughput_london_template.json")
+    }
 }
 
 # noinspection PyPep8
@@ -1310,13 +1321,13 @@ HTTP_GETS = {
     "http_404":
         u"""<html><body>HTTP 404</body></html>""",
     "https://api.netatmo.com/oauth2/token":
-        ilio.read(DIR_ROOT + "anode/test/template/web_netatmo_token_template.json"),
+        ilio.read(DIR_ROOT + "anode/test/template/netatmo_token_template.json"),
     "https://api.netatmo.com/api/devicelist":
-        ilio.read(DIR_ROOT + "anode/test/template/web_netatmo_weather_template.json"),
+        ilio.read(DIR_ROOT + "anode/test/template/netatmo_weather_template.json"),
     "http://10.0.0.151/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
-        ilio.read(DIR_ROOT + "anode/test/template/web_fronius_flow_template.json"),
+        ilio.read(DIR_ROOT + "anode/test/template/fronius_flow_template.json"),
     "http://10.0.0.151/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System":
-        ilio.read(DIR_ROOT + "anode/test/template/web_fronius_meter_template.json"),
+        ilio.read(DIR_ROOT + "anode/test/template/fronius_meter_template.json"),
     "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
-        ilio.read(DIR_ROOT + "anode/test/template/web_wunderground_10dayforecast_template.json")
+        ilio.read(DIR_ROOT + "anode/test/template/wunderground_10dayforecast_template.json")
 }

@@ -41,7 +41,7 @@ setup(
     packages=find_packages(),
     package_data={"": ["*.properties"]},
     install_requires=[
-        'python-dateutil',
+        "python-dateutil",
         "twisted",
         "twisted-mqtt",
         "autobahn[twisted]",

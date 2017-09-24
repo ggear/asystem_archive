@@ -33,6 +33,21 @@ from twisted.web.static import File
 from plugin import DATUM_QUEUE_LAST
 from plugin import Plugin
 
+APP_CONF = dict(
+    line.strip().split("=") for line in
+    open(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + "/application.properties")
+    if not line.startswith("#") and not line.startswith("\n"))
+APP_CONF_NAME = APP_CONF["APP_NAME"]
+APP_CONF_NAME_ESCAPED = APP_CONF["APP_NAME_ESCAPED"]
+APP_CONF_VERSION = APP_CONF["APP_VERSION"]
+APP_CONF_VERSION_NUMERIC = int(APP_CONF["APP_VERSION_NUMERIC"])
+
+MODEL_CONF = dict(
+    line.strip().split("=") for line in
+    open(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + "/avro/model.properties")
+    if not line.startswith("#") and not line.startswith("\n"))
+APP_CONF_MODEL_VERSION = MODEL_CONF["MODEL_VERSION"]
+
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
 KEEPALIVE_DEFAULT_SECONDS = 3613
@@ -57,14 +72,15 @@ class ANode:
                                 "publish_topic" in self.config and len(self.config["publish_topic"]) > 0
         for plugin_name in self.config["plugin"]:
             self.publish_upstream_plugin = self.publish_upstream_plugin or \
-                                           "publish_upstream" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name][
-                                               "publish_upstream"]
+                                           "publish_upstream" in self.config["plugin"][plugin_name] and \
+                                           self.config["plugin"][plugin_name]["publish_upstream"]
         if self.publish_upstream and self.publish_upstream_plugin:
             self.publish_mqtt = MqttPublishService(
                 clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
-                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"],
+                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"] + "/" + APP_CONF_MODEL_VERSION,
                 (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
-                KEEPALIVE_DEFAULT_SECONDS)
+                KEEPALIVE_DEFAULT_SECONDS, self.config["publish_access_key"] if "publish_access_key" in self.config else None,
+                self.config["publish_secret_key"] if "publish_secret_key" in self.config else None)
             self.publish_mqtt.startService()
 
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
@@ -121,7 +137,7 @@ class ANode:
         if "sources" in datum_filter:
             for source in datum_filter["sources"]:
                 if source in self.plugins:
-                    self.plugins[source].push(data)
+                    self.plugins[source].push(data, datum_filter["targets"] if "targets" in datum_filter else None)
 
     def push_datums(self, datums):
         self.web_ws.push(datums)
@@ -162,10 +178,14 @@ class ANode:
 
 # noinspection PyPep8Naming
 class MqttPublishService(ClientService):
-    def __init__(self, endpoint, factory, topic, keepalive):
+    def __init__(self, endpoint, factory, topic, keepalive, access_key=None, secret_key=None):
         self.topic = topic
         self.keepalive = keepalive
         self.protocol = None
+        self.access_key = os.environ[access_key[1:]] \
+            if (access_key is not None and access_key.startswith("$") and access_key[1:] in os.environ) else access_key
+        self.secret_key = os.environ[secret_key[1:]] \
+            if (secret_key is not None and secret_key.startswith("$") and access_key[1:] in os.environ) else secret_key
         ClientService.__init__(self, endpoint, factory, retryPolicy=backoffPolicy(maxDelay=keepalive))
 
     def startService(self):
@@ -179,7 +199,8 @@ class MqttPublishService(ClientService):
         self.protocol.setWindowSize(1)
         self.protocol.setTimeout(MQTTBaseProtocol.TIMEOUT_MAX_INITIAL)
         try:
-            yield self.protocol.connect("TwistedMQTT-publish", username=None, password=None, keepalive=self.keepalive, cleanStart=True)
+            yield self.protocol.connect("TwistedMQTT", username=self.access_key, password=self.secret_key,
+                                        keepalive=self.keepalive, cleanStart=True)
         except Exception as exception:
             Log(logging.WARN).log("Interface", "state", lambda: "[mqtt] connection error [{}]:\n".format(exception), exception)
         else:
@@ -324,7 +345,15 @@ class Log:
             logging_handler.setFormatter(logging.Formatter(LOG_FORMAT))
             logging.getLogger().addHandler(logging_handler)
             if verbose:
-                log.PythonLoggingObserver(loggerName=logging.getLogger().name).start()
+                from twisted.logger import (
+                    Logger, LogLevel, globalLogBeginner, textFileLogObserver,
+                    FilteringLogObserver, LogLevelFilterPredicate, LimitedHistoryLogObserver)
+                twisted_log_fitler = LogLevelFilterPredicate(defaultLogLevel=LogLevel.warn)
+                twisted_log_fitler.setLogLevelForNamespace(namespace="stdout", level=LogLevel.critical)
+                twisted_log_fitler.setLogLevelForNamespace(namespace="twisted", level=LogLevel.warn)
+                twisted_log_fitler.setLogLevelForNamespace(namespace="mqtt", level=LogLevel.warn)
+                globalLogBeginner.beginLoggingTo([FilteringLogObserver(observer=textFileLogObserver(sys.stdout),
+                                                                       predicates=[twisted_log_fitler])], redirectStandardIO=False)
         logging.getLogger().setLevel(logging.ERROR if quiet else (logging.DEBUG if verbose else logging.INFO))
 
     def start(self):

@@ -1,9 +1,11 @@
 host: 0.0.0.0
 port: 8091
-#publish_host: 37.187.106.16
-#publish_port: 1883
-#publish_topic: production/asystem/anode/datum/1
-#publish_seconds: 3613
+publish_host: 52.63.86.162
+publish_port: 8093
+publish_access_key: $MQTT_ACCESS_KEY
+publish_secret_key: $MQTT_SECRET_KEY
+publish_topic: asystem/anode/datum
+publish_seconds: 4
 save_on_exit: True
 save_seconds: 86400
 plugin:
@@ -16,7 +18,7 @@ plugin:
       repeat_seconds: 101
       repeat_partition: True
       publish_ticks: -1
-      publish_upstream: False
+      publish_upstream: True
     davis:
       poll_seconds: -1
       buffer_ticks: 30
@@ -26,7 +28,7 @@ plugin:
       repeat_seconds: 103
       repeat_partition: True
       publish_ticks: -1
-      publish_upstream: False
+      publish_upstream: True
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
@@ -36,7 +38,7 @@ plugin:
       repeat_seconds: 107
       repeat_partition: True
       publish_ticks: -1
-      publish_upstream: False
+      publish_upstream: True
     wunderground:
       poll_seconds: 300
       buffer_ticks: 5
@@ -46,4 +48,14 @@ plugin:
       repeat_seconds: 111
       repeat_partition: True
       publish_ticks: -1
-      publish_upstream: False
+      publish_upstream: True
+    speedtest:
+      poll_seconds: -1
+      buffer_ticks: 30
+      history_partitions: 25
+      history_ticks: 1000000
+      history_partition_seconds: 86400
+      repeat_seconds: 113
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
