@@ -333,7 +333,7 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>python-install</id>
+                        <id>python-deploy</id>
                         <phase>deploy</phase>
                         <configuration>
                             <target unless="${maven.install-python.skip}">

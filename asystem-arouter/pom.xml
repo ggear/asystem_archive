@@ -81,7 +81,7 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>flume-install</id>
+                        <id>flume-deploy</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>run</goal>
