@@ -334,7 +334,7 @@
                     </execution>
                     <execution>
                         <id>python-install</id>
-                        <phase>install</phase>
+                        <phase>deploy</phase>
                         <configuration>
                             <target unless="${maven.install-python.skip}">
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">

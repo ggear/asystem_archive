@@ -15,6 +15,7 @@
 
     <properties>
         <asystem-model.version>1000</asystem-model.version>
+        <maven.install-flume.skip>true</maven.install-flume.skip>
         <maven.install-python.skip>true</maven.install-python.skip>
     </properties>
 
@@ -50,6 +51,7 @@
                 <maven.system-test.skip>true</maven.system-test.skip>
                 <maven.package.skip>true</maven.package.skip>
                 <maven.install-python.skip>true</maven.install-python.skip>
+                <maven.install-flume.skip>true</maven.install-flume.skip>
             </properties>
         </profile>
         <profile>
@@ -59,6 +61,7 @@
                 <maven.system-test.skip>false</maven.system-test.skip>
                 <maven.package.skip>true</maven.package.skip>
                 <maven.install-python.skip>true</maven.install-python.skip>
+                <maven.install-flume.skip>true</maven.install-flume.skip>
             </properties>
         </profile>
         <profile>
@@ -68,6 +71,7 @@
                 <maven.system-test.skip>true</maven.system-test.skip>
                 <maven.package.skip>false</maven.package.skip>
                 <maven.install-python.skip>true</maven.install-python.skip>
+                <maven.install-flume.skip>true</maven.install-flume.skip>
             </properties>
         </profile>
     </profiles>
