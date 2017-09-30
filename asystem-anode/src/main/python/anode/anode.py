@@ -31,6 +31,7 @@ from twisted.web.server import Site
 from twisted.web.static import File
 
 from plugin import DATUM_QUEUE_LAST
+from plugin import ID_HEX
 from plugin import Plugin
 
 APP_CONF = dict(
@@ -42,11 +43,11 @@ APP_CONF_NAME_ESCAPED = APP_CONF["APP_NAME_ESCAPED"]
 APP_CONF_VERSION = APP_CONF["APP_VERSION"]
 APP_CONF_VERSION_NUMERIC = int(APP_CONF["APP_VERSION_NUMERIC"])
 
-MODEL_CONF = dict(
+APP_MODEL_CONF = dict(
     line.strip().split("=") for line in
     open(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + "/avro/model.properties")
     if not line.startswith("#") and not line.startswith("\n"))
-APP_CONF_MODEL_VERSION = MODEL_CONF["MODEL_VERSION"]
+APP_MODEL_CONF_VERSION = APP_MODEL_CONF["MODEL_VERSION"]
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
@@ -68,21 +69,23 @@ class ANode:
         self.publish_mqtt = None
         self.publish_upstream_plugin = False
         self.publish_upstream = "publish_host" in self.config and len(self.config["publish_host"]) > 0 and \
-                                "publish_port" in self.config and self.config["publish_port"] > 0 and \
-                                "publish_topic" in self.config and len(self.config["publish_topic"]) > 0
+                                "publish_port" in self.config and self.config["publish_port"] > 0
         for plugin_name in self.config["plugin"]:
             self.publish_upstream_plugin = self.publish_upstream_plugin or \
                                            "publish_upstream" in self.config["plugin"][plugin_name] and \
                                            self.config["plugin"][plugin_name]["publish_upstream"]
         if self.publish_upstream and self.publish_upstream_plugin:
+            access_key = (os.environ[self.config["publish_access_key"][1:]] if self.config["publish_access_key"].startswith("$")
+                          else self.config["publish_access_key"]) if "publish_access_key" in self.config else None
+            secret_key = (os.environ[self.config["publish_secret_key"][1:]] if self.config["publish_secret_key"].startswith("$")
+                          else self.config["publish_secret_key"]) if "publish_secret_key" in self.config else None
             self.publish_mqtt = MqttPublishService(
                 clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
-                MQTTFactory(profile=MQTTFactory.PUBLISHER), self.config["publish_topic"] + "/" + APP_CONF_MODEL_VERSION,
+                MQTTFactory(profile=MQTTFactory.PUBLISHER),
+                "asystem/" + APP_CONF_VERSION + "/anode/" + ID_HEX + "/datum/" + APP_MODEL_CONF_VERSION,
                 (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
-                KEEPALIVE_DEFAULT_SECONDS, self.config["publish_access_key"] if "publish_access_key" in self.config else None,
-                self.config["publish_secret_key"] if "publish_secret_key" in self.config else None)
+                KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
             self.publish_mqtt.startService()
-
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             save_loopingcall = LoopingCall(self.store_state)
             save_loopingcall.clock = self.core_reactor

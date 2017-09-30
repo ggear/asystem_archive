@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
@@ -28,9 +30,13 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class DatumFactory {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DatumFactory.class);
 
   private static final Map<String, String> ESCAPE_SWAPS =
     new Builder<String, String>()
@@ -45,6 +51,19 @@ public class DatumFactory {
       .put("_D", "-")
       .put("_P", "%")
       .build();
+
+  public static final String CONF_MODEL = "/avro/model.properties";
+
+  private static final Properties MODEL_PROPERTIES = Optional.of(new Properties()).map(properties -> {
+    try {
+      properties.load(Driver.class.getResourceAsStream(CONF_MODEL));
+    } catch (Exception exception) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Failed to load model properties from [" + CONF_MODEL + "]", exception);
+      }
+    }
+    return properties;
+  }).orElseGet(Properties::new);
 
   private transient ThreadLocal<BinaryEncoder> datumEncoder;
 
@@ -94,8 +113,7 @@ public class DatumFactory {
   }
 
   protected static String decode(int encoded, String raw, int base, int... dividers) {
-    String key = new StringBuilder().append(encoded).append("_").append(raw).append("_").
-      append(base).append("_").append(Arrays.toString(dividers)).toString();
+    String key = String.valueOf(encoded) + "_" + raw + "_" + base + "_" + Arrays.toString(dividers);
     String decoded = ENCODING_CACHE.get(key);
     if (decoded == null) {
       try {
@@ -172,6 +190,10 @@ public class DatumFactory {
       throw new RuntimeException("Could not serialise record", e);
     }
     return outputStream.toByteArray();
+  }
+
+  public static String getModelProperty(String key) {
+    return (String) MODEL_PROPERTIES.get(key);
   }
 
   private static Map<Object, String> ENCODING_CACHE = Collections.synchronizedMap(new LinkedHashMap<Object, String>() {

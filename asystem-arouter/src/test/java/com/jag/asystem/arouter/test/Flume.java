@@ -55,9 +55,13 @@ public class Flume implements TestConstants {
 
   private static final String FLUME_CONFIG = "flume/flume-conf.properties";
 
+  private static final String FLUME_AGENT = "arouter";
+
   private static final String MODEL_1_SINK = "s3_model_1";
   private static final String MODEL_1_SOURCE = "mqtt_model_1";
-  private static final String MODEL_1_TOPIC = "asystem/anode/datum/1";
+
+  private static final String MQTT_TOPIC = "asystem/" + Driver.getApplicationProperty("APP_VERSION") +
+    "/anode/3C15C2C0BC90/datum/" + DatumFactory.getModelProperty("MODEL_VERSION");
 
   private static final int DATUMS_COUNT = 50;
 
@@ -65,7 +69,6 @@ public class Flume implements TestConstants {
 
   private final Map<String, String> FLUME_ENV =
     new Builder<String, String>()
-      .put("FLUME_AGENT_NAME", "arouter")
       .put("MQTT_BROKER_HOST", "localhost")
       .put("MQTT_BROKER_PORT", "2883")
       .put("MQTT_BACK_OFF", "100")
@@ -77,6 +80,7 @@ public class Flume implements TestConstants {
       .put("FLUME_MQTT_DATA_DIRS", ABS_DIR_FLUME + "/flume/file_channel/data")
       .put("S3_URL", dfsServer.getPathUri(HDFS_DIR))
       .put("S3_APP", "asystem/" + Driver.getApplicationProperty("APP_VERSION"))
+      .put("APP_VERSION", Driver.getApplicationProperty("APP_VERSION"))
       .build();
 
   @Before
@@ -92,7 +96,7 @@ public class Flume implements TestConstants {
 
   @Test
   public void testPipeline() throws Exception {
-    assertTrue(flumeServer.crankPipeline(FLUME_ENV, FLUME_CONFIG, emptyMap(), emptyMap(), FLUME_ENV.get("FLUME_AGENT_NAME"),
+    assertTrue(flumeServer.crankPipeline(FLUME_ENV, FLUME_CONFIG, emptyMap(), emptyMap(), FLUME_AGENT,
       MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(), HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     Set<String> partitions = new HashSet<>();
     for (Path path : dfsServer.listFilesDfs(HDFS_DIR)) {
@@ -106,7 +110,8 @@ public class Flume implements TestConstants {
             "PARTITIONED BY (ingest_id STRING, ingest_timestamp BIGINT) " +
             "STORED AS AVRO " +
             "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/ingest_id")) + "' " +
-            "TBLPROPERTIES ('avro.schema.url'='" + Flume.class.getResource("/avro/1000/datum.avsc").toString() + "') "
+            "TBLPROPERTIES ('avro.schema.url'='" + Flume.class.getResource("/avro/" +
+            DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') "
         );
         hiveServer.execute("MSCK REPAIR TABLE datum_" + (partitions.size() - 1));
       }
@@ -130,7 +135,7 @@ public class Flume implements TestConstants {
 
   private void mqttClientSendMessage(Integer iteration) {
     try {
-      client.publish(MODEL_1_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
+      client.publish(MQTT_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
     } catch (MqttException e) {
       throw new RuntimeException("Could not publish message", e);
     }

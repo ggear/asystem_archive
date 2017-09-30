@@ -35,11 +35,11 @@ class Wunderground(Plugin):
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
-    def push_forecast(self, text_content):
+    def push_forecast(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
         # noinspection PyBroadException
         try:
-            dict_content = json.loads(text_content, parse_float=Decimal)
+            dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["forecast"]["txt_forecast"]["date"]).timetuple()))
             day_index_start = 0
@@ -289,5 +289,5 @@ class Wunderground(Plugin):
             self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
-                                         .format(self.name, exception, text_content), exception)
+                                         .format(self.name, exception, content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_forecast)
