@@ -81,8 +81,11 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>python-install</id>
-                        <phase>install</phase>
+                        <id>flume-install</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                         <configuration>
                             <target unless="${maven.install-flume.skip}">
                                 <exec executable="/usr/bin/sudo" dir="${project.build.directory}/assembly/${project.name}-${project.version}/bin" failonerror="true">
