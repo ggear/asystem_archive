@@ -76,6 +76,23 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>python-install</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <target unless="${maven.install-flume.skip}">
+                                <exec executable="/usr/bin/sudo" dir="${project.build.directory}/assembly/${project.name}-${project.version}/bin" failonerror="true">
+                                    <arg value="cldr-deploy.sh" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
