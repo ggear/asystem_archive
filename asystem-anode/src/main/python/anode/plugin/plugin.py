@@ -754,7 +754,8 @@ class Plugin(object):
         datums_plot_colour = "white"
         datums_plot_colour_foreground = "0.5"
         datums_plot_colour_background = "black"
-        datums_plot_colour_lines = ["yellow", "lime", "red", "orange", "magenta", "lightsteelblue", "cyan", "bisque", "blue"]
+        datums_plot_colour_lines = \
+            ["yellow", "lime", "red", "orange", "dodgerblue", "coral", "magenta", "aliceblue", "cyan", "darkgreen", "maroon"]
         datums_plot_title = datums_df.title if hasattr(datums_df, "title") else None
         datums_plot_buffer = StringIO.StringIO()
         datums_df = Plugin.datums_df_reindex(datums_df)

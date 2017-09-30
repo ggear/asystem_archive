@@ -839,7 +839,7 @@ class ANodeTest(TestCase):
         iterations_repeat = 15
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(1312, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1474, anode, "/rest/?scope=history", True)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,
@@ -1241,7 +1241,7 @@ class MockRequest:
 class MockHttpResponse:
     def __init__(self, url):
         self.url = url
-        self.code = 200 if url in HTTP_GETS else 404
+        self.code = 200 if url.split("?", 1)[0] in HTTP_GETS else 404
 
     def addCallbacks(self, callback, errback=None):
         callback(self)
@@ -1251,7 +1251,8 @@ class MockHttpResponse:
 class MockHttpResponseContent:
     def __init__(self, response):
         self.response = response
-        self.content = ANodeTest.template_populate(HTTP_GETS[response.url]) if response.code == 200 else HTTP_GETS["http_404"]
+        self.content = ANodeTest.template_populate(
+            HTTP_GETS[response.url.split("?", 1)[0]]) if response.code == 200 else HTTP_GETS["http_404"]
 
     def addCallbacks(self, callback, errback=None):
         callback(self.content)
@@ -1322,11 +1323,13 @@ HTTP_GETS = {
         u"""<html><body>HTTP 404</body></html>""",
     "https://api.netatmo.com/oauth2/token":
         ilio.read(DIR_ROOT + "anode/test/template/netatmo_token_template.json"),
-    "https://api.netatmo.com/api/devicelist":
-        ilio.read(DIR_ROOT + "anode/test/template/netatmo_weather_template.json"),
+    "https://api.netatmo.com/api/getstationsdata":
+        ilio.read(DIR_ROOT + "anode/test/template/netatmo_station_template.json"),
+    "https://api.netatmo.com/api/gethomecoachsdata":
+        ilio.read(DIR_ROOT + "anode/test/template/netatmo_homecoach_template.json"),
     "http://10.0.0.151/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
         ilio.read(DIR_ROOT + "anode/test/template/fronius_flow_template.json"),
-    "http://10.0.0.151/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System":
+    "http://10.0.0.151/solar_api/v1/GetMeterRealtimeData.cgi":
         ilio.read(DIR_ROOT + "anode/test/template/fronius_meter_template.json"),
     "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
         ilio.read(DIR_ROOT + "anode/test/template/wunderground_10dayforecast_template.json")

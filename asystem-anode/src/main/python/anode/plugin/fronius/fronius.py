@@ -55,10 +55,10 @@ class Fronius(Plugin):
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
-    def push_flow(self, text_content):
+    def push_flow(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
-            dict_content = json.loads(text_content, parse_float=Decimal)
+            dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             self.datum_push(
@@ -218,10 +218,10 @@ class Fronius(Plugin):
                                          .format(self.name, exception), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_flow)
 
-    def push_meter(self, text_content):
+    def push_meter(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
-            dict_content = json.loads(text_content, parse_float=Decimal)
+            dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             data_timestamp = int(calendar.timegm(dateutil.parser.parse(dict_content["Head"]["Timestamp"]).timetuple()))
             energy_export_grid_alltime = self.datum_value(dict_content, ["Body", "Data", "0", "EnergyReal_WAC_Minus_Absolute"], factor=10)
@@ -516,7 +516,7 @@ class Fronius(Plugin):
             self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
-                                         .format(self.name, exception, text_content), exception)
+                                         .format(self.name, exception, content), exception)
         log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_meter)
 
     def __init__(self, parent, name, config, reactor):

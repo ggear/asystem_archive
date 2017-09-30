@@ -1,9 +1,9 @@
 package com.jag.asystem.amodel;
 
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 
 import com.cloudera.framework.testing.TestConstants;
-import com.jag.asystem.amodel.avro.DatumBinUnit;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
 import com.jag.asystem.amodel.avro.DatumMetric;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -17,6 +17,11 @@ public class TestDatumFactory implements TestConstants {
   private static final Logger LOG = LoggerFactory.getLogger(TestDatumFactory.class);
 
   private static final DatumFactory DATUM_FACTORY = new DatumFactory();
+
+  @Test
+  public void testModelProperties() {
+    assertNotNull(DatumFactory.getModelProperty("MODEL_VERSION"));
+  }
 
   @Test
   public void testDecode() {
@@ -99,7 +104,7 @@ public class TestDatumFactory implements TestConstants {
     testDatum("indexed-50", DatumFactory.getDatumIndexed(50),
       "getDataUnit", DatumDataUnit._PC2_PB0, "getDataMetric", DatumMetric.energy__production_Dforecast_Da__inverter);
     testDatum("indexed-2147483647", DatumFactory.getDatumIndexed(21474836),
-      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.anode__netatmo__up_Dtime);
+      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.noise__indoor__edwin);
     testDatum("random", DatumFactory.getDatumRandom());
   }
 

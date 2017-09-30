@@ -23,7 +23,7 @@ class Netatmo(Plugin):
                                                                         'password': self.netatmo_password,
                                                                         'client_id': self.netatmo_client_id,
                                                                         'client_secret': self.netatmo_client_secret,
-                                                                        'scope': 'read_station'}, self.cache_tokens)
+                                                                        'scope': 'read_station read_homecoach'}, self.cache_tokens)
             elif self.token_expiry <= self.get_time():
                 self.http_post("https://api.netatmo.com/oauth2/token", {'grant_type': 'refresh_token',
                                                                         'refresh_token': self.token_refresh,
@@ -31,7 +31,17 @@ class Netatmo(Plugin):
                                                                         'client_secret': os.environ['NETATMO_CLIENT_SECRET']},
                                self.cache_tokens)
             else:
-                self.http_post("https://api.netatmo.com/api/devicelist", {'access_token': self.token_access}, self.push_devicelist)
+                self.http_get("https://api.netatmo.com/api/getstationsdata?access_token=" + self.token_access, self.push_getdata)
+                self.http_get("https://api.netatmo.com/api/gethomecoachsdata?access_token=" + self.token_access, self.push_getdata)
+
+    # noinspection PyShadowingNames
+    def http_get(self, url, callback):
+        connection_pool = self.config["pool"] if "pool" in self.config else None
+        treq.get(url, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
+            lambda response, url=url, callback=callback: self.http_response(response, url, callback),
+            errback=lambda error, url=url: anode.Log(logging.ERROR).log("Plugin", "error",
+                                                                        lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(
+                                                                            self.name, url, error.getErrorMessage())))
 
     # noinspection PyShadowingNames
     def http_post(self, url, data, callback):
@@ -49,9 +59,9 @@ class Netatmo(Plugin):
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
-    def cache_tokens(self, text_content):
+    def cache_tokens(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
-        dict_content = json.loads(text_content)
+        dict_content = json.loads(content)
         self.token_access = dict_content["access_token"]
         self.token_refresh = dict_content["refresh_token"]
         self.token_expiry = self.get_time() + dict_content["expires_in"] - 10 * self.config["poll_seconds"]
@@ -61,14 +71,13 @@ class Netatmo(Plugin):
         self.poll()
 
     # noinspection PyBroadException
-    def push_devicelist(self, text_content):
+    def push_getdata(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
-        # noinspection PyBroadException
         try:
-            dict_content = json.loads(text_content, parse_float=Decimal)
+            dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             for device in dict_content["body"]["devices"]:
-                module_name = "__indoor__" + device["module_name"].lower().encode("UTF-8")
+                module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" else "name"].lower().encode("UTF-8")
                 data_timestamp = device["dashboard_data"]["time_utc"]
                 self.datum_push(
                     "temperature" + module_name,
@@ -79,29 +88,9 @@ class Netatmo(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     self.config["poll_seconds"],
-                    "second"
-                )
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "high",
-                    self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    device["dashboard_data"]["date_max_temp"],
-                    bin_timestamp,
-                    1,
-                    "day"
-                )
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "low",
-                    self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    device["dashboard_data"]["date_min_temp"],
-                    bin_timestamp,
-                    1,
-                    "day"
+                    "second",
+                    data_derived_max=True,
+                    data_derived_min=True
                 )
                 self.datum_push(
                     "humidity" + module_name,
@@ -174,64 +163,12 @@ class Netatmo(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-            for device in dict_content["body"]["modules"]:
-                module_name = (("__indoor__" if device["type"] == "NAModule4" else "__outdoor__") + device["module_name"].lower()).encode(
-                    "UTF-8")
-                data_timestamp = device["dashboard_data"]["time_utc"]
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second"
-                )
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "high",
-                    self.datum_value(device, ["dashboard_data", "max_temp"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    device["dashboard_data"]["date_max_temp"],
-                    bin_timestamp,
-                    1,
-                    "day"
-                )
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "low",
-                    self.datum_value(device, ["dashboard_data", "min_temp"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    device["dashboard_data"]["date_min_temp"],
-                    bin_timestamp,
-                    1,
-                    "day"
-                )
-                self.datum_push(
-                    "humidity" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Humidity"]),
-                    "_P25",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_bound_upper=100,
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                if device["type"] == "NAModule4":
+                if device["type"] == "NHC":
                     self.datum_push(
-                        "carbon_Ddioxide" + module_name,
+                        "health_Dindex" + module_name,
                         "current", "point",
-                        self.datum_value(device, ["dashboard_data", "CO2"]),
-                        "ppm",
+                        self.datum_value(device, ["dashboard_data", "health_idx"]),
+                        "scalar",
                         1,
                         data_timestamp,
                         bin_timestamp,
@@ -241,11 +178,58 @@ class Netatmo(Plugin):
                         data_derived_max=True,
                         data_derived_min=True
                     )
+                for device_sub in device["modules"]:
+                    module_name = (("__indoor__" if device_sub["type"] == "NAModule4" else "__outdoor__") +
+                                   device_sub["module_name"].lower()).encode("UTF-8")
+                    data_timestamp = device_sub["dashboard_data"]["time_utc"]
+                    self.datum_push(
+                        "temperature" + module_name,
+                        "current", "point",
+                        self.datum_value(device_sub, ["dashboard_data", "Temperature"], factor=10),
+                        "_PC2_PB0C",
+                        10,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    self.datum_push(
+                        "humidity" + module_name,
+                        "current", "point",
+                        self.datum_value(device_sub, ["dashboard_data", "Humidity"]),
+                        "_P25",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_bound_upper=100,
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    if device_sub["type"] == "NAModule4":
+                        self.datum_push(
+                            "carbon_Ddioxide" + module_name,
+                            "current", "point",
+                            self.datum_value(device_sub, ["dashboard_data", "CO2"]),
+                            "ppm",
+                            1,
+                            data_timestamp,
+                            bin_timestamp,
+                            self.config["poll_seconds"],
+                            "second",
+                            data_bound_lower=0,
+                            data_derived_max=True,
+                            data_derived_min=True
+                        )
             self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
-                                         .format(self.name, exception, text_content), exception)
-        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_devicelist)
+                                         .format(self.name, exception, content), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.push_getdata)
 
     def __init__(self, parent, name, config, reactor):
         super(Netatmo, self).__init__(parent, name, config, reactor)
@@ -261,5 +245,5 @@ class Netatmo(Plugin):
         except KeyError as key_error:
             self.disabled = True
             anode.Log(logging.ERROR).log("Plugin", "error",
-                                         lambda: "[{}] error getting Netatmo connection key [{}] from environment, disabling plugin".format(
-                                             self.name, key_error))
+                                         lambda: "[{}] error getting Netatmo connection key [{}] from environment, disabling plugin"
+                                         .format(self.name, key_error))
