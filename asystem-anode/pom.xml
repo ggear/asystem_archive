@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+    <!--
+    Run: mvn clean install antrun:run@python-run -PCMP
+    Deploy: mvn clean deploy -pl asystem-anode -PPKG -Dmaven.install-python.skip=false -U -am
+    -->
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-anode</artifactId>
@@ -19,6 +24,7 @@
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
+        <dir.runtime-clean.anode>${project.build.directory}/anode-runtime-clean</dir.runtime-clean.anode>
         <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</system.test.anode.opts>
         <system.test.anode.log>${project.build.directory}/anode-runtime/anode.log</system.test.anode.log>
     </properties>
@@ -321,10 +327,11 @@
                                 <copy todir="${dir.runtime.anode}">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
+                                <mkdir dir="${dir.runtime-clean.anode}" />
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="--verbose" />
                                     <arg value="-c${dir.source.python}/config/anode.yaml" />
-                                    <arg value="-d${dir.runtime.anode}/" />
+                                    <arg value="-d${dir.runtime-clean.anode}/" />
                                 </exec>
                             </target>
                         </configuration>

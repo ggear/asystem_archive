@@ -185,10 +185,8 @@ class MqttPublishService(ClientService):
         self.topic = topic
         self.keepalive = keepalive
         self.protocol = None
-        self.access_key = os.environ[access_key[1:]] \
-            if (access_key is not None and access_key.startswith("$") and access_key[1:] in os.environ) else access_key
-        self.secret_key = os.environ[secret_key[1:]] \
-            if (secret_key is not None and secret_key.startswith("$") and access_key[1:] in os.environ) else secret_key
+        self.access_key = access_key
+        self.secret_key = secret_key
         ClientService.__init__(self, endpoint, factory, retryPolicy=backoffPolicy(maxDelay=keepalive))
 
     def startService(self):
