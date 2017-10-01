@@ -14,8 +14,6 @@ export FLUME_AGENT_CONFIG=$(echo "$FLUME_AGENT_CONFIG" | \
 	sed -e "s|\$MQTT_SECRET_KEY|$MQTT_SECRET_KEY|g" | \
 	sed -e "s|\$MQTT_BROKER_HOST|$MQTT_BROKER_HOST|g" | \
 	sed -e "s|\$MQTT_BROKER_PORT|$MQTT_BROKER_PORT|g" | \
-	sed -e "s|\$MQTT_BACK_OFF|$MQTT_BACK_OFF|g" | \
-	sed -e "s|\$MQTT_MAX_BACK_OFF|$MQTT_MAX_BACK_OFF|g" | \
 	sed -e "s|\$MQTT_BATCHSIZE|$MQTT_BATCHSIZE|g" | \
 	sed -e "s|\$HDFS_BATCHSIZE|$HDFS_BATCHSIZE|g" | \
 	sed -e "s|\$AVRO_SCHEMA_URL|$AVRO_SCHEMA_URL|g" | \
