@@ -55,7 +55,7 @@ public class Flume implements TestConstants {
 
   private static final String FLUME_CONFIG = "flume/flume-conf.properties";
 
-  private static final String FLUME_AGENT = "arouter";
+  private static final String FLUME_AGENT = "agent";
 
   private static final String MODEL_1_SINK = "s3_model_1";
   private static final String MODEL_1_SOURCE = "mqtt_model_1";
