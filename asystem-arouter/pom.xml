@@ -45,6 +45,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.cloudera.framework.library.thirdparty</groupId>
+            <artifactId>cloudera-framework-library-thirdparty-mqtt</artifactId>
+            <version>${cloudera-framework.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
             <groupId>com.cloudera.framework</groupId>
             <artifactId>cloudera-framework-common</artifactId>
             <version>${cloudera-framework.version}</version>
