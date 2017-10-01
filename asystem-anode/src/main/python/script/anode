@@ -18,8 +18,10 @@ ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/bash.bashrc"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
 
-[ -f ${ANODE_ENV_FILE} ] && $(grep NETATMO ${ANODE_ENV_FILE})
-
+if [ -f ${ANODE_ENV_FILE} ]; then
+  $(grep MQTT ${ANODE_ENV_FILE})
+  $(grep NETATMO ${ANODE_ENV_FILE})
+fi
 export PYTHONUNBUFFERED=true
 
 log_head() {
