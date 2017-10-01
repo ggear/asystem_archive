@@ -71,8 +71,6 @@ public class Flume implements TestConstants {
     new Builder<String, String>()
       .put("MQTT_BROKER_HOST", "localhost")
       .put("MQTT_BROKER_PORT", "2883")
-      .put("MQTT_BACK_OFF", "100")
-      .put("MQTT_MAX_BACK_OFF", "100")
       .put("MQTT_BATCHSIZE", "10")
       .put("HDFS_BATCHSIZE", "1")
       .put("AVRO_SCHEMA_URL", Flume.class.getResource("/avro").toString())
@@ -97,7 +95,7 @@ public class Flume implements TestConstants {
   @Test
   public void testPipeline() throws Exception {
     assertTrue(flumeServer.crankPipeline(FLUME_ENV, FLUME_CONFIG, emptyMap(), emptyMap(), FLUME_AGENT,
-      MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(), HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
+      MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(), HDFS_DIR, DATUMS_COUNT+1, this::mqttClientSendMessage) > 0);
     Set<String> partitions = new HashSet<>();
     for (Path path : dfsServer.listFilesDfs(HDFS_DIR)) {
       String pathContents = dfsServer.readFileAsString(path);
