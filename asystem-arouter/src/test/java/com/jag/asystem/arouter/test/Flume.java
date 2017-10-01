@@ -74,6 +74,7 @@ public class Flume implements TestConstants {
       .put("MQTT_BATCHSIZE", "10")
       .put("HDFS_BATCHSIZE", "1")
       .put("AVRO_SCHEMA_URL", Flume.class.getResource("/avro").toString())
+      .put("FLUME_MQTT_JOURNAL_DIR", ABS_DIR_FLUME + "/store/journal")
       .put("FLUME_MQTT_CHECKPOINT_DIR", ABS_DIR_FLUME + "/store/checkpoint")
       .put("FLUME_MQTT_DATA_DIRS", ABS_DIR_FLUME + "/store/data")
       .put("S3_URL", dfsServer.getPathUri(HDFS_DIR))
@@ -95,7 +96,7 @@ public class Flume implements TestConstants {
   @Test
   public void testPipeline() throws Exception {
     assertTrue(flumeServer.crankPipeline(FLUME_ENV, FLUME_CONFIG, emptyMap(), emptyMap(), FLUME_AGENT,
-      MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(), HDFS_DIR, DATUMS_COUNT+1, this::mqttClientSendMessage) > 0);
+      MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(), HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     Set<String> partitions = new HashSet<>();
     for (Path path : dfsServer.listFilesDfs(HDFS_DIR)) {
       String pathContents = dfsServer.readFileAsString(path);
@@ -131,12 +132,13 @@ public class Flume implements TestConstants {
     assertEquals(DATUMS_COUNT, hiveServer.execute(query.toString()).size());
   }
 
-  private void mqttClientSendMessage(Integer iteration) {
+  private int mqttClientSendMessage(Integer iteration) {
     try {
       client.publish(MQTT_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
     } catch (MqttException e) {
       throw new RuntimeException("Could not publish message", e);
     }
+    return 1;
   }
 
 }
