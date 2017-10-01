@@ -10,6 +10,8 @@ export FLUME_AGENT_CONFIG=$(echo "$FLUME_AGENT_CONFIG" | \
 	sed -e "s|\$APP_VERSION|$APP_VERSION|g" | \
 	sed -e "s|\$S3_URL|$S3_URL|g" | \
 	sed -e "s|\$S3_APP|$S3_APP|g" | \
+	sed -e "s|\$MQTT_ACCESS_KEY|$MQTT_ACCESS_KEY|g" | \
+	sed -e "s|\$MQTT_SECRET_KEY|$MQTT_SECRET_KEY|g" | \
 	sed -e "s|\$MQTT_BROKER_HOST|$MQTT_BROKER_HOST|g" | \
 	sed -e "s|\$MQTT_BROKER_PORT|$MQTT_BROKER_PORT|g" | \
 	sed -e "s|\$MQTT_BACK_OFF|$MQTT_BACK_OFF|g" | \
