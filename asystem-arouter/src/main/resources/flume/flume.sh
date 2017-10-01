@@ -6,15 +6,6 @@ for env in $ROOT_DIR/cfg/*.env; do if [ -f "$env" ]; then . "$env"; fi; done
 
 set -x -e
 
-echo ""
-echo ""
-echo ""
-echo $PARCEL_NAMESPACE
-echo ""
-echo ""
-echo ""
-echo ""
-
 export FLUME_AGENT_CONFIG=$(echo "$FLUME_AGENT_CONFIG" | \
 	sed -e "s|\$APP_VERSION|$APP_VERSION|g" | \
 	sed -e "s|\$S3_URL|$S3_URL|g" | \

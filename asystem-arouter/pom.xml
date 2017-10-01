@@ -93,9 +93,8 @@
                         </goals>
                         <configuration>
                             <target unless="${maven.install-flume.skip}">
-                                <exec executable="/usr/bin/sudo" dir="${project.build.directory}" failonerror="true">
-                                    <arg value="${project.build.directory}/assembly/${project.artifactId}-${project.version}/bin/cldr-deploy.sh" />
-                                </exec>
+                                <exec executable="${project.build.directory}/assembly/${project.artifactId}-${project.version}/bin/cldr-deploy.sh"
+                                      dir="${project.build.directory}" failonerror="true" />
                             </target>
                         </configuration>
                     </execution>
