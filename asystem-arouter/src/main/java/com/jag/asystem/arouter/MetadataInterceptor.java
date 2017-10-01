@@ -41,8 +41,8 @@ public class MetadataInterceptor implements Interceptor {
     String valuePrevious = event.getHeaders().get(key);
     if (force || valuePrevious == null) {
       event.getHeaders().put(key, value);
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("MQTT adding event header [" + key + "] with value [" + value + "]"
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("MQTT adding event header [" + key + "] with value [" + value + "]"
           + (valuePrevious == null ? "" : " overwriting previous value [" + valuePrevious + "]"));
       }
     }
