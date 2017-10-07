@@ -10,12 +10,12 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-arouter</artifactId>
     <packaging>jar</packaging>
-    <version>10.000.0000-SNAPSHOT</version>
+    <version>10.000.0000</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>10.000.0000-SNAPSHOT</version>
+        <version>10.000.0000</version>
     </parent>
 
     <properties>
@@ -98,8 +98,7 @@
                         </goals>
                         <configuration>
                             <target unless="${maven.install-flume.skip}">
-                                <exec executable="${project.build.directory}/assembly/${project.artifactId}-${project.version}/bin/cldr-deploy.sh"
-                                      dir="${project.build.directory}" failonerror="true" />
+                                <exec executable="${project.build.directory}/assembly/${project.artifactId}-${project.version}/bin/cldr-deploy.sh" dir="${project.build.directory}" failonerror="true" />
                             </target>
                         </configuration>
                     </execution>
