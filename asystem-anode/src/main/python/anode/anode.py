@@ -82,7 +82,7 @@ class ANode:
             self.publish_mqtt = MqttPublishService(
                 clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
                 MQTTFactory(profile=MQTTFactory.PUBLISHER),
-                "asystem/" + APP_CONF_VERSION + "/anode/" + ID_HEX + "/datum/" + APP_MODEL_CONF_VERSION,
+                "asystem/" + APP_CONF_VERSION + "/anode/" + ID_HEX + "/amodel/" + APP_MODEL_CONF_VERSION,
                 (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
                 KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
             self.publish_mqtt.startService()

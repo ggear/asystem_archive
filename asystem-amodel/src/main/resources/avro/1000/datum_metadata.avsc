@@ -3,7 +3,7 @@
     "namespace": "com.jag.asystem.amodel.avro",
     "name": "DatumMetadata",
     "type": "record",
-    "version": 1,
+    "version": 1000,
     "fields": [
       {
         "name": "ingest_id",

@@ -2,9 +2,14 @@ package com.jag.asystem.arouter;
 
 import static org.apache.flume.sink.hdfs.AvroEventSerializer.AVRO_SCHEMA_URL_HEADER;
 
+import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import com.cloudera.framework.common.flume.MqttSource;
+import com.google.common.base.Joiner;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.interceptor.Interceptor;
@@ -20,9 +25,13 @@ public class MetadataInterceptor implements Interceptor {
   public static final String HEADER_INGEST_ID = "iid";
   public static final String HEADER_INGEST_PARTITION = "ipt";
   public static final String HEADER_INGEST_TIMESTAMP = "its";
+  public static final String HEADER_ANODE_ID = "aid";
+  public static final String HEADER_AMODEL_VERSION = "amv";
+  public static final String HEADER_ASYSTEM_VERSION = "asv";
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataInterceptor.class);
 
+  private static final String AVRO_SCHEMA_FILE = "datum.avsc";
   private static final String INSTANCE_ID = "flume-" + UUID.randomUUID().toString();
 
   private final int batchSize;
@@ -30,6 +39,7 @@ public class MetadataInterceptor implements Interceptor {
 
   private int batchCount;
   private long batchTimestamp;
+
 
   private MetadataInterceptor(int batchSize, String avroSchemaUrl) {
     this.batchSize = batchSize;
@@ -53,8 +63,33 @@ public class MetadataInterceptor implements Interceptor {
   public void initialize() {
   }
 
+  public static boolean exists(String URLName){
+    try {
+      HttpURLConnection.setFollowRedirects(false);
+      // note : you may also need
+      //        HttpURLConnection.setInstanceFollowRedirects(false)
+      HttpURLConnection con =
+        (HttpURLConnection) new URL(URLName).openConnection();
+      con.setRequestMethod("HEAD");
+      return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
   @Override
   public Event intercept(Event event) {
+    String[] topicSegments;
+    String topic = event.getHeaders().get(MqttSource.HEADER_TOPIC);
+    if (topic == null || (topicSegments = topic.split("/")).length != 6) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("MQTT event missing valid header attributes [" +
+          Joiner.on(",").withKeyValueSeparator("=").join(event.getHeaders()) + "]");
+      }
+      return null;
+    }
     if (batchCount == 0 || batchCount >= batchSize) {
       batchTimestamp = System.currentTimeMillis();
     }
@@ -64,7 +99,10 @@ public class MetadataInterceptor implements Interceptor {
     putHeader(event, HEADER_INGEST_ID, INSTANCE_ID, false);
     putHeader(event, HEADER_INGEST_PARTITION, "" + batchTimestamp % 10, false);
     putHeader(event, HEADER_INGEST_TIMESTAMP, "" + batchTimestamp, false);
-    putHeader(event, AVRO_SCHEMA_URL_HEADER, avroSchemaUrl, false);
+    putHeader(event, AVRO_SCHEMA_URL_HEADER, avroSchemaUrl + "/" + topicSegments[5] + "/" + AVRO_SCHEMA_FILE, false);
+    putHeader(event, HEADER_ASYSTEM_VERSION, topicSegments[1], false);
+    putHeader(event, HEADER_ANODE_ID, topicSegments[3], false);
+    putHeader(event, HEADER_AMODEL_VERSION, topicSegments[5], false);
     return event;
   }
 

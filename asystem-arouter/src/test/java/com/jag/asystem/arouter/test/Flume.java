@@ -61,7 +61,7 @@ public class Flume implements TestConstants {
   private static final String MODEL_1_SOURCE = "mqtt_model_1";
 
   private static final String MQTT_TOPIC = "asystem/" + Driver.getApplicationProperty("APP_VERSION") +
-    "/anode/3C15C2C0BC90/datum/" + DatumFactory.getModelProperty("MODEL_VERSION");
+    "/anode/3C15C2C0BC90/amodel/" + DatumFactory.getModelProperty("MODEL_VERSION");
 
   private static final int DATUMS_COUNT = 50;
 
@@ -78,7 +78,6 @@ public class Flume implements TestConstants {
       .put("FLUME_MQTT_CHECKPOINT_DIR", ABS_DIR_FLUME + "/store/checkpoint")
       .put("FLUME_MQTT_DATA_DIRS", ABS_DIR_FLUME + "/store/data")
       .put("S3_URL", dfsServer.getPathUri(HDFS_DIR))
-      .put("S3_APP", "asystem/" + Driver.getApplicationProperty("APP_VERSION"))
       .put("APP_VERSION", Driver.getApplicationProperty("APP_VERSION"))
       .build();
 
@@ -132,6 +131,7 @@ public class Flume implements TestConstants {
     assertEquals(DATUMS_COUNT, hiveServer.execute(query.toString()).size());
   }
 
+  @SuppressWarnings("SameReturnValue")
   private int mqttClientSendMessage(Integer iteration) {
     try {
       client.publish(MQTT_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
