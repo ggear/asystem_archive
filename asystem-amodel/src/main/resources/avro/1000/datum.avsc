@@ -1,7 +1,7 @@
 {
   "namespace": "com.jag.asystem.amodel.avro",
   "name": "Datum",
-  "version": 1,
+  "version": 1000,
   "type": "record",
   "fields": [
     {
