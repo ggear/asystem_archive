@@ -46,17 +46,17 @@ function ANode(uri, onopen, onclose, onmessage) {
     this.metadata = this.metadataRequest();
     this.orderingIndexes = {};
     this.orderingIndexes["data_metric"] = {};
-    var data_metric = this.metadata["fields"][3]["type"]["symbols"];
+    var data_metric = this.metadata["fields"][4]["type"]["symbols"];
     for (var i = 1; i < data_metric.length; i++) {
         this.orderingIndexes["data_metric"][decodeDatumField(data_metric[i])] = i * 100000;
     }
     this.orderingIndexes["data_type"] = {};
-    var data_type = this.metadata["fields"][5]["type"]["symbols"];
+    var data_type = this.metadata["fields"][6]["type"]["symbols"];
     for (var i = 1; i < data_type.length; i++) {
         this.orderingIndexes["data_type"][decodeDatumField(data_type[i])] = i * 10000;
     }
     this.orderingIndexes["bin_unit"] = {};
-    var bin_unit = this.metadata["fields"][13]["type"]["symbols"];
+    var bin_unit = this.metadata["fields"][14]["type"]["symbols"];
     for (var i = 1; i < bin_unit.length; i++) {
         this.orderingIndexes["bin_unit"][decodeDatumField(bin_unit[i])] = i * 1000;
     }

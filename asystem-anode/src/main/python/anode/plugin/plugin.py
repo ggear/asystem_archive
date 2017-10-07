@@ -1313,5 +1313,5 @@ DATUM_SCHEMA_FILE = open(os.path.dirname(__file__) + "/../avro/datum.avsc", "rb"
 DATUM_SCHEMA_JSON = json.loads(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON["fields"][i]["name"].encode("utf-8"): i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"]))}
-DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][3]["type"]["symbols"][i].encode("utf-8")):
-                            i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][3]["type"]["symbols"]))}
+DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"][i].encode("utf-8")):
+                            i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"]))}
