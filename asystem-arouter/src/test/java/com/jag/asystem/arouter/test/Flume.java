@@ -71,6 +71,7 @@ public class Flume implements TestConstants {
     new Builder<String, String>()
       .put("MQTT_BROKER_HOST", "localhost")
       .put("MQTT_BROKER_PORT", "2883")
+      .put("MQTT_DROP_SNAPSHOTS", "false")
       .put("MQTT_BATCHSIZE", "10")
       .put("HDFS_BATCHSIZE", "1")
       .put("AVRO_SCHEMA_URL", Flume.class.getResource("/avro").toString())

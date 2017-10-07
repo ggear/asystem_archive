@@ -44,13 +44,15 @@ public class MetadataInterceptor implements Interceptor {
 
   private final int batchSize;
   private final String avroSchemaUrl;
+  private final boolean dropSnapshots;
 
   private int batchCount;
   private long batchTimestamp;
 
-  private MetadataInterceptor(int batchSize, String avroSchemaUrl) {
+  private MetadataInterceptor(int batchSize, String avroSchemaUrl, boolean dropSnapshots) {
     this.batchSize = batchSize;
     this.avroSchemaUrl = avroSchemaUrl;
+    this.dropSnapshots = dropSnapshots;
   }
 
   @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
@@ -78,6 +80,12 @@ public class MetadataInterceptor implements Interceptor {
       if (LOG.isDebugEnabled()) {
         LOG.debug("MQTT event missing valid header attributes [" +
           Joiner.on(",").withKeyValueSeparator("=").join(event.getHeaders()) + "]");
+      }
+      return null;
+    }
+    if (dropSnapshots && topicSegments[1].endsWith("SNAPSHOT")) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("MQTT event being dropped since it has a snapshot version [" + topicSegments[1] + "]");
       }
       return null;
     }
@@ -119,22 +127,25 @@ public class MetadataInterceptor implements Interceptor {
 
     public static final String CONFIG_BATCH_SIZE = "batchSize";
     public static final String CONFIG_AVRO_SCHEMA_URL = "avroSchemaURL";
+    public static final String CONFIG_DROP_SNAPSHOTS = "dropSnapshots";
 
     private int batchSize;
     private String avroSchemaUrl;
+    private boolean dropSnapshots;
 
     public Builder() {
     }
 
     @Override
     public MetadataInterceptor build() {
-      return new MetadataInterceptor(batchSize, avroSchemaUrl);
+      return new MetadataInterceptor(batchSize, avroSchemaUrl, dropSnapshots);
     }
 
     @Override
     public void configure(Context context) {
       batchSize = context.getInteger(CONFIG_BATCH_SIZE, 1);
       avroSchemaUrl = context.getString(CONFIG_AVRO_SCHEMA_URL, "").trim();
+      dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, false);
     }
 
   }
