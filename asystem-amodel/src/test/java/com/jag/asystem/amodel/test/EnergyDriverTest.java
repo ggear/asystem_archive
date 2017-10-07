@@ -31,11 +31,6 @@ public class EnergyDriverTest implements TestConstants {
   @ClassRule
   public static final SparkServer sparkServer = SparkServer.getInstance();
 
-  @Test
-  public void testFailure() throws Exception {
-    assertEquals(FAILURE_ARGUMENTS, new EnergyDriver(null).runner());
-  }
-
   public final TestMetaData testMetaDataPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}})
     .dataSetDestinationDirs(DATASET_DIR_INPUT).asserts(ImmutableMap.of(EnergyDriver.class.getName(), ImmutableMap.of(
@@ -45,7 +40,7 @@ public class EnergyDriverTest implements TestConstants {
     )));
 
   @TestWith({"testMetaDataPristine"})
-  public void testSuccess(TestMetaData testMetaData) throws Exception {
+  public void testEnergy(TestMetaData testMetaData) throws Exception {
     EnergyDriver driver = new EnergyDriver(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(dfsServer.getPath(DATASET_DIR_INPUT).toString(), dfsServer.getPath(DATASET_DIR_OUTPUT).toString()));
 

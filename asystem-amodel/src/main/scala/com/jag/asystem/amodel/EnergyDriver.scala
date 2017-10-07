@@ -43,87 +43,87 @@ class EnergyDriver(configuration: Configuration)
       val outputProduction = spark.sql(
         """
           SELECT
-            from_unixtime(ep.epd, 'YYYY-MM-dd') AS date,
-            ep.epv AS energy_production,
-            ft.ftv AS forecast_temperature,
-            fr.frv AS forecast_rain,
-            fh.fhv AS forecast_humidity,
-            fw.fwv AS forecast_wind,
-            sr.srv AS sun_rise,
-            ss.ssv AS sun_set,
-            sz.szv AS sun_azimuth,
-            sa.sav AS sun_altitude,
-            fc.fcv AS forecast_conditions
+            from_unixtime(ep.epd, 'dd/MM/YYYY') AS datum__bin__date,
+            ep.epv AS energy__production__inverter,
+            ft.ftv AS temperature__forecast__glen_Dforrest,
+            fr.frv AS rain__forecast__glen_Dforrest,
+            fh.fhv AS humidity__forecast__glen_Dforrest,
+            fw.fwv AS wind__forecast__glen_Dforrest,
+            sr.srv AS sun__outdoor__rise,
+            ss.ssv AS sun__outdoor__set,
+            sz.szv AS sun__outdoor__azimuth,
+            sa.sav AS sun__outdoor__altitude,
+            fc.fcv AS conditions__forecast__glen_Dforrest
           FROM
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS epd,
               max(data_value) / first(data_scale)   AS epv
             FROM global_temp.datums
             WHERE
-              data_metric='energy__production__inverter' AND data_type='integral' AND bin_width==1 AND bin_unit='day'
+              data_metric='energy__production__inverter' AND data_type='integral' AND bin_width=1 AND bin_unit='day'
             GROUP BY epd) AS ep,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS ftd,
               max(data_value) / first(data_scale) AS ftv
             FROM global_temp.datums
             WHERE
-              data_metric='temperature__forecast__glen_Dforrest' AND data_type='high' AND bin_width==1 AND bin_unit='day'
+              data_metric='temperature__forecast__glen_Dforrest' AND data_type='high' AND bin_width=1 AND bin_unit='day'
             GROUP BY ftd) AS ft,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS frd,
               max(data_value) / first(data_scale) AS frv
             FROM global_temp.datums
             WHERE
-              data_metric='rain__forecast__glen_Dforrest' AND data_type='integral' AND bin_width==1 AND bin_unit='day_Dtime'
+              data_metric='rain__forecast__glen_Dforrest' AND data_type='integral' AND bin_width=1 AND bin_unit='day_Dtime'
             GROUP BY frd) AS fr,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS fhd,
               max(data_value) / first(data_scale) AS fhv
             FROM global_temp.datums
             WHERE
-              data_metric='humidity__forecast__glen_Dforrest' AND data_type='mean' AND bin_width==1 AND bin_unit='day'
+              data_metric='humidity__forecast__glen_Dforrest' AND data_type='mean' AND bin_width=1 AND bin_unit='day'
             GROUP BY fhd) AS fh,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS fwd,
               max(data_value) / first(data_scale) AS fwv
             FROM global_temp.datums
             WHERE
-              data_metric='wind__forecast__glen_Dforrest' AND data_type='mean' AND bin_width==1 AND bin_unit='day'
+              data_metric='wind__forecast__glen_Dforrest' AND data_type='mean' AND bin_width=1 AND bin_unit='day'
             GROUP BY fwd) AS fw,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS srd,
               max(data_value) AS srv
             FROM global_temp.datums
             WHERE
-              data_metric='sun__outdoor__rise' AND data_type='epoch' AND bin_width==1 AND bin_unit='day'
+              data_metric='sun__outdoor__rise' AND data_type='epoch' AND bin_width=1 AND bin_unit='day'
             GROUP BY srd) AS sr,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS ssd,
               max(data_value) AS ssv
             FROM global_temp.datums
             WHERE
-              data_metric='sun__outdoor__set' AND data_type='epoch' AND bin_width==1 AND bin_unit='day'
+              data_metric='sun__outdoor__set' AND data_type='epoch' AND bin_width=1 AND bin_unit='day'
             GROUP BY ssd) AS ss,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS szd,
               max(data_value) / first(data_scale) AS szv
             FROM global_temp.datums
             WHERE
-              data_metric='sun__outdoor__azimuth' AND data_type='point' AND bin_width==2 AND bin_unit='second'
+              data_metric='sun__outdoor__azimuth' AND data_type='point' AND bin_width=2 AND bin_unit='second'
             GROUP BY szd) AS sz,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS sad,
               max(data_value) / first(data_scale) AS sav
             FROM global_temp.datums
             WHERE
-              data_metric='sun__outdoor__altitude' AND data_type='point' AND bin_width==2 AND bin_unit='second'
+              data_metric='sun__outdoor__altitude' AND data_type='point' AND bin_width=2 AND bin_unit='second'
             GROUP BY sad) AS sa,
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS fcd,
-              first(data_string) AS fcv
+              last(data_string) AS fcv
             FROM global_temp.datums
             WHERE
-              data_metric='conditions__forecast__glen_Dforrest' AND data_type='enumeration' AND bin_width==1 AND bin_unit='day'
+              data_metric='conditions__forecast__glen_Dforrest' AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
             GROUP BY fcd) AS fc
           WHERE
             ep.epd = ft.ftd AND
