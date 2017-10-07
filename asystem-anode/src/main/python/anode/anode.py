@@ -203,12 +203,12 @@ class MqttPublishService(ClientService):
             yield self.protocol.connect("TwistedMQTT", username=self.access_key, password=self.secret_key,
                                         keepalive=self.keepalive, cleanStart=True)
         except Exception as exception:
-            Log(logging.WARN).log("Interface", "state", lambda: "[mqtt] connection error [{}]:\n".format(exception), exception)
+            Log(logging.ERROR).log("Interface", "state", lambda: "[mqtt] connection error [{}]:\n".format(exception), exception)
         else:
             Log(logging.DEBUG).log("Interface", "state", lambda: "[mqtt] connection opened")
 
     def onDisconnection(self, reason):
-        Log(logging.DEBUG).log("Interface", "state", lambda: "[mqtt] connection lost [{}]".format(reason))
+        Log(logging.ERROR).log("Interface", "state", lambda: "[mqtt] connection lost [{}]".format(reason))
         self.whenConnected().addCallback(self.makeConnection)
 
     def isConnected(self):
