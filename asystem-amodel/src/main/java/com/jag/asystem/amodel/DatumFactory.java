@@ -1,5 +1,6 @@
 package com.jag.asystem.amodel;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
 import java.util.Arrays;
@@ -25,10 +26,16 @@ import com.jag.asystem.amodel.avro.DatumSource;
 import com.jag.asystem.amodel.avro.DatumTemporal;
 import com.jag.asystem.amodel.avro.DatumType;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +72,10 @@ public class DatumFactory {
     return properties;
   }).orElseGet(Properties::new);
 
+  private transient ThreadLocal<BinaryDecoder> datumDecoder;
   private transient ThreadLocal<BinaryEncoder> datumEncoder;
 
+  private transient ThreadLocal<Map<String, SpecificDatumReader<Datum>>> datumReaders;
   private transient ThreadLocal<Map<String, DatumWriter<SpecificRecordBase>>> datumWriters;
 
   public static Datum getDatum() {
@@ -178,18 +187,48 @@ public class DatumFactory {
     return datumEncoder;
   }
 
-  public byte[] serialize(SpecificRecordBase record) {
+  private SpecificDatumReader<Datum> getDatumReader(Schema schema) {
+    if (datumReaders == null) {
+      datumReaders = ThreadLocal.withInitial(HashMap::new);
+    }
+    if (!datumReaders.get().containsKey(schema.toString())) {
+      datumReaders.get().put(schema.toString(), new SpecificDatumReader<Datum>(Datum.getClassSchema()));
+    }
+    return datumReaders.get().get(schema.toString());
+  }
+
+  private ThreadLocal<BinaryDecoder> getDatumDecoder() {
+    if (datumDecoder == null) {
+      datumDecoder = new ThreadLocal<>();
+    }
+    return datumDecoder;
+  }
+
+  public byte[] serialize(Datum datum) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(40);
     try {
       ThreadLocal<BinaryEncoder> encoder = getDatumEncoder();
       BinaryEncoder encoderInstance = EncoderFactory.get().binaryEncoder(outputStream, encoder.get());
       encoder.set(encoderInstance);
-      getDatumWriter(record.getSchema()).write(record, encoderInstance);
+      getDatumWriter(datum.getSchema()).write(datum, encoderInstance);
       encoderInstance.flush();
     } catch (Exception e) {
       throw new RuntimeException("Could not serialise record", e);
     }
     return outputStream.toByteArray();
+  }
+
+  public Datum deserialize(byte[] bytes, Schema schema) {
+    Datum datum = null;
+    try {
+      ThreadLocal<BinaryDecoder> decoder = getDatumDecoder();
+      BinaryDecoder decoderInstance = DecoderFactory.get().binaryDecoder(bytes, decoder.get());
+      decoder.set(decoderInstance);
+      datum = getDatumReader(schema).read(null, decoderInstance);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not de-serialise record", e);
+    }
+    return datum;
   }
 
   public static String getModelProperty(String key) {

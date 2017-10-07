@@ -4,6 +4,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 
 import com.cloudera.framework.testing.TestConstants;
+import com.jag.asystem.amodel.avro.Datum;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
 import com.jag.asystem.amodel.avro.DatumMetric;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -108,13 +109,15 @@ public class TestDatumFactory implements TestConstants {
     testDatum("random", DatumFactory.getDatumRandom());
   }
 
-  private void testDatum(String type, SpecificRecordBase record, Object... tests) throws Exception {
+  private void testDatum(String type, Datum datum, Object... tests) throws Exception {
     if (tests.length % 2 == 0) {
       for (int i = 0; i < tests.length; i += 2) {
-        Assert.assertEquals(tests[i + 1], record.getClass().getMethod((String) tests[i]).invoke(record));
+        Assert.assertEquals(tests[i + 1], datum.getClass().getMethod((String) tests[i]).invoke(datum));
       }
-      LOG.info("Record of class [" + record.getClass().getSimpleName() + "] and instance type [" + type + "] serialized as [" +
-        DATUM_FACTORY.serialize(record).length + "] bytes");
+      Assert.assertEquals(datum, DATUM_FACTORY.deserialize(DATUM_FACTORY.serialize(
+        DATUM_FACTORY.deserialize(DATUM_FACTORY.serialize(datum), Datum.getClassSchema())), Datum.getClassSchema()));
+      LOG.info("Record of class [" + datum.getClass().getSimpleName() + "] and instance type [" + type + "] serialized as [" +
+        DATUM_FACTORY.serialize(datum).length + "] bytes");
     }
   }
 
