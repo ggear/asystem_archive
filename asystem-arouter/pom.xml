@@ -5,7 +5,6 @@
     Deploy: mvn clean deploy -pl asystem-arouter -PPKG -Dmaven.install-flume.skip=false -U -am
      -->
 
-
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-arouter</artifactId>

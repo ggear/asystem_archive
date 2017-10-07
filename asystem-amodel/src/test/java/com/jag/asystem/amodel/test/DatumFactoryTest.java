@@ -1,21 +1,21 @@
-package com.jag.asystem.amodel;
+package com.jag.asystem.amodel.test;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 
 import com.cloudera.framework.testing.TestConstants;
+import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.avro.Datum;
 import com.jag.asystem.amodel.avro.DatumDataUnit;
 import com.jag.asystem.amodel.avro.DatumMetric;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestDatumFactory implements TestConstants {
+public class DatumFactoryTest implements TestConstants {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestDatumFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DatumFactoryTest.class);
 
   private static final DatumFactory DATUM_FACTORY = new DatumFactory();
 

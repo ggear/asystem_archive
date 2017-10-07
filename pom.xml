@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.cloudera.framework</groupId>
         <artifactId>cloudera-framework-parent</artifactId>
-        <version>1.5.9-cdh5.12.1</version>
+        <version>1.6.0-cdh5.12.1-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -82,7 +82,6 @@
         <module>asystem-arouter</module>
         <module>asystem-astore</module>
         <module>asystem-astream</module>
-        <module>asystem-ascience</module>
     </modules>
 
     <build>

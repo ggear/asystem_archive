@@ -1,0 +1,7 @@
+{
+  "meta/cldr-initialise.sh": {
+    "user": "root",
+    "group": "root",
+    "permissions": "0755"
+  }
+}

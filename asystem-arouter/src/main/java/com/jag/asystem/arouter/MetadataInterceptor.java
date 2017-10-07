@@ -2,9 +2,6 @@ package com.jag.asystem.arouter;
 
 import static org.apache.flume.sink.hdfs.AvroEventSerializer.AVRO_SCHEMA_URL_HEADER;
 
-import java.io.File;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,11 +11,12 @@ import com.cloudera.framework.common.flume.MqttSource;
 import com.google.common.base.Joiner;
 import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.avro.Datum;
+import com.jag.asystem.amodel.avro.Datum;
+import com.jag.asystem.amodel.avro.DatumAnodeId;
 import com.jag.asystem.amodel.avro.DatumAnodeId;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.interceptor.Interceptor;
-import org.apache.flume.sink.hdfs.AvroEventSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

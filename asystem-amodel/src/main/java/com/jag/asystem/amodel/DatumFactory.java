@@ -1,6 +1,5 @@
 package com.jag.asystem.amodel;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
 import java.util.Arrays;
@@ -26,13 +25,10 @@ import com.jag.asystem.amodel.avro.DatumSource;
 import com.jag.asystem.amodel.avro.DatumTemporal;
 import com.jag.asystem.amodel.avro.DatumType;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -121,7 +117,7 @@ public class DatumFactory {
       .build();
   }
 
-  protected static String decode(int encoded, String raw, int base, int... dividers) {
+  public static String decode(int encoded, String raw, int base, int... dividers) {
     String key = String.valueOf(encoded) + "_" + raw + "_" + base + "_" + Arrays.toString(dividers);
     String decoded = ENCODING_CACHE.get(key);
     if (decoded == null) {
@@ -144,7 +140,7 @@ public class DatumFactory {
     return decoded;
   }
 
-  protected static String decode(Enum encoded) {
+  public static String decode(Enum encoded) {
     String decoded = ENCODING_CACHE.get(encoded);
     if (decoded == null) {
       try {
