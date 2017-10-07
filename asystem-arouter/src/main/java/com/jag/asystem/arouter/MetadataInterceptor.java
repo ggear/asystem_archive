@@ -8,11 +8,17 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import javax.xml.bind.DatatypeConverter;
+
 import com.cloudera.framework.common.flume.MqttSource;
 import com.google.common.base.Joiner;
+import com.jag.asystem.amodel.DatumFactory;
+import com.jag.asystem.amodel.avro.Datum;
+import com.jag.asystem.amodel.avro.DatumAnodeId;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.interceptor.Interceptor;
+import org.apache.flume.sink.hdfs.AvroEventSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +37,8 @@ public class MetadataInterceptor implements Interceptor {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataInterceptor.class);
 
+  private static final DatumFactory DATUM_FACTORY = new DatumFactory();
+
   private static final String AVRO_SCHEMA_FILE = "datum.avsc";
   private static final String INSTANCE_ID = "flume-" + UUID.randomUUID().toString();
 
@@ -39,7 +47,6 @@ public class MetadataInterceptor implements Interceptor {
 
   private int batchCount;
   private long batchTimestamp;
-
 
   private MetadataInterceptor(int batchSize, String avroSchemaUrl) {
     this.batchSize = batchSize;
@@ -63,22 +70,6 @@ public class MetadataInterceptor implements Interceptor {
   public void initialize() {
   }
 
-  public static boolean exists(String URLName){
-    try {
-      HttpURLConnection.setFollowRedirects(false);
-      // note : you may also need
-      //        HttpURLConnection.setInstanceFollowRedirects(false)
-      HttpURLConnection con =
-        (HttpURLConnection) new URL(URLName).openConnection();
-      con.setRequestMethod("HEAD");
-      return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-      return false;
-    }
-  }
-
   @Override
   public Event intercept(Event event) {
     String[] topicSegments;
@@ -95,6 +86,13 @@ public class MetadataInterceptor implements Interceptor {
     }
     if (++batchCount >= batchSize) {
       batchCount = 0;
+    }
+    int size = event.getBody().length;
+    Datum datum = DATUM_FACTORY.deserialize(event.getBody(), Datum.getClassSchema());
+    datum.setAnodeId(new DatumAnodeId(DatatypeConverter.parseHexBinary(topicSegments[3])));
+    event.setBody(DATUM_FACTORY.serialize(datum));
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("MQTT added event meta-data to datum with size increase of [" + (event.getBody().length - size) + "]");
     }
     putHeader(event, HEADER_INGEST_ID, INSTANCE_ID, false);
     putHeader(event, HEADER_INGEST_PARTITION, "" + batchTimestamp % 10, false);

@@ -10,6 +10,18 @@
       "default": 0
     },
     {
+      "name": "anode_id",
+      "type": [
+        "null",
+        {
+          "name": "DatumAnodeId",
+          "type": "fixed",
+          "size": 6
+        }
+      ],
+      "default": null
+    },
+    {
       "name": "data_version",
       "type": "int",
       "default": 0

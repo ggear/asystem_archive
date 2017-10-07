@@ -27,6 +27,15 @@
         "default": ""
       },
       {
+        "name": "anode_id",
+        "type": {
+          "name": "DatumAnodeId",
+          "type": "fixed",
+          "size": 6
+        },
+        "default": "\u0000\u0000\u0000\u0000\u0000\u0000"
+      },
+      {
         "name": "data_version",
         "type": "string",
         "default": ""
