@@ -5,9 +5,7 @@ import com.jag.asystem.amodel.EnergyDriver;
 import static com.cloudera.framework.common.Driver.Counter.FILES_OUT;
 import static com.cloudera.framework.common.Driver.Counter.RECORDS_IN;
 import static com.cloudera.framework.common.Driver.Counter.RECORDS_OUT;
-import static com.cloudera.framework.common.Driver.FAILURE_ARGUMENTS;
 import static com.cloudera.framework.common.Driver.SUCCESS;
-import static com.cloudera.framework.testing.Assert.assertCounterEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.cloudera.framework.testing.TestConstants;
@@ -19,7 +17,6 @@ import com.google.common.collect.ImmutableMap;
 import com.googlecode.zohhak.api.Coercion;
 import com.googlecode.zohhak.api.TestWith;
 import org.junit.ClassRule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(TestRunner.class)

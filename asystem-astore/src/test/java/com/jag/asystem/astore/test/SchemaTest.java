@@ -8,7 +8,6 @@ import static com.jag.asystem.arouter.Constants.MODEL_1_SOURCE;
 import static com.jag.asystem.arouter.Constants.MQTT_TOPIC;
 import static com.jag.asystem.arouter.Constants.getFlumeEnv;
 import static java.util.Collections.emptyMap;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;

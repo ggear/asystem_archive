@@ -27,7 +27,7 @@ class EnergyDriver(configuration: Configuration)
     SUCCESS
   }
 
-  override def parameters() = {
+  override def parameters(): Array[String] = {
     Array("input-path", "output-path")
   }
 
@@ -35,8 +35,8 @@ class EnergyDriver(configuration: Configuration)
     val spark = SparkSession.builder.config(new SparkConf).appName(getApplicationProperty("APP_NAME")).getOrCreate()
     val inputs = new ListBuffer[DataFrame]()
     inputPaths.foreach(inputPath => inputs += spark.read.format("com.databricks.spark.avro").load(inputPath))
-    if (inputs.length > 0) {
-      var input = inputs(0)
+    if (inputs.nonEmpty) {
+      var input = inputs.head
       for (i <- 1 until inputs.length) input = input.union(inputs(i))
       incrementCounter(RECORDS_IN, input.count())
       input.createGlobalTempView("datums")
@@ -57,7 +57,7 @@ class EnergyDriver(configuration: Configuration)
           FROM
             (SELECT
               bin_timestamp - pmod(bin_timestamp + 28800, 86400) AS epd,
-              max(data_value) / first(data_scale)   AS epv
+              max(data_value) / first(data_scale) AS epv
             FROM global_temp.datums
             WHERE
               data_metric='energy__production__inverter' AND data_type='integral' AND bin_width=1 AND bin_unit='day'
@@ -134,7 +134,10 @@ class EnergyDriver(configuration: Configuration)
             ep.epd = ss.ssd AND
             ep.epd = sz.szd AND
             ep.epd = sa.sad AND
-            ep.epd = fc.fcd
+            ep.epd = fc.fcd AND
+            ep.epd != 1507737600 AND
+            ep.epd != 1507824000 AND
+            ep.epd != unix_timestamp() - pmod(unix_timestamp() + 28800, 86400)
           ORDER BY
             ep.epd ASC
         """

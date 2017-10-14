@@ -11,8 +11,6 @@ import com.cloudera.framework.common.flume.MqttSource;
 import com.google.common.base.Joiner;
 import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.avro.Datum;
-import com.jag.asystem.amodel.avro.Datum;
-import com.jag.asystem.amodel.avro.DatumAnodeId;
 import com.jag.asystem.amodel.avro.DatumAnodeId;
 import org.apache.flume.Context;
 import org.apache.flume.Event;

@@ -6,6 +6,7 @@ declare -a HOST_NAME=("per1.speedtest.telstra.net" "nyc.speedtest.sbcglobal.net"
 VERBOSE=false
 LATENCY=false
 THROUGHPUT=false
+PING_FAIL=false
 HOST_COUNT=${#HOST_ID[@]}
 PING_FAIL_FILE=/tmp/speedtest.failed
 POSTURL="http://127.0.0.1:8091/rest/?sources=speedtest&targets="
@@ -33,24 +34,28 @@ if ! ${LATENCY} && ! ${THROUGHPUT}; then
 fi
 
 if ${LATENCY}; then
-  for (( i=1; i<${HOST_COUNT}+1; i++ )); do
-    PING=$(ping -c 1 -t 30 ${HOST_NAME[$i-1]} | sed -ne '/.*time=/{;s///;s/ .*//;p;}' | tr -d '\n')
-    JSON="{\"ping-icmp\":"${PING}",\"server\":{\"id\": \""${HOST_ID[$i-1]}"\"}}"
-    ${VERBOSE} && echo -n "Latency ["${HOST_NAME[$i-1]}"]: " && echo -n ${JSON} && echo ""
-    curl -H "Content-Type: application/json" -X POST -d "${JSON}" "${POSTURL}${HOST_ID[$i-1]}"
-    if [ -n "${PING}" ]; then
-      [ -f ${PING_FAIL_FILE} ] && THROUGHPUT=true
-      rm -rf ${PING_FAIL_FILE}
-    else
-      touch ${PING_FAIL_FILE}
+  for (( i=0; i<${HOST_COUNT}; i++ )); do
+    PING=$(ping -c 1 -t 30 ${HOST_NAME[$i]} | sed -ne '/.*time=/{;s///;s/ .*//;p;}' | tr -d '\n')
+    JSON="{\"ping-icmp\":"${PING}",\"server\":{\"id\": \""${HOST_ID[$i]}"\"}}"
+    ${VERBOSE} && echo -n "Latency ["${HOST_NAME[$i]}"]: " && echo -n ${JSON} && echo ""
+    curl -H "Content-Type: application/json" -X POST -d "${JSON}" "${POSTURL}${HOST_ID[$i]}"
+    if [ ! -n "${PING}" ]; then
+      PING_FAIL=true
     fi
   done
 fi
 
+if ${PING_FAIL}; then
+  touch ${PING_FAIL_FILE}
+else
+  [ -f ${PING_FAIL_FILE} ] && THROUGHPUT=true
+  rm -rf ${PING_FAIL_FILE}
+fi
+
 if ${THROUGHPUT}; then
-  for (( i=1; i<${HOST_COUNT}+1; i++ )); do
-    JSON=$(speedtest --json --bytes --timeout 30 --server ${HOST_ID[$i-1]} | tr '\n' ' ')
-    ${VERBOSE} && echo -n "Throughput ["${HOST_NAME[$i-1]}"]: " && echo -n ${JSON} && echo ""
-    curl -H "Content-Type: application/json" -X POST -d "${JSON}" "${POSTURL}${HOST_ID[$i-1]}"
+  for (( i=0; i<${HOST_COUNT}; i++ )); do
+    JSON=$(speedtest --json --bytes --timeout 30 --server ${HOST_ID[$i]} | tr '\n' ' ')
+    ${VERBOSE} && echo -n "Throughput ["${HOST_NAME[$i]}"]: " && echo -n ${JSON} && echo ""
+    curl -H "Content-Type: application/json" -X POST -d "${JSON}" "${POSTURL}${HOST_ID[$i]}"
   done
 fi

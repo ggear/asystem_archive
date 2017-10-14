@@ -188,7 +188,7 @@ public class DatumFactory {
       datumReaders = ThreadLocal.withInitial(HashMap::new);
     }
     if (!datumReaders.get().containsKey(schema.toString())) {
-      datumReaders.get().put(schema.toString(), new SpecificDatumReader<Datum>(Datum.getClassSchema()));
+      datumReaders.get().put(schema.toString(), new SpecificDatumReader<>(Datum.getClassSchema()));
     }
     return datumReaders.get().get(schema.toString());
   }
@@ -215,7 +215,7 @@ public class DatumFactory {
   }
 
   public Datum deserialize(byte[] bytes, Schema schema) {
-    Datum datum = null;
+    Datum datum;
     try {
       ThreadLocal<BinaryDecoder> decoder = getDatumDecoder();
       BinaryDecoder decoderInstance = DecoderFactory.get().binaryDecoder(bytes, decoder.get());
@@ -231,7 +231,7 @@ public class DatumFactory {
     return (String) MODEL_PROPERTIES.get(key);
   }
 
-  private static Map<Object, String> ENCODING_CACHE = Collections.synchronizedMap(new LinkedHashMap<Object, String>() {
+  private static final Map<Object, String> ENCODING_CACHE = Collections.synchronizedMap(new LinkedHashMap<Object, String>() {
     @Override
     protected boolean removeEldestEntry(Map.Entry<Object, String> eldest) {
       return size() > 100000;

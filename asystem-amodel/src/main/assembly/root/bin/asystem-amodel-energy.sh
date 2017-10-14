@@ -10,7 +10,7 @@ for env in $ROOT_DIR/cfg/*.env
 
 set -x -e
 
-$ROOT_DIR/bin/cloudera-framework-spark.sh "\
+$ROOT_DIR/bin/cloudera-framework-spark.sh \
   jar $ROOT_DIR/lib/jar/*.jar \
   com.jag.asystem.amodel.EnergyDriver \
   -libjars $LIBJARS \
