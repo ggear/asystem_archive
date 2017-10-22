@@ -4,26 +4,38 @@ import java.util.UUID
 
 import com.cloudera.framework.common.Driver.Counter.{RECORDS_IN, RECORDS_OUT}
 import com.cloudera.framework.common.Driver.{Engine, FAILURE_ARGUMENTS, SUCCESS, getApplicationProperty}
+import com.cloudera.framework.common.DriverSpark
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{FileSystem, Path, RemoteIterator}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
 
-class EnergyDriver(configuration: Configuration)
-  extends com.cloudera.framework.common.DriverSpark(configuration) {
+class EnergyDriver(configuration: Configuration) extends DriverSpark(configuration) {
 
-  var outputPath: Path = _
-  var inputPaths = new ListBuffer[String]()
+  var outputPath: String = _
+  var inputPaths: Set[String] = Set()
+
+  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyDriver])
 
   override def prepare(arguments: String*): Int = {
-    if (arguments == null || arguments.length != parameters().length)
+    if (arguments == null || arguments.length != parameters.length)
       return FAILURE_ARGUMENTS
-    val dfs = FileSystem.newInstance(getConf)
-    outputPath = dfs.makeQualified(new Path(arguments(1)))
-    dfs.listStatus(new Path(arguments(0))).foreach(fileStatus =>
-      if (fileStatus.isDirectory && fileStatus.getPath.getName != outputPath.getName) inputPaths += fileStatus.getPath.toString)
+    var inputPath = new Path(arguments(0))
+    val dfs = inputPath.getFileSystem(getConf)
+    inputPath = dfs.makeQualified(inputPath)
+    val files = dfs.listFiles(inputPath, true)
+    while (files.hasNext) {
+      val file = files.next()
+      if (file.getPath.depth > 12 && file.getPath.getParent.getParent.getParent.getParent.getParent.getParent.getParent.getParent
+        .getParent.getParent.getParent.getParent.getName != new Path(arguments(1)).getName)
+        inputPaths += dfs.makeQualified(file.getPath.getParent.getParent.getParent).toString
+    }
+    outputPath = dfs.makeQualified(new Path(arguments(1), UUID.randomUUID().toString)).toString
+    if (Log.isInfoEnabled()) Log.info("Driver [" + classOf[EnergyDriver].getSimpleName + "] " + "prepared with input [" +
+      inputPath.toString + "], inputs [" + inputPaths.mkString(", ") + "] and output [" + outputPath + "]")
     SUCCESS
   }
 
@@ -143,7 +155,7 @@ class EnergyDriver(configuration: Configuration)
         """
       )
       incrementCounter(RECORDS_OUT, outputProduction.count())
-      outputProduction.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save(outputPath.toString)
+      outputProduction.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save(outputPath)
       addResult(outputProduction.columns.mkString(","))
       outputProduction.collect.foreach(row => addResult(row.mkString(",")))
     }
@@ -155,8 +167,12 @@ class EnergyDriver(configuration: Configuration)
     SUCCESS
   }
 
+}
+
+object EnergyDriver {
+
   def main(arguments: Array[String]): Unit = {
-    System.exit(new EnergyDriver(null).runner(arguments: _*))
+    new EnergyDriver(null).runner(arguments: _*)
   }
 
 }

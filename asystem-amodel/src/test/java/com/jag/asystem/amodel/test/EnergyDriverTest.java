@@ -2,10 +2,10 @@ package com.jag.asystem.amodel.test;
 
 import com.jag.asystem.amodel.EnergyDriver;
 
-import static com.cloudera.framework.common.Driver.Counter.FILES_OUT;
 import static com.cloudera.framework.common.Driver.Counter.RECORDS_IN;
 import static com.cloudera.framework.common.Driver.Counter.RECORDS_OUT;
 import static com.cloudera.framework.common.Driver.SUCCESS;
+import static com.cloudera.framework.testing.Assert.assertCounterGreaterThan;
 import static org.junit.Assert.assertEquals;
 
 import com.cloudera.framework.testing.TestConstants;
@@ -31,20 +31,15 @@ public class EnergyDriverTest implements TestConstants {
   public final TestMetaData testMetaDataPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}})
     .dataSetDestinationDirs(DATASET_DIR_INPUT).asserts(ImmutableMap.of(EnergyDriver.class.getName(), ImmutableMap.of(
-      FILES_OUT, 3,
-      RECORDS_IN, 100L,
-      RECORDS_OUT, 100L
+      RECORDS_IN, 340000L - 1,
+      RECORDS_OUT, 6L - 1
     )));
 
   @TestWith({"testMetaDataPristine"})
   public void testEnergy(TestMetaData testMetaData) throws Exception {
     EnergyDriver driver = new EnergyDriver(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(dfsServer.getPath(DATASET_DIR_INPUT).toString(), dfsServer.getPath(DATASET_DIR_OUTPUT).toString()));
-
-    // TODO
-    //    assertCounterEquals(testMetaData, driver.getCounters());
-    //    assertCounterEquals(testMetaData, Driver.class.getName(), FILES_OUT, dfsServer.listFilesDfs(DATASET_DIR_OUTPUT).length);
-
+    assertCounterGreaterThan(testMetaData, driver.getCounters());
   }
 
   private static final String DATASET_DIR_INPUT = "/data";
