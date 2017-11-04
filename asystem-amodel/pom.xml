@@ -19,6 +19,8 @@
     </parent>
 
     <properties>
+        <templater-python.build.skip>false</templater-python.build.skip>
+        <conda.build.skip>false</conda.build.skip>
         <parcel.build.skip>false</parcel.build.skip>
         <tar.build.skip>false</tar.build.skip>
     </properties>
