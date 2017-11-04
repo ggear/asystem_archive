@@ -32,12 +32,12 @@
 
 import sys
 
+# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.CLOSE}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
 data_path = sys.argv[1] if len(sys.argv) > 1 else \
     "s3a://asystem-amodel/asystem/${project.version}/amodel/${asystem-model.version}/energy"
 model_path = sys.argv[2] if len(sys.argv) > 2 else \
-    "./asystem-amodel/target/asystem-amodel/asystem/${project.version}/amodel/${asystem-model.version}/energy"
-
-# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.CLOSE}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+    "asystem-amodel/target/asystem-amodel/asystem/${project.version}/amodel/${asystem-model.version}/energy"
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -48,25 +48,44 @@ from script_util import hdfs_make_qualified
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import DictVectorizer
 
-DEFAULT_COLUMNS = ['temperature', 'rain_mm', 'humidity_mbar', 'wind_power', 'day_length_sec', 'condition']
-ORIGINAL_COLUMNS = ['datum__bin__date', 'energy__production__inverter', 'temperature__forecast__glen_Dforrest',
-                    'rain__forecast__glen_Dforrest',
-                    'humidity__forecast__glen_Dforrest', 'wind__forecast__glen_Dforrest', 'conditions__forecast__glen_Dforrest',
-                    'day_length',
-                    'day_length_sec']
-RENAME_COLUMNS = {'datum__bin__date': 'date', 'energy__production__inverter': 'energy',
-                  'temperature__forecast__glen_Dforrest': 'temperature',
-                  'rain__forecast__glen_Dforrest': 'rain_mm', 'humidity__forecast__glen_Dforrest': 'humidity_mbar',
-                  'wind__forecast__glen_Dforrest': 'wind_power', 'conditions__forecast__glen_Dforrest': 'condition'}
+DEFAULT_COLUMNS = [
+    'temperature',
+    'rain_mm',
+    'humidity_mbar',
+    'wind_power',
+    'day_length_sec',
+    'condition'
+]
+ORIGINAL_COLUMNS = [
+    'datum__bin__date',
+    'energy__production__inverter',
+    'temperature__forecast__glen_Dforrest',
+    'rain__forecast__glen_Dforrest',
+    'humidity__forecast__glen_Dforrest',
+    'wind__forecast__glen_Dforrest',
+    'conditions__forecast__glen_Dforrest',
+    'day_length',
+    'day_length_sec'
+]
+RENAME_COLUMNS = {
+    'datum__bin__date': 'date',
+    'energy__production__inverter': 'energy',
+    'temperature__forecast__glen_Dforrest': 'temperature',
+    'rain__forecast__glen_Dforrest': 'rain_mm',
+    'humidity__forecast__glen_Dforrest': 'humidity_mbar',
+    'wind__forecast__glen_Dforrest': 'wind_power',
+    'conditions__forecast__glen_Dforrest': 'condition'
+}
+
+spark = SparkSession.builder.appName("asystem-amodel-energy").getOrCreate()
 
 # # Exploratory analysis before building predictive models
 
 # ## Load CSV
 
-spark = SparkSession.builder.appName("asystem-amodel-energy").getOrCreate()
-
 df = spark.read.csv(
-    hdfs_make_qualified(data_path + "/training/text/csv/none"), header=True).toPandas().apply(pd.to_numeric, errors='ignore')
+    hdfs_make_qualified(data_path + "/training/text/csv/none"), header=True). \
+    toPandas().apply(pd.to_numeric, errors='ignore')
 df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
 df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
 df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
@@ -78,7 +97,8 @@ df2
 df2.dtypes
 
 dfv = spark.read.csv(
-    hdfs_make_qualified(data_path + "/validation/text/csv/none"), header=True).toPandas().apply(pd.to_numeric, errors='ignore')
+    hdfs_make_qualified(data_path + "/validation/text/csv/none"), header=True). \
+    toPandas().apply(pd.to_numeric, errors='ignore')
 dfv['sun_rise_at'] = pd.to_datetime(dfv['sun__outdoor__rise'], unit='s')
 dfv['sun_set_at'] = pd.to_datetime(dfv['sun__outdoor__set'], unit='s')
 dfv['day_length'] = dfv['sun_set_at'] - dfv['sun_rise_at']
@@ -199,7 +219,8 @@ def evaluate_by_loo(energies_train, energies_target, regr=LinearRegression()):
 
         actual_powers = np.append(actual_powers, y_test.values[0])
         predicted_powers = np.append(predicted_powers, y_test_pred[0])
-        print("Actual energy generation: {}\tPredicted energy generation: {}".format(y_test.values[0], y_test_pred[0]))
+        print("Actual energy generation: {}\tPredicted energy generation: {}".
+              format(y_test.values[0], y_test_pred[0]))
 
         print("Train R^2 score: {}\tTest R^2 score:{}".format(train_r2_score, test_r2_score))
         print("Train RMSE: {}\tTest RMSE:{}\n".format(train_rmse_score, test_rmse_score))
@@ -208,8 +229,10 @@ def evaluate_by_loo(energies_train, energies_target, regr=LinearRegression()):
     # print("Standard deviation: {}".format(pd.DataFrame.std(energies_target)))
 
 
-    print("Train average RMSE: {}\tTest average RMSE:{}".format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
-    print("Train average R2: {}\tTest average R2:{}".format(np.average(train_r2_scores), np.average(test_r2_scores)))
+    print("Train average RMSE: {}\tTest average RMSE:{}".
+          format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
+    print("Train average R2: {}\tTest average R2:{}".
+          format(np.average(train_r2_scores), np.average(test_r2_scores)))
 
     return actual_powers, predicted_powers
 
@@ -242,10 +265,10 @@ def train_and_predict(regr, cat_train, target, cat_test, test_target):
 
     dev_rmse = rmse(target.values, pred_train)
     test_rmse = rmse(test_target.values, pred)
-    print("Dev RMSE: {}\tDev R2 score: {}".format(dev_rmse,
-                                                  r2_score(target.values, pred_train)))
-    print("Test RMSE: {}\tTest R2 score: {}".format(test_rmse,
-                                                    r2_score(test_target.values, pred)))
+    print("Dev RMSE: {}\tDev R2 score: {}".
+          format(dev_rmse, r2_score(target.values, pred_train)))
+    print("Test RMSE: {}\tTest R2 score: {}".
+          format(test_rmse, r2_score(test_target.values, pred)))
     print('Coefficients: \n', regr.coef_)
     # print(test.columns)
     print('Intercepts: \n', regr.intercept_)
@@ -269,13 +292,15 @@ best_model = None
 
 for _regr in [LinearRegression(), ElasticNetCV(cv=4), RidgeCV(cv=4), LassoCV(cv=4)]:
     print(type(_regr).__name__)
-    _model, _rmse, _test_rmse = train_and_predict(_regr, energies_cat_train, energies_target, energies_cat_test, energies_test_target)
+    _model, _rmse, _test_rmse = train_and_predict(
+        _regr, energies_cat_train, energies_target, energies_cat_test, energies_test_target)
     if min_rmse > _rmse:
         best_model = _model
         min_rmse = _rmse
         best_model_test_rmse = _test_rmse
 
-print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}".format(type(best_model).__name__, min_rmse, best_model_test_rmse))
+print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}".format(type(best_model).__name__,
+                                                               min_rmse, best_model_test_rmse))
 
 # Split data
 dev_data = df2
@@ -305,7 +330,8 @@ for target_columns in [DEFAULT_COLUMNS, ['temperature', 'condition']]:
         pl = train_model(_regr, train_cat, energies_target)
 
         # Save model
-        joblib.dump(pl, os.path.join(modelsDir, '{}_{}columns_pipeline.pkl'.format(regr_name, len(target_columns))))
+        joblib.dump(pl, os.path.join(modelsDir, '{}_{}columns_pipeline.pkl'.
+                                     format(regr_name, len(target_columns))))
 
         pred = predict_power_generation(pl, dev_data, predictor_columns=target_columns)
         dev_rmse = rmse(energies_target.values, pred)
