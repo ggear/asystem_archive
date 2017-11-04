@@ -40,7 +40,5 @@ asystem-anode/src/main/python/anode/avro
 asystem-anode/src/main/python/config/*.pkl
 asystem-anode/src/main/python/anode/web/js/avro
 asystem-anode/src/main/python/anode/application.properties
-asystem-amodel/src/main/script/python/script_util.py
-asystem-amodel/src/main/template/python/script_util.py
 asystem-amodel/src/main/java/com/jag/asystem/amodel/avro/*.java
 asystem-amodel/src/test/resources/data/astore/datums/pristine/?/asystem/1*
