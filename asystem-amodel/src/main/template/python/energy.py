@@ -37,6 +37,8 @@ data_path = sys.argv[1] if len(sys.argv) > 1 else \
 model_path = sys.argv[2] if len(sys.argv) > 2 else \
     "./asystem-amodel/target/asystem-amodel/asystem/${project.version}/amodel/${asystem-model.version}/energy"
 
+# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.CLOSE}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
