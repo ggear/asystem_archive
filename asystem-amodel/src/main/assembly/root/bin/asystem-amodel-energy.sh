@@ -34,3 +34,7 @@ altus dataeng submit-jobs \
                    "s3a://asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy/"
                 ]
             }}'
+
+# ship conda python, use it to launch
+# energy.py s3a://asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy $ROOT_DIR/lib/model
+# upload  $ROOT_DIR/lib/model to S3, overwite if SNAPSHOT, else deny

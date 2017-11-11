@@ -32,6 +32,9 @@
 
 import sys
 
+# Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
+# Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import seaborn as sns
+
 # Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 data_path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -40,8 +43,6 @@ model_path = sys.argv[2] if len(sys.argv) > 2 else \
     "asystem-amodel/target/asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy"
 
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
 
@@ -109,12 +110,9 @@ dfv2
 dfv2.dtypes
 
 # Plot the pairplot to discover correlation between power generation and other variables.
-
-sns.set(style="ticks")
-
-sns.pairplot(df2, hue="condition")
-
-plt.show(block=False)
+# Plot# IGNORE SCRIPT BOILERPLATE #sns.set(style="ticks")
+# Plot# IGNORE SCRIPT BOILERPLATE #sns.pairplot(df2, hue="condition")
+# Plot# IGNORE SCRIPT BOILERPLATE #plt.show(block=False)
 
 df2.describe()
 
@@ -252,7 +250,7 @@ def plot_predict_actual(actual, predicted):
     plt.show(block=False)
 
 
-plot_predict_actual(actual_powers, predicted_powers)
+# Plot# IGNORE SCRIPT BOILERPLATE #plot_predict_actual(actual_powers, predicted_powers)
 
 
 # Create model with dev data

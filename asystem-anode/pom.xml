@@ -20,7 +20,7 @@
 
     <properties>
         <tar.build.skip>true</tar.build.skip>
-        <python.runtime>/usr/bin/python</python.runtime>
+        <python.runtime>python</python.runtime>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
