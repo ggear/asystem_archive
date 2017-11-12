@@ -166,8 +166,8 @@ def predict_power_generation(_regr, input_df, predictor_columns=DEFAULT_COLUMNS)
 # Split development data and test data
 # Training data is the range of the first data
 
-dev_data = df2[0:20]
-test_data = df2[20:]
+dev_data = df2
+test_data = dfv2
 
 energies_train, energies_target = prepare_data(dev_data)
 
