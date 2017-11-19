@@ -90,29 +90,29 @@ def energy_pipeline():
 
     # ## Load CSV
 
-    def prepare_data(df):
+    def prepare_data(data_df):
+        df = data_df.copy()
+        df
+        df.dtypes
         df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
         df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
         df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
         df['day_length_sec'] = df['sun__outdoor__set'] - df['sun__outdoor__rise']
-        df
         df2 = df[ORIGINAL_COLUMNS]
         df2 = df2.rename(columns=RENAME_COLUMNS)
+        df2
+        df2.dtypes
         return df2
 
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = prepare_data(df)
-    df2
-    df2.dtypes
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = prepare_data(dfv)
-    dfv2
-    dfv2.dtypes
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    sns.set(style="ticks")
