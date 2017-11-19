@@ -30,19 +30,84 @@
 #
 ###############################################################################
 
+# Add plotting libraries
+import matplotlib.pyplot as plt
+# Add plotting libraries
+import seaborn as sns
+
+# Add working directory to the system path
+sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
+
+import sys
+import tempfile
+import shutil
+import pandas as pd
+from pyspark.sql import SparkSession
+from script_util import hdfs_make_qualified
+from model_util import publish_model
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.model_selection import LeaveOneOut
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+import numpy as np
+from sklearn.feature_extraction import DictVectorizer
+import os
+import os.path
+import shutil
+from sklearn.externals import joblib
+
+FEATURES = [
+    'temperature',
+    'rain_mm',
+    'humidity_mbar',
+    'wind_power',
+    'day_length_sec',
+    'condition'
+]
+FEATURES_ORIGINAL = [
+    'datum__bin__date',
+    'energy__production__inverter',
+    'temperature__forecast__glen_Dforrest',
+    'rain__forecast__glen_Dforrest',
+    'humidity__forecast__glen_Dforrest',
+    'wind__forecast__glen_Dforrest',
+    'conditions__forecast__glen_Dforrest',
+    'day_length',
+    'day_length_sec'
+]
+FEATURES_RENAME = {
+    'datum__bin__date': 'date',
+    'energy__production__inverter': 'energy',
+    'temperature__forecast__glen_Dforrest': 'temperature',
+    'rain__forecast__glen_Dforrest': 'rain_mm',
+    'humidity__forecast__glen_Dforrest': 'humidity_mbar',
+    'wind__forecast__glen_Dforrest': 'wind_power',
+    'conditions__forecast__glen_Dforrest': 'condition'
+}
+
+
+def feature_engineering(features):
+    features_engineered = features.copy(deep=True)
+    print(features_engineered)
+    print(features_engineered.dtypes)
+    features_engineered['sun_rise_at'] = pd.to_datetime(features_engineered['sun__outdoor__rise'], unit='s')
+    features_engineered['sun_set_at'] = pd.to_datetime(features_engineered['sun__outdoor__set'], unit='s')
+    features_engineered['day_length'] = features_engineered['sun_set_at'] - features_engineered['sun_rise_at']
+    features_engineered['day_length_sec'] = features_engineered['sun__outdoor__set'] - features_engineered['sun__outdoor__rise']
+    df2 = features_engineered[FEATURES_ORIGINAL]
+    df2 = df2.rename(columns=FEATURES_RENAME)
+    print(df2)
+    print(df2.dtypes)
+    return df2
+
+
+def predict(model, features):
+    return model['pipeline'].predict(model['vectorizer'].transform(feature_engineering(features)[FEATURES].to_dict(orient='record')))
+
+
 def energy_pipeline():
-    import sys
-    import tempfile
-    import shutil
-
-    # Add plotting libraries
-    import matplotlib.pyplot as plt
-    # Add plotting libraries
-    import seaborn as sns
-
-    # Add working directory to the system path
-    sys.path.insert(0, 'asystem-amodel/src/main/script/python')
-
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
         "s3a://asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
@@ -50,72 +115,20 @@ def energy_pipeline():
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
-    import pandas as pd
-    from pyspark.sql import SparkSession
-    from script_util import hdfs_make_qualified
-    from model_util import publish_model
-
-    from sklearn.pipeline import Pipeline
-    from sklearn.feature_extraction import DictVectorizer
-
-    DEFAULT_COLUMNS = [
-        'temperature',
-        'rain_mm',
-        'humidity_mbar',
-        'wind_power',
-        'day_length_sec',
-        'condition'
-    ]
-    ORIGINAL_COLUMNS = [
-        'datum__bin__date',
-        'energy__production__inverter',
-        'temperature__forecast__glen_Dforrest',
-        'rain__forecast__glen_Dforrest',
-        'humidity__forecast__glen_Dforrest',
-        'wind__forecast__glen_Dforrest',
-        'conditions__forecast__glen_Dforrest',
-        'day_length',
-        'day_length_sec'
-    ]
-    RENAME_COLUMNS = {
-        'datum__bin__date': 'date',
-        'energy__production__inverter': 'energy',
-        'temperature__forecast__glen_Dforrest': 'temperature',
-        'rain__forecast__glen_Dforrest': 'rain_mm',
-        'humidity__forecast__glen_Dforrest': 'humidity_mbar',
-        'wind__forecast__glen_Dforrest': 'wind_power',
-        'conditions__forecast__glen_Dforrest': 'condition'
-    }
-
     spark = SparkSession.builder.appName("asystem-amodel-energy").getOrCreate()
 
     # # Exploratory analysis before building predictive models
 
     # ## Load CSV
-
-    def etl_data(data_df):
-        df = data_df.copy(deep=True)
-        print(df)
-        print(df.dtypes)
-        df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
-        df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
-        df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
-        df['day_length_sec'] = df['sun__outdoor__set'] - df['sun__outdoor__rise']
-        df2 = df[ORIGINAL_COLUMNS]
-        df2 = df2.rename(columns=RENAME_COLUMNS)
-        print(df2)
-        print(df2.dtypes)
-        return df2
-
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    df2 = etl_data(df)
+    df2 = feature_engineering(df)
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    dfv2 = etl_data(dfv)
+    dfv2 = feature_engineering(dfv)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot
@@ -140,7 +153,7 @@ def energy_pipeline():
 
         return _pl
 
-    def prepare_data(raw_df, predictor_columns=DEFAULT_COLUMNS):
+    def prepare_data(raw_df, predictor_columns=FEATURES):
         predictors = raw_df[predictor_columns]
         target = None
         if 'energy' in raw_df.columns:
@@ -148,7 +161,7 @@ def energy_pipeline():
 
         return predictors, target
 
-    def predict_power_generation(_regr, input_df, predictor_columns=DEFAULT_COLUMNS):
+    def predict_power_generation(_regr, input_df, predictor_columns=FEATURES):
         _predictors, _target = prepare_data(input_df, predictor_columns)
         input_dict = _predictors.to_dict(orient='record')
         return _regr.predict(input_dict)
@@ -172,17 +185,10 @@ def energy_pipeline():
     energies_train, energies_target = prepare_data(dev_data)
 
     # ## Encode condition from category to dummy variable
-    from sklearn.feature_extraction import DictVectorizer
-
     vectorizer = DictVectorizer(sparse=False)
     energies_cat_train = vectorizer.fit_transform(energies_train.to_dict(orient='record'))
 
     # ## Build a model with linear regression
-
-    from sklearn.model_selection import LeaveOneOut
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import r2_score
-    import numpy as np
 
     def evaluate_by_loo(energies_train, energies_target, regr=LinearRegression()):
         loo = LeaveOneOut()
@@ -302,19 +308,11 @@ def energy_pipeline():
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
-    import os
-    import os.path
-    import shutil
-    from sklearn.externals import joblib
-
     model_file = '/model/pickle/joblib/none/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
     os.makedirs(os.path.dirname(local_model_file))
-
-    def predict(model, features):
-        return model['pipeline'].predict(model['vectorizer'].transform(etl_data(features)[DEFAULT_COLUMNS].to_dict(orient='record')))
 
     model_dict = {'vectorizer': vectorizer, 'pipeline': best_model, 'predict': predict}
     joblib.dump(model_dict, local_model_file)
