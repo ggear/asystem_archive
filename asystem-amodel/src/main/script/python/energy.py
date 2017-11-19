@@ -93,28 +93,27 @@ def energy_pipeline():
 
     # ## Load CSV
 
+    def prepare_data(df):
+        df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
+        df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
+        df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
+        df['day_length_sec'] = df['sun__outdoor__set'] - df['sun__outdoor__rise']
+        df
+        df2 = df[ORIGINAL_COLUMNS]
+        df2 = df2.rename(columns=RENAME_COLUMNS)
+        return df2
+
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
-    df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
-    df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
-    df['day_length_sec'] = df['sun__outdoor__set'] - df['sun__outdoor__rise']
-    df
-    df2 = df[ORIGINAL_COLUMNS]
-    df2 = df2.rename(columns=RENAME_COLUMNS)
+    df2 = prepare_data(df)
     df2
     df2.dtypes
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    dfv['sun_rise_at'] = pd.to_datetime(dfv['sun__outdoor__rise'], unit='s')
-    dfv['sun_set_at'] = pd.to_datetime(dfv['sun__outdoor__set'], unit='s')
-    dfv['day_length'] = dfv['sun_set_at'] - dfv['sun_rise_at']
-    dfv['day_length_sec'] = dfv['sun__outdoor__set'] - dfv['sun__outdoor__rise']
-    dfv2 = dfv[ORIGINAL_COLUMNS]
-    dfv2 = dfv2.rename(columns=RENAME_COLUMNS)
+    dfv2 = prepare_data(dfv)
     dfv2
     dfv2.dtypes
 
@@ -168,7 +167,7 @@ def energy_pipeline():
     # Training data is the range of the first data
 
     dev_data = df2
-    test_data = dfv2
+    model_test_data = dfv2
 
     energies_train, energies_target = prepare_data(dev_data)
 
@@ -284,7 +283,7 @@ def energy_pipeline():
     from sklearn.linear_model import RidgeCV
     from sklearn.linear_model import LassoCV
 
-    energies_test, energies_test_target = prepare_data(test_data)
+    energies_test, energies_test_target = prepare_data(model_test_data)
     energies_cat_test = vectorizer.transform(energies_test.to_dict(orient='record'))
 
     min_rmse = 10000000000
@@ -313,13 +312,16 @@ def energy_pipeline():
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
     os.makedirs(os.path.dirname(local_model_file))
-    joblib.dump(best_model, local_model_file)
 
-    #TODO: Show example of model usage
-    model_loaded = joblib.load(local_model_file)
-    target, _ = prepare_data(test_data)
-    target_dict = target.to_dict(orient='record')
-    #print("Model prediction: {}".format(model_loaded.predict(target_dict)))
+    def predict(model, features):
+        return model['pipeline'].predict(model['vectorizer'].transform(prepare_data(features)[DEFAULT_COLUMNS].to_dict(orient='record')))
+
+    model_dict = {'vectorizer': vectorizer, 'pipeline': best_model, 'predict': predict}
+    joblib.dump(model_dict, local_model_file)
+
+    # TODO: Show example of model usage
+    model_dict_loaded = joblib.load(local_model_file)
+    print("Model prediction: {}".format(model_dict_loaded['predict'](model_dict_loaded, dfv)))
 
     print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
     publish_model(local_model_file, remote_model_file)
