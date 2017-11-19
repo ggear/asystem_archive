@@ -35,7 +35,6 @@
 
 # Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
-
 import sys
 import tempfile
 import shutil
@@ -314,15 +313,17 @@ def energy_pipeline():
     model_dict_loaded = joblib.load(local_model_file)
     print(dfv)
     print(dfv.dtypes)
-    print("Model prediction: {}".format(model_dict_loaded['predict'](model_dict_loaded, dfv)))
-    print("Model prediction {} versus actual {}"
-          .format(model_dict_loaded['predict'](model_dict_loaded, dfv)[0],
-                  dfv['energy__production__inverter'].iloc[0]))
+    energy_production_actual = dfv['energy__production__inverter'].iloc[0]
+    energy_production_prediction = round(model_dict_loaded['predict'](model_dict_loaded, dfv)[0], 1)
+    energy_production_accuracy = int(round(energy_production_prediction / energy_production_actual * 100))
+    print("Model prediction [{}] versus actual [{}] at accuracy [{}%]"
+          .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
 
+    print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
+    publish_model(local_model_file, remote_model_file)
+    shutil.rmtree(local_model_path)
 
-print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
-publish_model(local_model_file, remote_model_file)
-shutil.rmtree(local_model_path)  # Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}energy_pipeline()
+# Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}energy_pipeline()
 
 # Main function${TEMPLATE.PRE-PROCESSOR.UNOPEN}if __name__ == "__main__":
 # Run pipeline${TEMPLATE.PRE-PROCESSOR.UNOPEN}    energy_pipeline()
