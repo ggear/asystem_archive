@@ -93,29 +93,29 @@ def energy_pipeline():
 
     # ## Load CSV
 
-    def prepare_data(data_df):
-        df = data_df.copy()
-        df
-        df.dtypes
+    def etl_data(data_df):
+        df = data_df.copy(deep=True)
+        print(df)
+        print(df.dtypes)
         df['sun_rise_at'] = pd.to_datetime(df['sun__outdoor__rise'], unit='s')
         df['sun_set_at'] = pd.to_datetime(df['sun__outdoor__set'], unit='s')
         df['day_length'] = df['sun_set_at'] - df['sun_rise_at']
         df['day_length_sec'] = df['sun__outdoor__set'] - df['sun__outdoor__rise']
         df2 = df[ORIGINAL_COLUMNS]
         df2 = df2.rename(columns=RENAME_COLUMNS)
-        df2
-        df2.dtypes
+        print(df2)
+        print(df2.dtypes)
         return df2
 
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    df2 = prepare_data(df)
+    df2 = etl_data(df)
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    dfv2 = prepare_data(dfv)
+    dfv2 = etl_data(dfv)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot
@@ -314,7 +314,7 @@ def energy_pipeline():
     os.makedirs(os.path.dirname(local_model_file))
 
     def predict(model, features):
-        return model['pipeline'].predict(model['vectorizer'].transform(prepare_data(features)[DEFAULT_COLUMNS].to_dict(orient='record')))
+        return model['pipeline'].predict(model['vectorizer'].transform(etl_data(features)[DEFAULT_COLUMNS].to_dict(orient='record')))
 
     model_dict = {'vectorizer': vectorizer, 'pipeline': best_model, 'predict': predict}
     joblib.dump(model_dict, local_model_file)
@@ -322,6 +322,7 @@ def energy_pipeline():
     # TODO: Show example of model usage
     model_dict_loaded = joblib.load(local_model_file)
     print(dfv)
+    print(dfv.dtypes)
     print("Model prediction: {}".format(model_dict_loaded['predict'](model_dict_loaded, dfv)))
 
     print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
