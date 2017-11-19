@@ -315,12 +315,14 @@ def energy_pipeline():
     print(dfv)
     print(dfv.dtypes)
     print("Model prediction: {}".format(model_dict_loaded['predict'](model_dict_loaded, dfv)))
+    print("Model prediction {} versus actual {}"
+          .format(model_dict_loaded['predict'](model_dict_loaded, dfv)[0],
+                  dfv['energy__production__inverter'].iloc[0]))
 
-    print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
-    publish_model(local_model_file, remote_model_file)
-    shutil.rmtree(local_model_path)
 
-# Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}energy_pipeline()
+print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
+publish_model(local_model_file, remote_model_file)
+shutil.rmtree(local_model_path)  # Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}energy_pipeline()
 
 # Main function${TEMPLATE.PRE-PROCESSOR.UNOPEN}if __name__ == "__main__":
 # Run pipeline${TEMPLATE.PRE-PROCESSOR.UNOPEN}    energy_pipeline()
