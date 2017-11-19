@@ -52,13 +52,15 @@ public class EnergyTest implements TestConstants {
       dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL).toString()));
     assertCounterGreaterThan(testMetaData, driver.getCounters());
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energy.py"),
-      Arrays.asList(DATASET_DIR_AMODEL, DATASET_DIR_MODEL)));
+      Arrays.asList(DATASET_DIR_AMODEL, DATASET_ABS_AMODEL, DATASET_TMP_AMODEL)));
   }
 
   private static final String DATASET_DIR_ASTORE = "/data/asystem-astore";
   private static final String DATASET_DIR_AMODEL = "/data/asystem-amodel/asystem/" +
     Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_VERSION") + "/energy";
-  private static final String DATASET_DIR_MODEL = ABS_DIR_TARGET + "/asystem-amodel/asystem/" +
+  private static final String DATASET_ABS_AMODEL = "file://" + ABS_DIR_TARGET + "/asystem-amodel/asystem/" +
+    Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_VERSION") + "/energy";
+  private static final String DATASET_TMP_AMODEL = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/" +
     Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_VERSION") + "/energy";
 
   @Coercion

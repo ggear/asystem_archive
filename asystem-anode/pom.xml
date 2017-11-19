@@ -299,21 +299,6 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>python-package</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <target unless="${maven.package.skip}">
-                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="setup.py" />
-                                    <arg value="sdist" />
-                                </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>python-run</id>
                         <configuration>
                             <target>

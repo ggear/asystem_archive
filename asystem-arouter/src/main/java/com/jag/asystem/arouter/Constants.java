@@ -31,7 +31,7 @@ public class Constants {
       .put("FLUME_MQTT_JOURNAL_DIR", flumeLocalWorkingDir + "/store/journal")
       .put("FLUME_MQTT_CHECKPOINT_DIR", flumeLocalWorkingDir + "/store/checkpoint")
       .put("FLUME_MQTT_DATA_DIRS", flumeLocalWorkingDir + "/store/data")
-      .put("S3_URL", flumeDfsDataDir)
+      .put("S3_URL_ASTORE", flumeDfsDataDir)
       .put("APP_VERSION", Driver.getApplicationProperty("APP_VERSION"))
       .build();
   }

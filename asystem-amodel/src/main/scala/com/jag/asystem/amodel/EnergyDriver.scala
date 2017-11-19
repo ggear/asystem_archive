@@ -49,7 +49,7 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
   }
 
   override def execute(): Int = {
-    val spark = SparkSession.builder.config(new SparkConf).appName(getApplicationProperty("APP_NAME")).getOrCreate()
+    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energy-model-preparation").getOrCreate()
     val inputs = new ListBuffer[DataFrame]()
     inputPaths.foreach(inputPath => inputs += spark.read.format("com.databricks.spark.avro").load(inputPath.toString))
     if (inputs.nonEmpty) {
