@@ -10,12 +10,12 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-amodel</artifactId>
     <packaging>jar</packaging>
-    <version>10.000.0002-SNAPSHOT</version>
+    <version>10.000.0001</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>10.000.0002-SNAPSHOT</version>
+        <version>10.000.0001</version>
     </parent>
 
     <properties>
