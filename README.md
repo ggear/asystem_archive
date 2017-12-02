@@ -42,6 +42,9 @@ mvn release:prepare -B \
   -DreleaseVersion=$AS_VERSION_RELEASE \
   -DdevelopmentVersion=$AS_VERSION_HEAD-SNAPSHOT -PPKG -Dresume=false && \
 mvn release:perform -PPKG && \
+mvn clean install -PPKG &&
+git add -A && \
+git commit -m "Update generated files for assystem-${AS_VERSION_HEAD}" && \
 git push --all && \
 git tag
 ```
