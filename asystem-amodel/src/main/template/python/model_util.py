@@ -4,11 +4,11 @@
 #
 ###############################################################################
 
+import os.path
 import re
 import shutil
-import os.path
-from boto.s3.key import Key
 from boto.s3.connection import S3Connection
+from boto.s3.key import Key
 
 
 def publish_model(local_file, publish_url):

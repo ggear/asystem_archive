@@ -24,8 +24,8 @@
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
-        <dir.runtime-clean.anode>${project.build.directory}/anode-runtime-clean</dir.runtime-clean.anode>
-        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime.anode} --verbose</system.test.anode.opts>
+        <dir.runtime-tmp.anode>${project.build.directory}/anode-runtime-tmp</dir.runtime-tmp.anode>
+        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime-tmp.anode}/config --verbose</system.test.anode.opts>
         <system.test.anode.log>${project.build.directory}/anode-runtime/anode.log</system.test.anode.log>
     </properties>
 
@@ -151,6 +151,25 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-resources-test-pickle</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${dir.output.python}/config/state/${project.version}/amodel/${asystem-model.version}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${dir.source.python}/anode/test/pickle</directory>
+                                    <includes>
+                                        <include>**/*.pkl</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -249,6 +268,11 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
+                                <copy todir="${dir.runtime.anode}/config/state/${project.version}/amodel/${asystem-model.version}">
+                                    <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
+                                </copy>
+                                <delete dir="${dir.runtime-tmp.anode}" />
+                                <mkdir dir="${dir.runtime-tmp.anode}/config" />
                                 <echo>
 
                                 </echo>
@@ -309,14 +333,15 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
-                                <copy todir="${dir.runtime.anode}">
+                                <copy todir="${dir.runtime.anode}/config/state/${project.version}/amodel/${asystem-model.version}">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
-                                <mkdir dir="${dir.runtime-clean.anode}" />
+                                <delete dir="${dir.runtime-tmp.anode}" />
+                                <mkdir dir="${dir.runtime-tmp.anode}/config" />
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="--verbose" />
                                     <arg value="-c${dir.source.python}/config/anode.yaml" />
-                                    <arg value="-d${dir.runtime-clean.anode}/" />
+                                    <arg value="-d${dir.runtime-tmp.anode}/config" />
                                 </exec>
                             </target>
                         </configuration>

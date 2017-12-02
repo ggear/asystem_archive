@@ -12,7 +12,7 @@ function decodeDatumField(datumField) {
     var datumFields = datumField.split("__");
     for (var i = 0; i < datumFields.length; i++) {
         for (var escaped in ESCAPE_SEQUENCES) {
-            datumFields[i] = datumFields[i].replace(escaped, ESCAPE_SEQUENCES[escaped])
+            datumFields[i] = datumFields[i].split(escaped).join(ESCAPE_SEQUENCES[escaped])
         }
     }
     var datumFieldDecodedChars = datumFields.join("_").split('');

@@ -195,9 +195,8 @@ class Fronius(Plugin):
                 data_bound_lower=0,
                 data_derived_min=True
             )
-            energy_production_inverter_alltime_min = self.datum_get(DATUM_QUEUE_MIN,
-                                                                    "energy__production__inverter", "integral", "Wh", 1, "all_Dtime", 1,
-                                                                    "day")
+            energy_production_inverter_alltime_min = self.datum_get(
+                DATUM_QUEUE_MIN, "energy__production__inverter", "integral", "Wh", 1, "all_Dtime", 1, "day")
             energy_production_inverter_day = (energy_production_inverter_alltime - energy_production_inverter_alltime_min["data_value"]) \
                 if energy_production_inverter_alltime_min is not None else 0
             self.datum_push(
@@ -238,8 +237,8 @@ class Fronius(Plugin):
                 data_bound_lower=0,
                 data_derived_min=True
             )
-            energy_export_grid_alltime_min = self.datum_get(DATUM_QUEUE_MIN, "energy__export__grid", "integral", "Wh", 1, "all_Dtime", 1,
-                                                            "day")
+            energy_export_grid_alltime_min = self.datum_get(
+                DATUM_QUEUE_MIN, "energy__export__grid", "integral", "Wh", 1, "all_Dtime", 1, "day")
             energy_export_grid_day = (energy_export_grid_alltime - energy_export_grid_alltime_min["data_value"]) \
                 if energy_export_grid_alltime_min is not None else 0
             self.datum_push(
@@ -254,11 +253,10 @@ class Fronius(Plugin):
                 "day",
                 data_bound_lower=0
             )
-            energy_production_inverter_alltime_last = self.datum_get(DATUM_QUEUE_LAST,
-                                                                     "energy__production__inverter", "integral", "Wh", "1", "all_Dtime")
-            energy_production_inverter_alltime_min = self.datum_get(DATUM_QUEUE_MIN,
-                                                                    "energy__production__inverter", "integral", "Wh", 1, "all_Dtime", 1,
-                                                                    "day")
+            energy_production_inverter_alltime_last = self.datum_get(
+                DATUM_QUEUE_LAST, "energy__production__inverter", "integral", "Wh", "1", "all_Dtime")
+            energy_production_inverter_alltime_min = self.datum_get(
+                DATUM_QUEUE_MIN, "energy__production__inverter", "integral", "Wh", 1, "all_Dtime", 1, "day")
             energy_production_inverter_day = (energy_production_inverter_alltime_last["data_value"] -
                                               energy_production_inverter_alltime_min["data_value"]) \
                 if (energy_production_inverter_alltime_last is not None and energy_production_inverter_alltime_min is not None) else 0
@@ -275,8 +273,8 @@ class Fronius(Plugin):
                 "day",
                 data_bound_lower=0
             )
-            energy_consumption_grid_alltime = self.datum_value(dict_content, ["Body", "Data", "0", "EnergyReal_WAC_Plus_Absolute"],
-                                                               factor=10)
+            energy_consumption_grid_alltime = self.datum_value(
+                dict_content, ["Body", "Data", "0", "EnergyReal_WAC_Plus_Absolute"], factor=10)
             self.datum_push(
                 "energy__consumption__grid",
                 "current", "integral",
@@ -290,8 +288,8 @@ class Fronius(Plugin):
                 data_bound_lower=0,
                 data_derived_min=True
             )
-            energy_consumption_grid_min = self.datum_get(DATUM_QUEUE_MIN, "energy__consumption__grid", "integral", "Wh", 1, "all_Dtime", 1,
-                                                         "day")
+            energy_consumption_grid_min = self.datum_get(
+                DATUM_QUEUE_MIN, "energy__consumption__grid", "integral", "Wh", 1, "all_Dtime", 1, "day")
             energy_consumption_grid_day = (energy_consumption_grid_alltime - energy_consumption_grid_min["data_value"]) \
                 if energy_consumption_grid_min is not None else 0
             self.datum_push(
@@ -306,12 +304,10 @@ class Fronius(Plugin):
                 "day",
                 data_bound_lower=0
             )
-            energy_consumption_peak_morning_inverter = self.datum_get(DATUM_QUEUE_LAST,
-                                                                      "energy__consumption_Dpeak_Dmorning__inverter", "integral", "Wh", 1,
-                                                                      "all_Dtime")
-            energy_consumption_peak_morning_grid = self.datum_get(DATUM_QUEUE_LAST,
-                                                                  "energy__consumption_Dpeak_Dmorning__grid", "integral", "Wh", 1,
-                                                                  "all_Dtime")
+            energy_consumption_peak_morning_inverter = self.datum_get(
+                DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Dmorning__inverter", "integral", "Wh", 1, "all_Dtime")
+            energy_consumption_peak_morning_grid = self.datum_get(
+                DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Dmorning__grid", "integral", "Wh", 1, "all_Dtime")
             if energy_consumption_peak_morning_grid is not None and \
                             self.get_time_period(energy_consumption_peak_morning_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
                             self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):
@@ -342,12 +338,10 @@ class Fronius(Plugin):
                     "all_Dtime",
                     data_bound_lower=0
                 )
-            energy_consumption_peak_evening_inverter = self.datum_get(DATUM_QUEUE_LAST,
-                                                                      "energy__consumption_Dpeak_Devening__inverter", "integral", "Wh", 1,
-                                                                      "all_Dtime")
-            energy_consumption_peak_evening_grid = self.datum_get(DATUM_QUEUE_LAST,
-                                                                  "energy__consumption_Dpeak_Devening__grid", "integral", "Wh", 1,
-                                                                  "all_Dtime")
+            energy_consumption_peak_evening_inverter = self.datum_get(
+                DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Devening__inverter", "integral", "Wh", 1, "all_Dtime")
+            energy_consumption_peak_evening_grid = self.datum_get(
+                DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Devening__grid", "integral", "Wh", 1, "all_Dtime")
             if energy_consumption_peak_evening_grid is not None and \
                             self.get_time_period(energy_consumption_peak_evening_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
                             self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):

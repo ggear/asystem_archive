@@ -1,6 +1,7 @@
+from __future__ import print_function
+
 import logging
 import logging.config
-import os
 import sys
 import time
 import urlparse
@@ -24,30 +25,15 @@ from twisted.internet.defer import returnValue
 from twisted.internet.defer import succeed
 from twisted.internet.endpoints import clientFromString
 from twisted.internet.task import LoopingCall
-from twisted.python import log
 from twisted.web import client
 from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
 
+from application import *
 from plugin import DATUM_QUEUE_LAST
 from plugin import ID_HEX
 from plugin import Plugin
-
-APP_CONF = dict(
-    line.strip().split("=") for line in
-    open(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + "/application.properties")
-    if not line.startswith("#") and not line.startswith("\n"))
-APP_CONF_NAME = APP_CONF["APP_NAME"]
-APP_CONF_NAME_ESCAPED = APP_CONF["APP_NAME_ESCAPED"]
-APP_CONF_VERSION = APP_CONF["APP_VERSION"]
-APP_CONF_VERSION_NUMERIC = int(APP_CONF["APP_VERSION_NUMERIC"])
-
-APP_MODEL_CONF = dict(
-    line.strip().split("=") for line in
-    open(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) + "/avro/model.properties")
-    if not line.startswith("#") and not line.startswith("\n"))
-APP_MODEL_CONF_VERSION = APP_MODEL_CONF["MODEL_VERSION"]
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
@@ -82,7 +68,7 @@ class ANode:
             self.publish_mqtt = MqttPublishService(
                 clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
                 MQTTFactory(profile=MQTTFactory.PUBLISHER),
-                "asystem/" + APP_CONF_VERSION + "/anode/" + ID_HEX + "/amodel/" + APP_MODEL_CONF_VERSION,
+                "asystem/" + APP_VERSION + "/anode/" + ID_HEX + "/amodel/" + APP_MODEL_VERSION,
                 (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
                 KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
             self.publish_mqtt.startService()
@@ -126,6 +112,9 @@ class ANode:
             plugin_pushcall.clock = self.core_reactor
             plugin_pushcall.start(self.config["publish_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
+
+    def get_plugin(self, plugin):
+        return self.plugins[plugin] if plugin in self.plugins else None
 
     def get_datums(self, datum_filter, datums=None):
         datums_filtered = {}
@@ -347,8 +336,8 @@ class Log:
             logging.getLogger().addHandler(logging_handler)
             if verbose:
                 from twisted.logger import (
-                    Logger, LogLevel, globalLogBeginner, textFileLogObserver,
-                    FilteringLogObserver, LogLevelFilterPredicate, LimitedHistoryLogObserver)
+                    LogLevel, globalLogBeginner, textFileLogObserver,
+                    FilteringLogObserver, LogLevelFilterPredicate)
                 twisted_log_fitler = LogLevelFilterPredicate(defaultLogLevel=LogLevel.warn)
                 twisted_log_fitler.setLogLevelForNamespace(namespace="stdout", level=LogLevel.critical)
                 twisted_log_fitler.setLogLevelForNamespace(namespace="twisted", level=LogLevel.warn)

@@ -12,10 +12,11 @@ import json
 import logging
 import numbers
 import operator
-import os
+import os.path
 import re
 import time
 import urllib
+from StringIO import StringIO
 from collections import deque
 from decimal import Decimal
 from functools import reduce
@@ -26,6 +27,7 @@ import avro
 import avro.io
 import avro.schema
 import avro.schema
+import dill
 import matplotlib
 import matplotlib.pyplot as plot
 import numpy
@@ -34,9 +36,12 @@ from avro.io import AvroTypeException
 from cycler import cycler
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+from sklearn.externals import joblib
 from twisted.internet.task import Clock
 
+import anode
 import anode.plugin
+from anode.application import *
 
 
 # noinspection PyTypeChecker
@@ -256,12 +261,13 @@ class Plugin(object):
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] published [{}] datums".format(self.name, datums_publish_pending))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
-                   bin_unit, data_string=None, data_bound_upper=None, data_bound_lower=None, data_derived_max=False, data_derived_min=False,
-                   data_derived_period=1, data_derived_unit="day", data_derived_force=False, data_push_force=False, data_transient=False):
+                   bin_unit, asystem_version=None, data_string=None, data_bound_upper=None, data_bound_lower=None, data_derived_max=False,
+                   data_derived_min=False, data_derived_period=1, data_derived_unit="day", data_derived_force=False, data_push_force=False,
+                   data_transient=False):
         log_timer = anode.Log(logging.DEBUG).start()
         if data_value is not None:
             datum_dict = {
-                "asystem_version": anode.anode.APP_CONF_VERSION_NUMERIC,
+                "asystem_version": Plugin.datum_version_encode(asystem_version),
                 "data_version": 0,
                 "data_source": self.name,
                 "data_metric": data_metric,
@@ -559,8 +565,9 @@ class Plugin(object):
         return sorted(datums, key=lambda datum: (
             "aaaaa" if datum["data_unit"] == "_P24" else
             "bbbbb" if datum["data_unit"] == "W" else
-            "ccccc" if datum["data_unit"] == "ms" else
-            "ddddd" if datum["data_unit"] == "MB_P2Fs" else
+            "ccccc" if datum["data_unit"] == "Wh" else
+            "ddddd" if datum["data_unit"] == "ms" else
+            "eeeee" if datum["data_unit"] == "MB_P2Fs" else
             "eeeee" if datum["data_unit"] == "KB_P2Fs" else
             "zzzzz" + datum["data_unit"],
             datum["data_metric"],
@@ -757,7 +764,7 @@ class Plugin(object):
         datums_plot_colour_lines = \
             ["yellow", "lime", "red", "orange", "dodgerblue", "coral", "magenta", "aliceblue", "cyan", "darkgreen", "maroon"]
         datums_plot_title = datums_df.title if hasattr(datums_df, "title") else None
-        datums_plot_buffer = StringIO.StringIO()
+        datums_plot_buffer = StringIO()
         datums_df = Plugin.datums_df_reindex(datums_df)
         datums_points = len(datums_df.index)
         datums_axes_x_range = ((datums_df.index[-1] - datums_df.index[0]).total_seconds()) if datums_points > 0 else 0
@@ -1149,7 +1156,9 @@ class Plugin(object):
                         else:
                             self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_BUFFER].clear()
         if len(self.datums) > 0:
-            pandas.to_pickle(self.datums, self.datums_file())
+            self.pickled_put(os.path.join(self.config["db_dir"], "state"), "/state/" + APP_VERSION + "/amodel/" +
+                             APP_MODEL_VERSION + "/" + self.name + "/model/pickle/pandas/none/" +
+                             self.name + ".pkl", self.datums, True)
         metrics_count = sum(len(units)
                             for metrics in self.datums.values()
                             for types in metrics.values()
@@ -1167,12 +1176,13 @@ class Plugin(object):
     def datums_load(self):
         log_timer = anode.Log(logging.INFO).start()
         metrics_count = 0
-        if os.path.isfile(self.datums_file()):
-            self.datums = pandas.read_pickle(self.datums_file())
-            metrics_count = sum(len(units)
-                                for metrics in self.datums.values()
-                                for types in metrics.values()
-                                for units in types.values())
+        datums_pickled = self.pickled_get(os.path.join(self.config["db_dir"], "state"), name=self.name, cache=False)
+        self.datums = datums_pickled[self.name][APP_MODEL_VERSION][1] \
+            if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[self.name] else {}
+        metrics_count = sum(len(units)
+                            for metrics in self.datums.values()
+                            for types in metrics.values()
+                            for units in types.values())
         for datum_metric in self.datums:
             for datum_type in self.datums[datum_metric]:
                 for datum_unit in self.datums[datum_metric][datum_type]:
@@ -1185,11 +1195,13 @@ class Plugin(object):
                            for units in types.values()
                            for bins in units.values())
         log_timer.log("Plugin", "timer",
-                      lambda: "[{}] state loaded [{}] metrics and [{}] datums".format(self.name, metrics_count, datums_count),
+                      lambda: "[{}] state loaded [{}] metrics and [{}] datums from [{}]".format(
+                          self.name, metrics_count, datums_count, (
+                              self.name + "-" + APP_MODEL_VERSION + "-" +
+                              datums_pickled[self.name][APP_MODEL_VERSION][
+                                  0]) if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[
+                              self.name] else ""),
                       context=self.datums_store)
-
-    def datums_file(self):
-        return self.config["db_dir"] + "/" + self.name + ".pkl"
 
     def get_time(self):
         return calendar.timegm(time.gmtime()) if not self.is_clock else (
@@ -1200,9 +1212,109 @@ class Plugin(object):
         return period if period > timestamp else \
             ((timestamp + self.time_tmz_offset) - (timestamp + self.time_tmz_offset) % period - self.time_tmz_offset)
 
+    def pickled_status(self, store, path, model_lower=None, model_upper=None):
+        log_timer = anode.Log(logging.INFO).start()
+        path_dirty = False
+        path_filtered = True
+        pickle_metadata = re.search(LIB_PATH_REGEX, path)
+        if pickle_metadata is not None:
+            if (model_lower is None or model_lower <= pickle_metadata.group(2)) and \
+                    (model_upper is None or model_upper >= pickle_metadata.group(2)) and \
+                            APP_VERSION >= pickle_metadata.group(1):
+                path_filtered = False
+                pickle_cache = self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2))
+                path_dirty = pickle_metadata.group(3) not in pickle_cache or \
+                             pickle_metadata.group(2) not in pickle_cache[pickle_metadata.group(3)] or \
+                             pickle_metadata.group(1) > pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0]
+        log_timer.log("Plugin", "timer", lambda: "[{}] status pickled [{}filtered, {}dirty] [{}]".format(
+            self.name, "" if path_filtered else "not ", "" if path_dirty else "not ", path), context=self.pickled_status)
+        return path_filtered, path_dirty
+
+    def pickled_put(self, store, path, library, pickle=False):
+        log_timer = anode.Log(logging.INFO).start()
+        pickle_path = None
+        pickle_metadata = re.search(LIB_PATH_REGEX, path)
+        if pickle_metadata is not None:
+            pickle_path = os.path.join(store, pickle_metadata.group(1), "amodel", pickle_metadata.group(2), pickle_metadata.group(3),
+                                       "model/pickle", pickle_metadata.group(4), "none", pickle_metadata.group(3) + ".pkl")
+            not os.path.exists(os.path.dirname(pickle_path)) and os.makedirs(os.path.dirname(pickle_path))
+            if pickle:
+                if pickle_metadata.group(4) == "pandas":
+                    pandas.to_pickle(library, pickle_path)
+                else:
+                    raise Exception("Unknown pickle write format [{}]".format(pickle_metadata[0]))
+            else:
+                with open(pickle_path, "wb") as pickle_file:
+                    pickle_file.write(library)
+            self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2), warm=True)
+        log_timer.log("Plugin", "timer", lambda: "[{}] put pickled [{}] to [{}]".format(self.name, "-".join(
+            "" if pickle_metadata is None else pickle_metadata.group(3, 2, 1)), "" if pickle_path is None else ("file://" + pickle_path)),
+                      context=self.pickled_put)
+        return pickle_path
+
+    def pickled_get(self, store, path=None, name=None, model=None, warm=False, cache=True):
+        log_timer = anode.Log(logging.INFO).start()
+        if cache:
+            if store not in PICKLE_CACHE:
+                PICKLE_CACHE[store] = {}
+            pickle_cache = PICKLE_CACHE[store]
+        else:
+            pickle_cache = {}
+        if path is not None:
+            pickle_metadata = re.search(LIB_PATH_REGEX, path)
+            if pickle_metadata is not None:
+                name = pickle_metadata.group(3)
+                model = pickle_metadata.group(2)
+        if not cache or warm:
+            pickle_metadata_cache = {}
+            for root_dir, parent_dirs, file_names in os.walk(store):
+                for file_name in file_names:
+                    file_path = os.path.join(root_dir, file_name)
+                    pickle_metadata = re.search(LIB_PATH_REGEX, file_path)
+                    if pickle_metadata is not None:
+                        if (name is None or name == pickle_metadata.group(3)) and (model is None or model == pickle_metadata.group(2)):
+                            if APP_VERSION.endswith("-SNAPSHOT") or not pickle_metadata.group(1).endswith("-SNAPSHOT"):
+                                if pickle_metadata.group(3) not in pickle_metadata_cache:
+                                    pickle_metadata_cache[pickle_metadata.group(3)] = {}
+                                if pickle_metadata.group(2) not in pickle_metadata_cache[pickle_metadata.group(3)]:
+                                    pickle_metadata_cache[pickle_metadata.group(3)][pickle_metadata.group(2)] = {}
+                                pickle_metadata_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][pickle_metadata.group(1)] = \
+                                    (pickle_metadata.group(4), file_path)
+            for pickle_name in pickle_metadata_cache:
+                for pickle_model in pickle_metadata_cache[pickle_name]:
+                    pickle_version = next(iter(sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), reverse=True)))
+                    pickle_metadata = pickle_metadata_cache[pickle_name][pickle_model][pickle_version]
+                    pickle_cache[pickle_name] = pickle_cache[pickle_name] if pickle_name in pickle_cache else {}
+                    if pickle_metadata[0] == "pandas":
+                        pickle_cache[pickle_name][pickle_model] = (pickle_version, pandas.read_pickle(pickle_metadata[1]))
+                    elif pickle_metadata[0] == "joblib":
+                        unpickled = joblib.load(pickle_metadata[1])
+                        unpickled['execute'] = dill.load(StringIO(unpickled['execute'].getvalue()))
+
+                        pickle_cache[pickle_name][pickle_model] = (pickle_version, unpickled)
+                        # pickle_cache[pickle_name][pickle_model] = (pickle_version, "WHOOPS!")
+
+                    else:
+                        raise Exception("Unknown pickle read format [{}]".format(pickle_metadata[0]))
+                    anode.Log(logging.INFO).log("Plugin", "timer", lambda: "[{}] read pickled [{}] using [{}]".format(
+                        self.name, pickle_name + "-" + pickle_model + "-" + pickle_version, pickle_metadata[0]))
+        pickle_cache = pickle_cache if name is None else ({name: pickle_cache[name]} if name in pickle_cache else {name: {}})
+        pickle_cache = pickle_cache if model is None else ({name: {model: pickle_cache[name][model]}}
+                                                           if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
+        pickle = pickle_cache[name] if name in pickle_cache else {}
+        log_timer.log("Plugin", "timer", lambda: "[{}] got pickled [{}]".format(self.name, ", ".join(
+            [name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])), context=self.pickled_get)
+        return pickle_cache
+
     @staticmethod
     def datum_field_swap(field):
         return "" if field is None else "".join([ESCAPE_SWAPS.get(field_char, field_char) for field_char in field])
+
+    @staticmethod
+    def datum_version_encode(version):
+        return APP_VERSION_NUMERIC if version is None else (
+            (-1 if version.endswith("-SNAPSHOT")else 1) * ((int(re.sub("[^0-9]", "", version)) - 99999999) if (
+                int(re.sub("[^0-9]", "", version)) > 100000000) else int(re.sub("[^0-9]", "", version))))
 
     @staticmethod
     def datum_field_encode(field):
@@ -1269,6 +1381,9 @@ class Plugin(object):
             else self.config["buffer_ticks"]
         self.datums_load()
 
+
+PICKLE_CACHE = {}
+LIB_PATH_REGEX = ".*([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel/([1-9][0-9]{3})/([a-zA-z]*)/model/pickle/([a-zA-z]*).*\.pkl"
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex").upper()

@@ -1,8 +1,8 @@
 ###############################################################################
 #
-# PRE-PROCESSED SCRIPT - EDITS WILL BE CLOBBERED BY MAVEN BUILD
+# ${TEMPLATE.PRE-PROCESSOR.RAW_TEMPLATE}
 #
-# This file is in the SCRIPT pre-processed state with template available by the
+# This file is in the ${TEMPLATE.PRE-PROCESSOR.STATE} pre-processed state with template available by the
 # same package and file name under the modules src/main/template directory.
 #
 # When editing the template directly (as indicated by the presence of the
@@ -30,92 +30,90 @@
 #
 ###############################################################################
 
-# Add plotting libraries
-import matplotlib.pyplot as plt
-# Add plotting libraries
-import seaborn as sns
+# Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import matplotlib.pyplot as plt
+# Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import seaborn as sns
 
-# Add working directory to the system path
-sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
-
+import os
+import os.path
 import sys
-import tempfile
 import shutil
+import tempfile
 import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import r2_score
+from sklearn.model_selection import LeaveOneOut
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import ElasticNetCV
+from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import LassoCV
+from sklearn.feature_extraction import DictVectorizer
 from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
 from model_util import publish_model
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.model_selection import LeaveOneOut
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-import numpy as np
-from sklearn.feature_extraction import DictVectorizer
-import os
-import os.path
-import shutil
-from sklearn.externals import joblib
-
-FEATURES = [
-    'temperature',
-    'rain_mm',
-    'humidity_mbar',
-    'wind_power',
-    'day_length_sec',
-    'condition'
-]
-FEATURES_ORIGINAL = [
-    'datum__bin__date',
-    'energy__production__inverter',
-    'temperature__forecast__glen_Dforrest',
-    'rain__forecast__glen_Dforrest',
-    'humidity__forecast__glen_Dforrest',
-    'wind__forecast__glen_Dforrest',
-    'conditions__forecast__glen_Dforrest',
-    'day_length',
-    'day_length_sec'
-]
-FEATURES_RENAME = {
-    'datum__bin__date': 'date',
-    'energy__production__inverter': 'energy',
-    'temperature__forecast__glen_Dforrest': 'temperature',
-    'rain__forecast__glen_Dforrest': 'rain_mm',
-    'humidity__forecast__glen_Dforrest': 'humidity_mbar',
-    'wind__forecast__glen_Dforrest': 'wind_power',
-    'conditions__forecast__glen_Dforrest': 'condition'
-}
 
 
-def feature_engineering(features):
-    features_engineered = features.copy(deep=True)
-    print(features_engineered)
-    print(features_engineered.dtypes)
-    features_engineered['sun_rise_at'] = pd.to_datetime(features_engineered['sun__outdoor__rise'], unit='s')
-    features_engineered['sun_set_at'] = pd.to_datetime(features_engineered['sun__outdoor__set'], unit='s')
-    features_engineered['day_length'] = features_engineered['sun_set_at'] - features_engineered['sun_rise_at']
-    features_engineered['day_length_sec'] = features_engineered['sun__outdoor__set'] - features_engineered['sun__outdoor__rise']
-    df2 = features_engineered[FEATURES_ORIGINAL]
-    df2 = df2.rename(columns=FEATURES_RENAME)
-    print(df2)
-    print(df2.dtypes)
-    return df2
+def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
+    import pandas as pd
+    from sklearn.pipeline import Pipeline
+    from sklearn.linear_model import ElasticNetCV
+    from sklearn.linear_model import RidgeCV
+    from sklearn.linear_model import LassoCV
+    from sklearn.feature_extraction import DictVectorizer
+    FEATURES = [
+        'temperature',
+        'rain_mm',
+        'humidity_mbar',
+        'wind_power',
+        'day_length_sec',
+        'condition'
+    ]
+    FEATURES_ORIGINAL = [
+        'datum__bin__date',
+        'energy__production__inverter',
+        'temperature__forecast__glen_Dforrest',
+        'rain__forecast__glen_Dforrest',
+        'humidity__forecast__glen_Dforrest',
+        'wind__forecast__glen_Dforrest',
+        'conditions__forecast__glen_Dforrest',
+        'day_length',
+        'day_length_sec'
+    ]
+    FEATURES_RENAME = {
+        'datum__bin__date': 'date',
+        'energy__production__inverter': 'energy',
+        'temperature__forecast__glen_Dforrest': 'temperature',
+        'rain__forecast__glen_Dforrest': 'rain_mm',
+        'humidity__forecast__glen_Dforrest': 'humidity_mbar',
+        'wind__forecast__glen_Dforrest': 'wind_power',
+        'conditions__forecast__glen_Dforrest': 'condition'
+    }
+    if labels:
+        return FEATURES, FEATURES_ORIGINAL, FEATURES_RENAME
+    elif engineering:
+        features_engineered = features.copy(deep=True)
+        features_engineered['sun_rise_at'] = pd.to_datetime(features_engineered['sun__outdoor__rise'], unit='s')
+        features_engineered['sun_set_at'] = pd.to_datetime(features_engineered['sun__outdoor__set'], unit='s')
+        features_engineered['day_length'] = features_engineered['sun_set_at'] - features_engineered['sun_rise_at']
+        features_engineered['day_length_sec'] = features_engineered['sun__outdoor__set'] - features_engineered['sun__outdoor__rise']
+        features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
+        features_engineered_renamed = features_engineered_renamed.rename(columns=FEATURES_RENAME)
+        return features_engineered_renamed
+    elif prediction:
+        return model['pipeline'].predict(model['vectorizer'].transform(features[FEATURES].to_dict(orient='record')))
 
 
-def predict(model, features):
-    return model['pipeline'].predict(model['vectorizer'].transform(feature_engineering(features)[FEATURES].to_dict(orient='record')))
-
-
-def energy_pipeline():
+def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy"
+        "s3a://asystem-amodel/asystem/${project.version}/amodel/${asystem-model-energyforecast.version}/energyforecast"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel/asystem/10.000.0001-SNAPSHOT/amodel/1000/energy"
+        "s3a://asystem-amodel/asystem/${project.version}/amodel/${asystem-model-energyforecast.version}/energyforecast"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
-    spark = SparkSession.builder.appName("asystem-amodel-energy").getOrCreate()
+    spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
 
     # # Exploratory analysis before building predictive models
 
@@ -123,20 +121,17 @@ def energy_pipeline():
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    df2 = feature_engineering(df)
+    df2 = execute(features=df, engineering=True)
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none"), header=True). \
         toPandas().apply(pd.to_numeric, errors='ignore')
-    dfv2 = feature_engineering(dfv)
+    dfv2 = execute(features=dfv, engineering=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
-    # Plot
-    sns.set(style="ticks")
-    # Plot
-    sns.pairplot(df2, hue="condition")
-    # Plot
-    plt.show(block=False)
+    # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    sns.set(style="ticks")
+    # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    sns.pairplot(df2, hue="condition")
+    # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    plt.show(block=False)
 
     df2.describe()
 
@@ -153,7 +148,7 @@ def energy_pipeline():
 
         return _pl
 
-    def prepare_data(raw_df, predictor_columns=FEATURES):
+    def prepare_data(raw_df, predictor_columns=execute(labels=True)[0]):
         predictors = raw_df[predictor_columns]
         target = None
         if 'energy' in raw_df.columns:
@@ -161,7 +156,7 @@ def energy_pipeline():
 
         return predictors, target
 
-    def predict_power_generation(_regr, input_df, predictor_columns=FEATURES):
+    def predict_power_generation(_regr, input_df, predictor_columns=execute(labels=True)[0]):
         _predictors, _target = prepare_data(input_df, predictor_columns)
         input_dict = _predictors.to_dict(orient='record')
         return _regr.predict(input_dict)
@@ -258,8 +253,7 @@ def energy_pipeline():
         ax.set_ylabel('Predicted')
         plt.show(block=False)
 
-    # Plot
-    plot_predict_actual(actual_powers, predicted_powers)
+    # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    plot_predict_actual(actual_powers, predicted_powers)
 
 
     # Create model with dev data
@@ -284,10 +278,6 @@ def energy_pipeline():
 
 
         return regr, dev_rmse, test_rmse
-
-    from sklearn.linear_model import ElasticNetCV
-    from sklearn.linear_model import RidgeCV
-    from sklearn.linear_model import LassoCV
 
     energies_test, energies_test_target = prepare_data(model_test_data)
     energies_cat_test = vectorizer.transform(energies_test.to_dict(orient='record'))
@@ -314,15 +304,24 @@ def energy_pipeline():
     if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
     os.makedirs(os.path.dirname(local_model_file))
 
-    model_dict = {'vectorizer': vectorizer, 'pipeline': best_model, 'predict': predict}
-    joblib.dump(model_dict, local_model_file)
+    import dill
+    from StringIO import StringIO
+    from sklearn.externals import joblib
 
-    # TODO: Show example of model usage
-    model_dict_loaded = joblib.load(local_model_file)
+    pickled_execute = StringIO()
+    dill.dump(execute, pickled_execute)
+    pickled_execute.flush()
+
+    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model, 'execute': pickled_execute}, local_model_file)
+
+    # Example of serialized model usage
+    model = joblib.load(local_model_file)
+    model['execute'] = dill.load(StringIO(model['execute'].getvalue()))
     print(dfv)
     print(dfv.dtypes)
     energy_production_actual = dfv['energy__production__inverter'].iloc[0]
-    energy_production_prediction = round(model_dict_loaded['predict'](model_dict_loaded, dfv)[0], 1)
+    energy_production_prediction = round(
+        model['execute'](model=model, features=model['execute'](features=dfv, engineering=True), prediction=True)[0], 1)
     energy_production_accuracy = int(round(energy_production_prediction / energy_production_actual * 100))
     print("Model prediction [{}] versus actual [{}] at accuracy [{}%]"
           .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
@@ -331,8 +330,7 @@ def energy_pipeline():
     publish_model(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)
 
-# Run pipeline
-energy_pipeline()
+# Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}pipeline()
 
-# Main function# IGNORE LIBRARY BOILERPLATE #if __name__ == "__main__":
-# Run pipeline# IGNORE LIBRARY BOILERPLATE #    energy_pipeline()
+# Main function${TEMPLATE.PRE-PROCESSOR.UNOPEN}if __name__ == "__main__":
+# Run pipeline${TEMPLATE.PRE-PROCESSOR.UNOPEN}    pipeline()

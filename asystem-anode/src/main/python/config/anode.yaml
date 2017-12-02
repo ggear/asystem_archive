@@ -6,7 +6,7 @@ publish_access_key: $MQTT_ACCESS_KEY
 publish_secret_key: $MQTT_SECRET_KEY
 publish_seconds: 4
 save_on_exit: True
-save_seconds: 86400
+save_seconds: 14400
 plugin:
     fronius:
       poll_seconds: 1
@@ -22,7 +22,7 @@ plugin:
       poll_seconds: -1
       buffer_ticks: 30
       history_partitions: 25
-      history_ticks: 1500000
+      history_ticks: 2500000
       history_partition_seconds: 86400
       repeat_seconds: 103
       repeat_partition: True
@@ -52,9 +52,19 @@ plugin:
       poll_seconds: -1
       buffer_ticks: 30
       history_partitions: 25
-      history_ticks: 300000
+      history_ticks: 350000
       history_partition_seconds: 86400
       repeat_seconds: 113
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
+    energyforecast:
+      poll_seconds: 30
+      buffer_ticks: 5
+      history_partitions: 25
+      history_ticks: 1000000
+      history_partition_seconds: 86400
+      repeat_seconds: 115
       repeat_partition: True
       publish_ticks: -1
       publish_upstream: True

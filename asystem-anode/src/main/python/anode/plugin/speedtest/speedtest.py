@@ -5,7 +5,6 @@ import logging
 from decimal import Decimal
 
 import anode
-from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
 SPEEDTEST_ID_METRIC = {

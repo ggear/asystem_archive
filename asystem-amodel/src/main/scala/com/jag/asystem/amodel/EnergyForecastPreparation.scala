@@ -14,20 +14,20 @@ import org.apache.spark.sql.functions._
 
 import scala.collection.mutable.ListBuffer
 
-class EnergyDriver(configuration: Configuration) extends DriverSpark(configuration) {
+class EnergyForecastPreparation(configuration: Configuration) extends DriverSpark(configuration) {
 
   var outputPath: Path = _
   var inputPaths: Set[Path] = Set()
 
-  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyDriver])
+  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastPreparation])
 
   override def prepare(arguments: String*): Int = {
-    if (arguments == null || arguments.length != parameters.length) return FAILURE_ARGUMENTS
+    if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
     outputPath = new Path(arguments(1))
     var dfs = outputPath.getFileSystem(getConf)
     outputPath = dfs.makeQualified(outputPath)
     if (dfs.exists(outputPath)) if (outputPath.toString.contains("-SNAPSHOT/amodel/")) dfs.delete(outputPath, true) else {
-      if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyDriver].getSimpleName +
+      if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastPreparation].getSimpleName +
         "] cannot write to pre-existing non-SNAPSHOT directory [" + outputPath + "]")
       return FAILURE_ARGUMENTS
     }
@@ -39,7 +39,7 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
       val file = files.next()
       if (file.getPath.depth > 3) inputPaths += dfs.makeQualified(file.getPath.getParent.getParent.getParent)
     }
-    if (Log.isInfoEnabled()) Log.info("Driver [" + classOf[EnergyDriver].getSimpleName + "] prepared with input [" +
+    if (Log.isInfoEnabled()) Log.info("Driver [" + classOf[EnergyForecastPreparation].getSimpleName + "] prepared with input [" +
       inputPath.toString + "], inputs [" + inputPaths.mkString(", ") + "] and output [" + outputPath + "]")
     SUCCESS
   }
@@ -49,7 +49,7 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
   }
 
   override def execute(): Int = {
-    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energy-model-preparation").getOrCreate()
+    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-model-preparation").getOrCreate()
     val inputs = new ListBuffer[DataFrame]()
     inputPaths.foreach(inputPath => inputs += spark.read.format("com.databricks.spark.avro").load(inputPath.toString))
     if (inputs.nonEmpty) {
@@ -57,7 +57,7 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
       for (i <- 1 until inputs.length) input = input.union(inputs(i))
       incrementCounter(RECORDS_IN, input.count())
       input.createGlobalTempView("datums")
-      var outputAll = spark.sql(
+      val outputAll = spark.sql(
         """
           SELECT
             ep.epd AS datum__bin__date,
@@ -156,12 +156,14 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
             ep.epd != '2017/10/13' AND
             ep.epd != '2017/10/29' AND
             ep.epd != '2017/10/30' AND
+            ep.epd != '2017/11/27' AND
+            ep.epd != '2017/11/28' AND
             ep.epd != date_format(from_utc_timestamp(from_unixtime(unix_timestamp()), 'AWST'), 'YYYY/MM/dd')
           ORDER BY
             ep.epd ASC
         """
       )
-      var outputAllCount = outputAll.count().toInt
+      val outputAllCount = outputAll.count().toInt
       incrementCounter(RECORDS_OUT, outputAllCount)
       val outputTraining = outputAll.limit(outputAllCount - 1)
       outputTraining.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save(outputPath.toString +
@@ -182,10 +184,10 @@ class EnergyDriver(configuration: Configuration) extends DriverSpark(configurati
 
 }
 
-object EnergyDriver {
+object EnergyForecastPreparation {
 
   def main(arguments: Array[String]): Unit = {
-    new EnergyDriver(null).runner(arguments: _*)
+    new EnergyForecastPreparation(null).runner(arguments: _*)
   }
 
 }
