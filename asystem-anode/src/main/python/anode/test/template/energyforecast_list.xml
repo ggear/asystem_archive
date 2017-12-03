@@ -6,35 +6,35 @@
     <MaxKeys>1000000</MaxKeys>
     <IsTruncated>false</IsTruncated>
     <Contents>
-        <Key>asystem/10.000.0000/amodel/1000/energyforecast/model/pickle/joblib/none/model.pkl</Key>
+        <Key>asystem/10.000.0000/amodel/$MODEL_ENERGYFORECAST/energyforecast/model/pickle/joblib/none/model.pkl</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;a064cf8b20feab355d15d53c89843039&quot;</ETag>
         <Size>1239</Size>
         <StorageClass>STANDARD</StorageClass>
     </Contents>
     <Contents>
-        <Key>asystem/10.000.0000/amodel/1000/energyforecast/training/text/csv/none/_SUCCESS</Key>
+        <Key>asystem/10.000.0000/amodel/$MODEL_ENERGYFORECAST/energyforecast/training/text/csv/none/_SUCCESS</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag>
         <Size>0</Size>
         <StorageClass>STANDARD</StorageClass>
     </Contents>
     <Contents>
-        <Key>asystem/10.000.0000/amodel/1000/energyforecast/training/text/csv/none/part-00000-5cf13c81-4888-4180-8c36-ad9ca711d6ee-c000.csv</Key>
+        <Key>asystem/10.000.0000/amodel/$MODEL_ENERGYFORECAST/energyforecast/training/text/csv/none/part-00000-5cf13c81-4888-4180-8c36-ad9ca711d6ee-c000.csv</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;adc78f02d7d224b84e2f18f14beb7d40&quot;</ETag>
         <Size>3706</Size>
         <StorageClass>STANDARD</StorageClass>
     </Contents>
     <Contents>
-        <Key>asystem/10.000.0000/amodel/1000/energyforecast/validation/text/csv/none/_SUCCESS</Key>
+        <Key>asystem/10.000.0000/amodel/$MODEL_ENERGYFORECAST/energyforecast/validation/text/csv/none/_SUCCESS</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag>
         <Size>0</Size>
         <StorageClass>STANDARD</StorageClass>
     </Contents>
     <Contents>
-        <Key>asystem/10.000.0000/amodel/1000/energyforecast/validation/text/csv/none/part-00000-587eace8-12f4-43ee-a0e5-5f0f22017b3a-c000.csv</Key>
+        <Key>asystem/10.000.0000/amodel/$MODEL_ENERGYFORECAST/energyforecast/validation/text/csv/none/part-00000-587eace8-12f4-43ee-a0e5-5f0f22017b3a-c000.csv</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;9d809e68b63a1262703cab60a7eb904b&quot;</ETag>
         <Size>372</Size>

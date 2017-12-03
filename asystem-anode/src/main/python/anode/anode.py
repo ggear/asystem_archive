@@ -2,11 +2,11 @@ from __future__ import print_function
 
 import logging
 import logging.config
-import sys
-import time
 import urlparse
 from optparse import OptionParser
 
+import sys
+import time
 import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
@@ -61,10 +61,8 @@ class ANode:
                                            "publish_upstream" in self.config["plugin"][plugin_name] and \
                                            self.config["plugin"][plugin_name]["publish_upstream"]
         if self.publish_upstream and self.publish_upstream_plugin:
-            access_key = (os.environ[self.config["publish_access_key"][1:]] if self.config["publish_access_key"].startswith("$")
-                          else self.config["publish_access_key"]) if "publish_access_key" in self.config else None
-            secret_key = (os.environ[self.config["publish_secret_key"][1:]] if self.config["publish_secret_key"].startswith("$")
-                          else self.config["publish_secret_key"]) if "publish_secret_key" in self.config else None
+            access_key = os.environ["MQTT_ACCESS_KEY"] if "MQTT_ACCESS_KEY" in os.environ else None
+            secret_key = os.environ["MQTT_SECRET_KEY"] if "MQTT_SECRET_KEY" in os.environ else None
             self.publish_mqtt = MqttPublishService(
                 clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
                 MQTTFactory(profile=MQTTFactory.PUBLISHER),
@@ -95,9 +93,9 @@ class ANode:
                 plugin_repeatingcall.start(self.config["plugin"][plugin_name]["repeat_seconds"])
         for plugin in self.plugins.itervalues():
             if "history_partition_seconds" in self.config["plugin"][plugin.name] and \
-                            self.config["plugin"][plugin.name]["history_partition_seconds"] > 0 and \
-                            "repeat_seconds" in self.config["plugin"][plugin_name] and \
-                            self.config["plugin"][plugin_name]["repeat_seconds"] >= 0:
+                    self.config["plugin"][plugin.name]["history_partition_seconds"] > 0 and \
+                    "repeat_seconds" in self.config["plugin"][plugin_name] and \
+                    self.config["plugin"][plugin_name]["repeat_seconds"] >= 0:
                 time_current = plugin.get_time()
                 time_partition = self.config["plugin"][plugin.name]["history_partition_seconds"]
                 time_partition_next = time_partition - (time_current - plugin.get_time_period(time_current, time_partition))
@@ -107,7 +105,7 @@ class ANode:
                                             lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
                                             plugin_partitioncall, time_partition)
         if self.publish_upstream and self.publish_upstream_plugin and \
-                        "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
+                "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
             plugin_pushcall = LoopingCall(self.publish_datums)
             plugin_pushcall.clock = self.core_reactor
             plugin_pushcall.start(self.config["publish_seconds"])
@@ -297,7 +295,7 @@ class WebRest:
         request.setHeader("Content-Type",
                           "text/csv" if datum_format == "csv" else (
                               "application/json" if datum_format == "json" else ("image/svg+xml" if datum_format == "svg" else (
-                                  "application" + datum_format))))
+                                      "application" + datum_format))))
         log_timer.log("Interface", "timer", lambda: "[rest]", context=self.get)
         returnValue(datums_formatted)
 

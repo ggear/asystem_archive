@@ -2,11 +2,11 @@ from __future__ import division
 from __future__ import print_function
 
 import calendar
-import datetime
 import json
 import logging
 from decimal import Decimal
 
+import datetime
 import dateutil.parser
 import treq
 
@@ -309,8 +309,8 @@ class Fronius(Plugin):
             energy_consumption_peak_morning_grid = self.datum_get(
                 DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Dmorning__grid", "integral", "Wh", 1, "all_Dtime")
             if energy_consumption_peak_morning_grid is not None and \
-                            self.get_time_period(energy_consumption_peak_morning_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
-                            self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):
+                    self.get_time_period(energy_consumption_peak_morning_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
+                    self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):
                 energy_consumption_peak_morning_grid = None
             if energy_consumption_peak_morning_grid is None and bin_timestamp >= \
                     (self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) + HOUR_PEAK_START * 60 * 60):
@@ -343,8 +343,8 @@ class Fronius(Plugin):
             energy_consumption_peak_evening_grid = self.datum_get(
                 DATUM_QUEUE_LAST, "energy__consumption_Dpeak_Devening__grid", "integral", "Wh", 1, "all_Dtime")
             if energy_consumption_peak_evening_grid is not None and \
-                            self.get_time_period(energy_consumption_peak_evening_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
-                            self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):
+                    self.get_time_period(energy_consumption_peak_evening_grid["data_timestamp"], Plugin.get_seconds(1, "day")) != \
+                    self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")):
                 energy_consumption_peak_evening_grid = None
             if energy_consumption_peak_evening_grid is None and bin_timestamp >= \
                     (self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) + HOUR_PEAK_FINISH * 60 * 60):

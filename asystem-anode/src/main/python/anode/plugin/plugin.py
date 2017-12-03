@@ -5,16 +5,13 @@ import StringIO
 import abc
 import base64
 import calendar
-import datetime
 import decimal
 import io
 import json
 import logging
 import numbers
-import operator
 import os.path
 import re
-import time
 import urllib
 from StringIO import StringIO
 from collections import deque
@@ -27,11 +24,14 @@ import avro
 import avro.io
 import avro.schema
 import avro.schema
+import datetime
 import dill
 import matplotlib
 import matplotlib.pyplot as plot
 import numpy
+import operator
 import pandas
+import time
 from avro.io import AvroTypeException
 from cycler import cycler
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -73,7 +73,7 @@ class Plugin(object):
                                     datum_bin_timestamp = self.get_time_period(datum_bin_timestamp, Plugin.get_seconds(
                                         self.config["history_partition_seconds"], "second"))
                                 if force or ((24 * 60 * 60) > (datum_bin_timestamp - datum["bin_timestamp"]) >= (
-                                            self.config["repeat_seconds"] - 5)):
+                                        self.config["repeat_seconds"] - 5)):
 
                                     def expired_max_min(max_or_min):
                                         if max_or_min in self.datums[datum_metric][datum_type][datum_unit][datum_bin]:
@@ -87,8 +87,8 @@ class Plugin(object):
                                     datum_value = datum["data_value"]
                                     if force and "history_partition_seconds" in self.config and self.config[
                                         "history_partition_seconds"] > 0 and \
-                                                    Plugin.get_seconds(datum["bin_width"], datum["bin_unit"]) == \
-                                                    Plugin.get_seconds(self.config["history_partition_seconds"], "second"):
+                                            Plugin.get_seconds(datum["bin_width"], datum["bin_unit"]) == \
+                                            Plugin.get_seconds(self.config["history_partition_seconds"], "second"):
                                         if datum["data_type"] == "integral":
                                             datum_value = 0
                                         elif datum["data_type"] == "forecast":
@@ -163,7 +163,7 @@ class Plugin(object):
             metric_name + "history",
             "current", "point",
             self.datum_value(0 if ("history_ticks" not in self.config or self.config["history_ticks"] < 1) else (
-                float(datums_count) / self.config["history_ticks"] * 100)),
+                    float(datums_count) / self.config["history_ticks"] * 100)),
             "_P25",
             1,
             time_now,
@@ -184,7 +184,7 @@ class Plugin(object):
             metric_name + "partitions",
             "current", "point",
             self.datum_value(0 if ("history_partitions" not in self.config or self.config["history_partitions"] < 1) else (
-                float(partitions_count_max) / self.config["history_partitions"] * 100)),
+                    float(partitions_count_max) / self.config["history_partitions"] * 100)),
             "_P25",
             1,
             time_now,
@@ -261,14 +261,16 @@ class Plugin(object):
         anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] published [{}] datums".format(self.name, datums_publish_pending))
 
     def datum_push(self, data_metric, data_temporal, data_type, data_value, data_unit, data_scale, data_timestamp, bin_timestamp, bin_width,
-                   bin_unit, asystem_version=None, data_string=None, data_bound_upper=None, data_bound_lower=None, data_derived_max=False,
-                   data_derived_min=False, data_derived_period=1, data_derived_unit="day", data_derived_force=False, data_push_force=False,
-                   data_transient=False):
+                   bin_unit, asystem_version=None, data_version=None, data_string=None, data_bound_upper=None, data_bound_lower=None,
+                   data_derived_max=False, data_derived_min=False, data_derived_period=1, data_derived_unit="day",
+                   data_derived_force=False, data_push_force=False, data_transient=False):
         log_timer = anode.Log(logging.DEBUG).start()
+        asystem_version = APP_VERSION_NUMERIC if asystem_version is None else Plugin.datum_version_encode(asystem_version, 100000000)
+        data_version = 0 if data_version is None else Plugin.datum_version_encode(data_version, 1000)
         if data_value is not None:
             datum_dict = {
-                "asystem_version": Plugin.datum_version_encode(asystem_version),
-                "data_version": 0,
+                "asystem_version": asystem_version,
+                "data_version": data_version,
                 "data_source": self.name,
                 "data_metric": data_metric,
                 "data_temporal": data_temporal,
@@ -307,22 +309,22 @@ class Plugin(object):
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                     str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1
-                                                       else self.config["publish_ticks"])), DATUM_QUEUE_BUFFER: deque()}
+                    else self.config["publish_ticks"])), DATUM_QUEUE_BUFFER: deque()}
                 if not data_transient:
                     self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                         str(datum_dict["bin_width"]) + datum_dict["bin_unit"]][DATUM_QUEUE_HISTORY] = {}
             datums_deref = self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                 str(datum_dict["bin_width"]) + datum_dict["bin_unit"]]
             if DATUM_QUEUE_LAST not in datums_deref or datums_deref[DATUM_QUEUE_LAST]["data_value"] != datum_dict["data_value"] or \
-                            datums_deref[DATUM_QUEUE_LAST]["data_unit"] != datum_dict["data_unit"] or \
-                            datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"] or \
+                    datums_deref[DATUM_QUEUE_LAST]["data_unit"] != datum_dict["data_unit"] or \
+                    datums_deref[DATUM_QUEUE_LAST]["data_scale"] != datum_dict["data_scale"] or \
                     ("data_string" in datums_deref[DATUM_QUEUE_LAST] and
-                             datums_deref[DATUM_QUEUE_LAST]["data_string"] != datum_dict["data_string"]) or \
+                     datums_deref[DATUM_QUEUE_LAST]["data_string"] != datum_dict["data_string"]) or \
                     ("repeat_partition" in self.config and self.config["repeat_partition"] and
-                             self.get_time_period(datums_deref[DATUM_QUEUE_LAST]["bin_timestamp"],
-                                                  self.config["history_partition_seconds"]) !=
-                             self.get_time_period(datum_dict["bin_timestamp"],
-                                                  self.config["history_partition_seconds"])) or data_push_force:
+                     self.get_time_period(datums_deref[DATUM_QUEUE_LAST]["bin_timestamp"],
+                                          self.config["history_partition_seconds"]) !=
+                     self.get_time_period(datum_dict["bin_timestamp"],
+                                          self.config["history_partition_seconds"])) or data_push_force:
                 self.time_seen = self.get_time()
                 datums_deref[DATUM_QUEUE_LAST] = datum_dict
                 bin_timestamp_derived = self.get_time_period(datum_dict["bin_timestamp"],
@@ -364,8 +366,8 @@ class Plugin(object):
                                             data_transient=data_transient)
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
-                                    "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
-                                    "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+                            "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                            "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
                         bin_timestamp_partition = self.get_time_period(datum_dict["bin_timestamp"],
                                                                        self.config["history_partition_seconds"])
                         if len(datums_deref[DATUM_QUEUE_BUFFER]) == self.datums_buffer_batch or bin_timestamp_partition \
@@ -385,8 +387,8 @@ class Plugin(object):
     def datum_merge_buffer_history(self, datums_buffer, datums_history):
         log_timer = anode.Log(logging.DEBUG).start()
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
-                        "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
-                        "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+                "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
             bin_timestamp_partition_max = None
             if len(datums_buffer) > 0:
                 datums_buffer_partition = {}
@@ -422,8 +424,8 @@ class Plugin(object):
                                                      lambda: "[{}] purged expired partition [{}]".format(self.name,
                                                                                                          bin_timestamp_partition_del))
             while len(datums_history) > self.config["history_partitions"] or \
-                            sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
-                            self.config["history_ticks"]:
+                    sum(len(datums_df_cached["data_df"].index) for datums_df_cached in datums_history.itervalues()) > \
+                    self.config["history_ticks"]:
                 bin_timestamp_partition_del = min(datums_history.keys())
                 del datums_history[bin_timestamp_partition_del]
                 anode.Log(logging.DEBUG).log("Plugin", "state",
@@ -436,8 +438,8 @@ class Plugin(object):
         log_timer = anode.Log(logging.DEBUG).start()
         datums = []
         if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
-                        "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
-                        "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
+                "history_partitions" in self.config and self.config["history_partitions"] > 0 and \
+                "history_partition_seconds" in self.config and self.config["history_partition_seconds"] > 0:
             datums_partitions = []
             if "partitions" in datum_filter:
                 datum_filter_partitions = 0 if not min(datum_filter["partitions"]).isdigit() else int(min(datum_filter["partitions"]))
@@ -491,8 +493,8 @@ class Plugin(object):
     def datum_get(self, datum_scope, data_metric, data_type, data_unit, bin_width, bin_unit, data_derived_period=None,
                   data_derived_unit="day"):
         if data_metric in self.datums and data_type in self.datums[data_metric] and data_unit in self.datums[data_metric][data_type] and \
-                        (str(bin_width) + bin_unit) in self.datums[data_metric][data_type][data_unit] and \
-                        datum_scope in self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit]:
+                (str(bin_width) + bin_unit) in self.datums[data_metric][data_type][data_unit] and \
+                datum_scope in self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit]:
             datum_dict = self.datums[data_metric][data_type][data_unit][str(bin_width) + bin_unit][datum_scope]
             return datum_dict if (data_derived_period is None or datum_dict["bin_timestamp"] ==
                                   self.get_time_period(self.get_time(), Plugin.get_seconds(data_derived_period,
@@ -556,7 +558,7 @@ class Plugin(object):
         for datum_filter_field_value in datum_filter[datum_filter_field]:
             datum_filter_field_value = Plugin.datum_field_encode(datum_filter_field_value)
             if exact_match and datum_field == datum_filter_field_value or not exact_match and \
-                            datum_field.find(datum_filter_field_value) != -1:
+                    datum_field.find(datum_filter_field_value) != -1:
                 return True
         return False
 
@@ -1197,16 +1199,16 @@ class Plugin(object):
         log_timer.log("Plugin", "timer",
                       lambda: "[{}] state loaded [{}] metrics and [{}] datums from [{}]".format(
                           self.name, metrics_count, datums_count, (
-                              self.name + "-" + APP_MODEL_VERSION + "-" +
-                              datums_pickled[self.name][APP_MODEL_VERSION][
-                                  0]) if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[
+                                  self.name + "-" + APP_MODEL_VERSION + "-" +
+                                  datums_pickled[self.name][APP_MODEL_VERSION][
+                                      0]) if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[
                               self.name] else ""),
                       context=self.datums_store)
 
     def get_time(self):
         return calendar.timegm(time.gmtime()) if not self.is_clock else (
-            (1 if self.reactor.seconds() == 0 else int(self.reactor.seconds())) +
-            self.get_time_period(self.time_boot, 24 * 60 * 60))
+                (1 if self.reactor.seconds() == 0 else int(self.reactor.seconds())) +
+                self.get_time_period(self.time_boot, 24 * 60 * 60))
 
     def get_time_period(self, timestamp, period):
         return period if period > timestamp else \
@@ -1216,29 +1218,17 @@ class Plugin(object):
         log_timer = anode.Log(logging.INFO).start()
         path_dirty = False
         path_filtered = True
-        pickle_metadata = re.search(LIB_PATH_REGEX, path)
+        pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
         if pickle_metadata is not None:
             if (model_lower is None or model_lower <= pickle_metadata.group(2)) and \
                     (model_upper is None or model_upper >= pickle_metadata.group(2)):
                 path_filtered = False
                 pickle_cache = self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2))
-                path_dirty = pickle_metadata.group(3) not in pickle_cache or \
+                path_dirty = pickle_metadata.group(1).endswith("-SNAPSHOT") or \
+                             pickle_metadata.group(3) not in pickle_cache or \
                              pickle_metadata.group(2) not in pickle_cache[pickle_metadata.group(3)] or \
-                             pickle_metadata.group(1) > pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0]
-
-                            # TODO: SNAPSHOT detection
-                            #  (pickle_metadata.group(1) == pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0].replace(
-                            #      "-SNAPSHOT", "") and pickle_metadata.group(1) != \
-                            #   pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0])
-
-                # TODO
-                # if pickle_metadata.group(3) == "energyforecast":
-                #     print("energyforecast {} {}".format(path_dirty, path))
-                # if pickle_metadata.group(3) == "energyforecast" and pickle_metadata.group(3) in pickle_cache and pickle_metadata.group(2) in pickle_cache[pickle_metadata.group(3)]:
-                #     print("energyforecast {} {} {} {} {}".format(path_dirty, path,pickle_metadata.group(1),pickle_cache[pickle_metadata.group(3)][
-                # pickle_metadata.group(2)][0], pickle_cache))
-                # print("energyforecast\n\n\n")
-
+                             Plugin.compare_version(pickle_metadata.group(1),
+                                                    pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0]) > 0
         log_timer.log("Plugin", "timer", lambda: "[{}] status pickled [{}filtered, {}dirty] [{}]".format(
             self.name, "" if path_filtered else "not ", "" if path_dirty else "not ", path), context=self.pickled_status)
         return path_filtered, path_dirty
@@ -1246,7 +1236,7 @@ class Plugin(object):
     def pickled_put(self, store, path, library, pickle=False):
         log_timer = anode.Log(logging.INFO).start()
         pickle_path = None
-        pickle_metadata = re.search(LIB_PATH_REGEX, path)
+        pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
         if pickle_metadata is not None:
             pickle_path = os.path.join(store, pickle_metadata.group(1), "amodel", pickle_metadata.group(2), pickle_metadata.group(3),
                                        "model/pickle", pickle_metadata.group(4), "none", pickle_metadata.group(3) + ".pkl")
@@ -1260,11 +1250,6 @@ class Plugin(object):
                 with open(pickle_path, "wb") as pickle_file:
                     pickle_file.write(library)
             self.pickled_get(store, path=path, warm=True)
-
-            # TODO
-            # if pickle_metadata.group(3) == "energyforecast" and pickle_metadata.group(2) == "1001":
-            #     print("{}".format(path))
-
         log_timer.log("Plugin", "timer", lambda: "[{}] put pickled [{}] to [{}]".format(self.name, "-".join(
             "" if pickle_metadata is None else pickle_metadata.group(3, 2, 1)), "" if pickle_path is None else ("file://" + pickle_path)),
                       context=self.pickled_put)
@@ -1273,28 +1258,22 @@ class Plugin(object):
     def pickled_get(self, store, path=None, name=None, model=None, warm=False, cache=True):
         log_timer = anode.Log(logging.INFO).start()
         if cache:
-            if store not in PICKLE_CACHE:
-                PICKLE_CACHE[store] = {}
-            pickle_cache = PICKLE_CACHE[store]
+            if store not in self.pickles:
+                self.pickles[store] = {}
+            pickle_cache = self.pickles[store]
         else:
             pickle_cache = {}
         if path is not None:
-            pickle_metadata = re.search(LIB_PATH_REGEX, path)
+            pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
             if pickle_metadata is not None:
                 name = pickle_metadata.group(3)
                 model = pickle_metadata.group(2)
-
-        # TODO
-        # if name == "energyforecast" and store.endswith("model"):
-        #     print("{} {} {} {}".format(path,model,warm,cache))
-        # print("\n")
-
         if not cache or warm:
             pickle_metadata_cache = {}
             for root_dir, parent_dirs, file_names in os.walk(store):
                 for file_name in file_names:
                     file_path = os.path.join(root_dir, file_name)
-                    pickle_metadata = re.search(LIB_PATH_REGEX, file_path)
+                    pickle_metadata = re.search(PICKLE_PATH_REGEX, file_path)
                     if pickle_metadata is not None:
                         if (name is None or name == pickle_metadata.group(3)) and (model is None or model == pickle_metadata.group(2)):
                             if APP_VERSION.endswith("-SNAPSHOT") or not pickle_metadata.group(1).endswith("-SNAPSHOT"):
@@ -1306,21 +1285,7 @@ class Plugin(object):
                                     (pickle_metadata.group(4), file_path)
             for pickle_name in pickle_metadata_cache:
                 for pickle_model in pickle_metadata_cache[pickle_name]:
-                    pickle_versions = sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), reverse=True)
-                    pickle_version = pickle_versions[0]
-
-                    # TODO: SNAPSHOT detection
-                    # if len(pickle_metadata_cache[pickle_name][pickle_model]) > 1 and \
-                    #                 pickle_versions[0].replace("-SNAPSHOT", "") == pickle_versions[1]:
-                    #     pickle_version = pickle_versions[1]
-
-                    # TODO
-                    # print("energyforecast {}".format(path))
-                    # print("energyforecast {}".format(pickle_model))
-                    # print("energyforecast {}".format(pickle_metadata_cache[pickle_name][pickle_model].keys()))
-                    # print("energyforecast {}".format(pickle_version))
-                    # print("energyforecast\n\n\n")
-
+                    pickle_version = sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), cmp=Plugin.compare_version)[-1]
                     pickle_metadata = pickle_metadata_cache[pickle_name][pickle_model][pickle_version]
                     pickle_cache[pickle_name] = pickle_cache[pickle_name] if pickle_name in pickle_cache else {}
                     if pickle_metadata[0] == "pandas":
@@ -1335,26 +1300,29 @@ class Plugin(object):
                         self.name, pickle_name + "-" + pickle_model + "-" + pickle_version, pickle_metadata[0]))
         pickle_cache = pickle_cache if name is None else ({name: pickle_cache[name]} if name in pickle_cache else {name: {}})
         pickle_cache = pickle_cache if model is None else ({name: {model: pickle_cache[name][model]}}
-                                                           if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
+        if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
         pickle = pickle_cache[name] if name in pickle_cache else {}
-
-        # TODO
-        # if name == "energyforecast" and model == "1002":
-        #     print("{} {}".format(path, ", ".join([name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])))
-
         log_timer.log("Plugin", "timer", lambda: "[{}] got pickled [{}]".format(self.name, ", ".join(
             [name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])), context=self.pickled_get)
         return pickle_cache
+
+    @staticmethod
+    def compare_version(this, that):
+        if this is not None and that is not None and \
+                (this.endswith("-SNAPSHOT") or that.endswith("-SNAPSHOT")) and \
+                this.replace("-SNAPSHOT", "") == that.replace("-SNAPSHOT", ""):
+            return 0 if this == that else (1 if that.endswith("-SNAPSHOT") else -1)
+        else:
+            return 0 if this == that else (1 if this > that else -1)
 
     @staticmethod
     def datum_field_swap(field):
         return "" if field is None else "".join([ESCAPE_SWAPS.get(field_char, field_char) for field_char in field])
 
     @staticmethod
-    def datum_version_encode(version):
-        return APP_VERSION_NUMERIC if version is None else (
-            (-1 if version.endswith("-SNAPSHOT") else 1) * ((int(re.sub("[^0-9]", "", version)) - 99999999) if (
-                int(re.sub("[^0-9]", "", version)) > 100000000) else int(re.sub("[^0-9]", "", version))))
+    def datum_version_encode(version, base):
+        return (-1 if version.endswith("-SNAPSHOT") else 1) * ((int(re.sub("[^0-9]", "", version)) - base + 1) if (
+                int(re.sub("[^0-9]", "", version)) > base) else int(re.sub("[^0-9]", "", version)))
 
     @staticmethod
     def datum_field_encode(field):
@@ -1413,6 +1381,7 @@ class Plugin(object):
         self.config = config
         self.reactor = reactor
         self.datums = {}
+        self.pickles = {}
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
@@ -1422,8 +1391,7 @@ class Plugin(object):
         self.datums_load()
 
 
-PICKLE_CACHE = {}
-LIB_PATH_REGEX = ".*([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel/([1-9][0-9]{3})/([a-zA-z]*)/model/pickle/([a-zA-z]*).*\.pkl"
+PICKLE_PATH_REGEX = ".*([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel/([1-9][0-9]{3})/([a-zA-z]*)/model/pickle/([a-zA-z]*).*\.pkl"
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex").upper()

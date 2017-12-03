@@ -53,6 +53,7 @@ setup(
         "dill",
         "pyyaml",
         "xmltodict",
+        "requests",
         "cycler",
         "pandas",
         "numpy",

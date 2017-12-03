@@ -2,8 +2,6 @@ host: 0.0.0.0
 port: 8091
 publish_host: 52.63.86.162
 publish_port: 8093
-publish_access_key: $MQTT_ACCESS_KEY
-publish_secret_key: $MQTT_SECRET_KEY
 publish_seconds: 4
 save_on_exit: True
 save_seconds: 14400

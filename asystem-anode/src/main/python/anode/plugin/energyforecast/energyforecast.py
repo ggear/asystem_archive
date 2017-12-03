@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-import datetime
 import logging
 import os
 
+import datetime
 import pandas
 import treq
 import xmltodict
@@ -18,7 +18,7 @@ HTTP_TIMEOUT = 10
 S3_REGION = "ap-southeast-2"
 S3_BUCKET = "asystem-amodel"
 
-MODEL_PRODUCTION_VERSION = "1000"
+MODEL_PRODUCTION_VERSION = "1001"
 
 
 class Energyforecast(Plugin):
@@ -80,8 +80,8 @@ class Energyforecast(Plugin):
             bin_timestamp = self.get_time()
             models = self.pickled_get(os.path.join(self.config["db_dir"], "model"), path=path)
             if self.name in models and \
-                            self.anode.get_plugin("davis") is not None and \
-                            self.anode.get_plugin("wunderground") is not None:
+                    self.anode.get_plugin("davis") is not None and \
+                    self.anode.get_plugin("wunderground") is not None:
                 for day in range(1, 4):
                     temperature_forecast = self.anode.get_plugin("wunderground").datum_get(
                         DATUM_QUEUE_LAST, "temperature__forecast__glen_Dforrest", "point", "_PC2_PB0C", day, "day")
@@ -154,6 +154,7 @@ class Energyforecast(Plugin):
                             day,
                             "day",
                             asystem_version=models[self.name][model_version][0],
+                            data_version=model_version,
                             data_bound_lower=0)
                 self.publish()
         except Exception as exception:
@@ -164,3 +165,6 @@ class Energyforecast(Plugin):
     def __init__(self, parent, name, config, reactor):
         super(Energyforecast, self).__init__(parent, name, config, reactor)
         self.pickled_get(os.path.join(self.config["db_dir"], "model"), name=self.name, warm=True)
+        for datum_metric in self.datums:
+            if datum_metric <= "energy__production_Dforecast_D" + MODEL_PRODUCTION_VERSION:
+                del self.datums[datum_metric]

@@ -4,24 +4,23 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
-import datetime
 import json
+import logging
 import os.path
 import os.path
+import re
 import shutil
-import sys
-import time
+import socket
 import urlparse
 from StringIO import StringIO
 from random import randint
-import socket
 
-import re
-import logging
-import warnings
-import requests
+import datetime
 import ilio
 import pandas
+import requests
+import sys
+import time
 import treq
 from twisted.internet import threads
 from twisted.internet.defer import succeed
@@ -32,11 +31,11 @@ from twisted_s3 import auth
 from anode.anode import MqttPublishService
 from anode.anode import main
 from anode.application import *
+from anode.plugin import PICKLE_PATH_REGEX
 from anode.plugin import Plugin
-from anode.plugin import LIB_PATH_REGEX
-
-from anode.plugin.energyforecast.energyforecast import S3_REGION
+from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION_VERSION
 from anode.plugin.energyforecast.energyforecast import S3_BUCKET
+from anode.plugin.energyforecast.energyforecast import S3_REGION
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
@@ -98,19 +97,32 @@ class ANodeTest(TestCase):
         return template if test_corruptions else template \
             .replace("\\\"${EPOCH}\\\"", epoch_str if epoch_str != "null" else "") \
             .replace("\"${EPOCH}\"", epoch_str) \
+            .replace("${EPOCH}", epoch_str) \
             .replace("\\\"${TIME}\\\"", time_str if time_str != "null" else "") \
             .replace("\"${TIME}\"", time_str) \
+            .replace("${TIME}", time_str) \
             .replace("\\\"${TIMESTAMP}\\\"", timestamp_str if timestamp_str != "null" else "") \
             .replace("\"${TIMESTAMP}\"", timestamp_str) \
+            .replace("${TIMESTAMP}", timestamp_str) \
             .replace("\\\"${INTEGER}\\\"", integer_str if integer_str != "null" else "") \
             .replace("\"${INTEGER}\"", integer_str) \
+            .replace("${INTEGER}", integer_str) \
             .replace("\\\"${-INTEGER}\\\"", (("-" if integer_str != "null" else "") + integer_str) if integer_str != "null" else "") \
             .replace("\"${-INTEGER}\"", ("-" if integer_str != "null" else "") + integer_str) \
+            .replace("${-INTEGER}", ("-" if integer_str != "null" else "") + integer_str) \
             .replace("\\\"${FLOATINGPOINT}\\\"", floatingpoint_str if floatingpoint_str != "null" else "") \
             .replace("\"${FLOATINGPOINT}\"", floatingpoint_str) \
+            .replace("${FLOATINGPOINT}", floatingpoint_str) \
             .replace("\\\"${-FLOATINGPOINT}\\\"",
                      (("-" if floatingpoint_str != "null" else "") + floatingpoint_str) if floatingpoint_str != "null" else "") \
-            .replace("\"${-FLOATINGPOINT}\"", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str)
+            .replace("\"${-FLOATINGPOINT}\"", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
+            .replace("${-FLOATINGPOINT}", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
+            .replace("\\\"${MODEL_ENERGYFORECAST}\\\"", MODEL_PRODUCTION_VERSION) \
+            .replace("\"${MODEL_ENERGYFORECAST}\"", MODEL_PRODUCTION_VERSION) \
+            .replace("${MODEL_ENERGYFORECAST}", MODEL_PRODUCTION_VERSION) \
+            .replace("\\\"${MODEL_ENERGYFORECAST_ADD_1}\\\"", str(int(MODEL_PRODUCTION_VERSION) + 1)) \
+            .replace("\"${MODEL_ENERGYFORECAST_ADD_1}\"", str(int(MODEL_PRODUCTION_VERSION) + 1)) \
+            .replace("${MODEL_ENERGYFORECAST_ADD_1}", str(int(MODEL_PRODUCTION_VERSION) + 1))
 
     @staticmethod
     def unwrap_deferred(deferred):
@@ -241,6 +253,19 @@ class ANodeTest(TestCase):
             self.assertEqual(unescaped, Plugin.datum_field_decode(Plugin.datum_field_encode(unescaped)))
             self.assertEqual(unescaped, Plugin.datum_field_decode(Plugin.datum_field_encode(Plugin.datum_field_decode(escaped))))
             self.assertEqual(escaped, Plugin.datum_field_encode(Plugin.datum_field_decode(Plugin.datum_field_encode(unescaped))))
+
+    def test_version_compare(self):
+        self.assertEqual(0, Plugin.compare_version(None, None))
+        self.assertEqual(0, Plugin.compare_version("", ""))
+        self.assertEqual(0, Plugin.compare_version("10.000.0000", "10.000.0000"))
+        self.assertEqual(1, Plugin.compare_version("10.000.0001", "10.000.0000"))
+        self.assertEqual(-1, Plugin.compare_version("10.000.0000", "10.000.0001"))
+        self.assertEqual(1, Plugin.compare_version("10.000.0001", "10.000.0000-SNAPSHOT"))
+        self.assertEqual(-1, Plugin.compare_version("10.000.000-SNAPSHOT", "10.000.0001"))
+        self.assertEqual(1, Plugin.compare_version("10.000.0001-SNAPSHOT", "10.000.0000"))
+        self.assertEqual(-1, Plugin.compare_version("10.000.0000", "10.000.0001-SNAPSHOT"))
+        self.assertEqual(1, Plugin.compare_version("10.000.0000", "10.000.0000-SNAPSHOT"))
+        self.assertEqual(-1, Plugin.compare_version("10.000.0000-SNAPSHOT", "10.000.0000"))
 
     def test_bare(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-d" + DIR_ANODE_DB_TMP, "-q"])
@@ -937,7 +962,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 1
         iterations_repeat = 2
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(33, anode, "/rest/?metrics=energy", True)[1]
         self.assertTrue(metrics > 0)
@@ -1246,36 +1271,36 @@ class ANodeTest(TestCase):
                             False)[0]["bin_timestamp"].iloc[-2]
         for parameters in [
             ("&start=" + str(last_timestamp + 1) + "&finish=" + str(last_timestamp) +
-                 "&period=1&method=max&fill=linear"),
+             "&period=1&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - 1) + "&finish=" + str(last_timestamp) +
-                 "&period=1&method=max&fill=linear"),
+             "&period=1&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - 10) + "&finish=" + str(last_timestamp) +
-                 "&period=1&method=max&fill=linear"),
+             "&period=1&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - 60) + "&finish=" + str(last_timestamp) +
-                 "&period=5&method=max&fill=linear"),
+             "&period=5&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - 60 * 2) + "&finish=" + str(last_timestamp) +
-                 "&period=5&method=max&fill=linear"),
+             "&period=5&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 - 100)) + "&finish=" + str(last_timestamp) +
-                 "&period=5&method=max&fill=linear"),
+             "&period=5&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60)) + "&finish=" + str(last_timestamp) +
-                 "&period=5&method=max&fill=linear"),
+             "&period=5&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 4)) + "&finish=" + str(last_timestamp) +
-                 "&period=300&method=max&fill=linear"),
+             "&period=300&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 8)) + "&finish=" + str(last_timestamp) +
-                 "&period=300&method=max&fill=linear"),
+             "&period=300&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 16)) + "&finish=" + str(last_timestamp) +
-                 "&period=300&method=max&fill=linear"),
+             "&period=300&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 24)) + "&finish=" + str(last_timestamp) +
-                 "&period=300&method=max&fill=linear"),
+             "&period=300&method=max&fill=linear"),
             "&partitions=1&period=300&method=max&fill=linear",
             ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 4)) + "&finish=" + str(last_timestamp) +
-                 "&period=1800&method=max&fill=linear"),
+             "&period=1800&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 8)) + "&finish=" + str(last_timestamp) +
-                 "&period=1800&method=max&fill=linear"),
+             "&period=1800&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 16)) + "&finish=" + str(last_timestamp) +
-                 "&period=1800&method=max&fill=linear"),
+             "&period=1800&method=max&fill=linear"),
             ("&start=" + str(last_timestamp - (60 * 60 * 24 * 2 + 60 * 60 * 24)) + "&finish=" + str(last_timestamp) +
-                 "&period=1800&method=max&fill=linear"),
+             "&period=1800&method=max&fill=linear"),
             "&partitions=3&period=1800&method=max&fill=linear"
         ]:
             self.assertRest(0,
@@ -1292,14 +1317,15 @@ class ANodeTest(TestCase):
             try:
                 period = 1
                 iterations = 1
-                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
                 anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
                 self.assertRest(len(test_integration_tests) * 3,
                                 anode,
                                 "/rest/?metrics=energy.production-forecast",
-                                True)
+                                False)
             finally:
                 test_integration = False
+                test_integration_tests.clear()
 
     def test_oneoff(self):
         period = 1
@@ -1352,8 +1378,8 @@ class MockHttpResponseContent:
                                                                 os.environ["AWS_ACCESS_KEY"], os.environ["AWS_SECRET_KEY"])
             self.content = requests.get(response.url, headers=headers).content
             if "list-type=" not in params:
-                pickle_metadata = re.search(LIB_PATH_REGEX, response.url)
-                test_integration_tests.add((pickle_metadata.group(3)+ pickle_metadata.group(2)))
+                pickle_metadata = re.search(PICKLE_PATH_REGEX, response.url)
+                test_integration_tests.add((pickle_metadata.group(3) + pickle_metadata.group(2)))
         else:
             self.content = ANodeTest.template_populate(
                 HTTP_GETS[url_path]) if response.code == 200 else HTTP_GETS["http_404"]
@@ -1375,6 +1401,7 @@ class MockDeferToThread:
         callback(self.function(*self.arguments, **self.keyword_arguments), *arguments, **keyword_arguments)
 
 
+# noinspection PyBroadException
 def is_connected():
     try:
         socket.create_connection(("www.google.com", 80))
@@ -1382,6 +1409,7 @@ def is_connected():
     except:
         pass
     return False
+
 
 logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
@@ -1462,10 +1490,10 @@ HTTP_GETS = {
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com/":
         ilio.read(DIR_TEST + "/template/energyforecast_list_template.xml"),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0000/amodel/1000/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem/10.000.0000/amodel/" + MODEL_PRODUCTION_VERSION + "/energyforecast/model/pickle/joblib/none/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0001-SNAPSHOT/amodel/1001/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem/10.000.0001-SNAPSHOT/amodel/" + str(int(MODEL_PRODUCTION_VERSION) + 1) + "/energyforecast/model/pickle/joblib/none/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
     "/asystem/10.000.0000/amodel/1010/energyforecast/model/pickle/joblib/none/model.pkl":
