@@ -9,12 +9,12 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-arouter</artifactId>
     <packaging>jar</packaging>
-    <version>10.000.0002</version>
+    <version>10.000.0003-SNAPSHOT</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>10.000.0002</version>
+        <version>10.000.0003-SNAPSHOT</version>
     </parent>
 
     <properties>
