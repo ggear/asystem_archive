@@ -19,6 +19,7 @@ ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/bash.bashrc"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
+  $(grep AWS ${ANODE_ENV_FILE})
   $(grep MQTT ${ANODE_ENV_FILE})
   $(grep NETATMO ${ANODE_ENV_FILE})
 fi

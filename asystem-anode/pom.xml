@@ -3,7 +3,7 @@
 
     <!--
     Run: mvn clean install antrun:run@python-run -PCMP
-    Deploy: mvn clean deploy -pl asystem-anode -PPKG  -U -am -Dmaven.install-python.skip=false
+    Deploy: mvn clean deploy -pl asystem-anode -PPKG -U -Dmaven.install-python.skip=false
     -->
 
     <modelVersion>4.0.0</modelVersion>
