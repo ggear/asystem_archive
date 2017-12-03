@@ -1287,7 +1287,6 @@ class ANodeTest(TestCase):
     def test_models(self):
         if TEST_INTEGRATION:
             global test_integration
-            global test_integration_tests
             test_integration = True
             test_integration_tests.clear()
             try:
@@ -1301,7 +1300,6 @@ class ANodeTest(TestCase):
                                 True)
             finally:
                 test_integration = False
-                test_integration_tests = 0
 
     def test_oneoff(self):
         period = 1
