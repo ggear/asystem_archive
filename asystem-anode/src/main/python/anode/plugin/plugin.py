@@ -1219,13 +1219,26 @@ class Plugin(object):
         pickle_metadata = re.search(LIB_PATH_REGEX, path)
         if pickle_metadata is not None:
             if (model_lower is None or model_lower <= pickle_metadata.group(2)) and \
-                    (model_upper is None or model_upper >= pickle_metadata.group(2)) and \
-                            APP_VERSION >= pickle_metadata.group(1):
+                    (model_upper is None or model_upper >= pickle_metadata.group(2)):
                 path_filtered = False
                 pickle_cache = self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2))
                 path_dirty = pickle_metadata.group(3) not in pickle_cache or \
                              pickle_metadata.group(2) not in pickle_cache[pickle_metadata.group(3)] or \
                              pickle_metadata.group(1) > pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0]
+
+                            # TODO: SNAPSHOT detection
+                            #  (pickle_metadata.group(1) == pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0].replace(
+                            #      "-SNAPSHOT", "") and pickle_metadata.group(1) != \
+                            #   pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0])
+
+                # TODO
+                # if pickle_metadata.group(3) == "energyforecast":
+                #     print("energyforecast {} {}".format(path_dirty, path))
+                # if pickle_metadata.group(3) == "energyforecast" and pickle_metadata.group(3) in pickle_cache and pickle_metadata.group(2) in pickle_cache[pickle_metadata.group(3)]:
+                #     print("energyforecast {} {} {} {} {}".format(path_dirty, path,pickle_metadata.group(1),pickle_cache[pickle_metadata.group(3)][
+                # pickle_metadata.group(2)][0], pickle_cache))
+                # print("energyforecast\n\n\n")
+
         log_timer.log("Plugin", "timer", lambda: "[{}] status pickled [{}filtered, {}dirty] [{}]".format(
             self.name, "" if path_filtered else "not ", "" if path_dirty else "not ", path), context=self.pickled_status)
         return path_filtered, path_dirty
@@ -1246,7 +1259,12 @@ class Plugin(object):
             else:
                 with open(pickle_path, "wb") as pickle_file:
                     pickle_file.write(library)
-            self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2), warm=True)
+            self.pickled_get(store, path=path, warm=True)
+
+            # TODO
+            # if pickle_metadata.group(3) == "energyforecast" and pickle_metadata.group(2) == "1001":
+            #     print("{}".format(path))
+
         log_timer.log("Plugin", "timer", lambda: "[{}] put pickled [{}] to [{}]".format(self.name, "-".join(
             "" if pickle_metadata is None else pickle_metadata.group(3, 2, 1)), "" if pickle_path is None else ("file://" + pickle_path)),
                       context=self.pickled_put)
@@ -1265,6 +1283,12 @@ class Plugin(object):
             if pickle_metadata is not None:
                 name = pickle_metadata.group(3)
                 model = pickle_metadata.group(2)
+
+        # TODO
+        # if name == "energyforecast" and store.endswith("model"):
+        #     print("{} {} {} {}".format(path,model,warm,cache))
+        # print("\n")
+
         if not cache or warm:
             pickle_metadata_cache = {}
             for root_dir, parent_dirs, file_names in os.walk(store):
@@ -1282,7 +1306,21 @@ class Plugin(object):
                                     (pickle_metadata.group(4), file_path)
             for pickle_name in pickle_metadata_cache:
                 for pickle_model in pickle_metadata_cache[pickle_name]:
-                    pickle_version = next(iter(sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), reverse=True)))
+                    pickle_versions = sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), reverse=True)
+                    pickle_version = pickle_versions[0]
+
+                    # TODO: SNAPSHOT detection
+                    # if len(pickle_metadata_cache[pickle_name][pickle_model]) > 1 and \
+                    #                 pickle_versions[0].replace("-SNAPSHOT", "") == pickle_versions[1]:
+                    #     pickle_version = pickle_versions[1]
+
+                    # TODO
+                    # print("energyforecast {}".format(path))
+                    # print("energyforecast {}".format(pickle_model))
+                    # print("energyforecast {}".format(pickle_metadata_cache[pickle_name][pickle_model].keys()))
+                    # print("energyforecast {}".format(pickle_version))
+                    # print("energyforecast\n\n\n")
+
                     pickle_metadata = pickle_metadata_cache[pickle_name][pickle_model][pickle_version]
                     pickle_cache[pickle_name] = pickle_cache[pickle_name] if pickle_name in pickle_cache else {}
                     if pickle_metadata[0] == "pandas":
@@ -1290,10 +1328,7 @@ class Plugin(object):
                     elif pickle_metadata[0] == "joblib":
                         unpickled = joblib.load(pickle_metadata[1])
                         unpickled['execute'] = dill.load(StringIO(unpickled['execute'].getvalue()))
-
                         pickle_cache[pickle_name][pickle_model] = (pickle_version, unpickled)
-                        # pickle_cache[pickle_name][pickle_model] = (pickle_version, "WHOOPS!")
-
                     else:
                         raise Exception("Unknown pickle read format [{}]".format(pickle_metadata[0]))
                     anode.Log(logging.INFO).log("Plugin", "timer", lambda: "[{}] read pickled [{}] using [{}]".format(
@@ -1302,6 +1337,11 @@ class Plugin(object):
         pickle_cache = pickle_cache if model is None else ({name: {model: pickle_cache[name][model]}}
                                                            if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
         pickle = pickle_cache[name] if name in pickle_cache else {}
+
+        # TODO
+        # if name == "energyforecast" and model == "1002":
+        #     print("{} {}".format(path, ", ".join([name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])))
+
         log_timer.log("Plugin", "timer", lambda: "[{}] got pickled [{}]".format(self.name, ", ".join(
             [name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])), context=self.pickled_get)
         return pickle_cache
@@ -1313,7 +1353,7 @@ class Plugin(object):
     @staticmethod
     def datum_version_encode(version):
         return APP_VERSION_NUMERIC if version is None else (
-            (-1 if version.endswith("-SNAPSHOT")else 1) * ((int(re.sub("[^0-9]", "", version)) - 99999999) if (
+            (-1 if version.endswith("-SNAPSHOT") else 1) * ((int(re.sub("[^0-9]", "", version)) - 99999999) if (
                 int(re.sub("[^0-9]", "", version)) > 100000000) else int(re.sub("[^0-9]", "", version))))
 
     @staticmethod

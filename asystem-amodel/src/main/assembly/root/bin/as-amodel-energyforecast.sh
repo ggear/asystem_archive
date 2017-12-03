@@ -14,7 +14,7 @@ DELETE_CLUSTER=${2:-"false"}
 DO_PREPARATION=${3:-"true"}
 DO_TRAINING=${4:-"true"}
 
-[[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK = "true"
+[[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK="true"
 
 $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
 

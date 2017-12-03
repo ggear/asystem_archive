@@ -249,6 +249,7 @@
                                     <arg value="setup.py" />
                                     <arg value="trial" />
                                     <arg value="--reporter=text" />
+                                    <env key="INTEGRATION_TEST_SKIP" value="${maven.integration-test.skip}"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -257,7 +258,7 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>python-integration-test-pre</id>
+                        <id>python-system-test-pre</id>
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">
@@ -290,7 +291,7 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>python-integration-test-post</id>
+                        <id>python-system-test-post</id>
                         <phase>post-integration-test</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">

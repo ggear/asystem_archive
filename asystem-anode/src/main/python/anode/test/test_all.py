@@ -14,7 +14,12 @@ import time
 import urlparse
 from StringIO import StringIO
 from random import randint
+import socket
 
+import re
+import logging
+import warnings
+import requests
 import ilio
 import pandas
 import treq
@@ -22,11 +27,16 @@ from twisted.internet import threads
 from twisted.internet.defer import succeed
 from twisted.internet.task import Clock
 from twisted.trial.unittest import TestCase
+from twisted_s3 import auth
 
 from anode.anode import MqttPublishService
 from anode.anode import main
 from anode.application import *
 from anode.plugin import Plugin
+from anode.plugin import LIB_PATH_REGEX
+
+from anode.plugin.energyforecast.energyforecast import S3_REGION
+from anode.plugin.energyforecast.energyforecast import S3_BUCKET
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
@@ -927,7 +937,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 1
         iterations_repeat = 2
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(33, anode, "/rest/?metrics=energy", True)[1]
         self.assertTrue(metrics > 0)
@@ -1274,14 +1284,33 @@ class ANodeTest(TestCase):
                             "&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
                             False, True)
 
-        def test_oneoff(self):
-            period = 1
-            self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
-            anode = self.anode_init(False, False, False, False, period=period, iterations=1)
-            self.assertRest(0,
-                            anode,
-                            "/rest/?metrics=ping.internet.perth&types=point",
-                            False, True)
+    def test_models(self):
+        if TEST_INTEGRATION:
+            global test_integration
+            global test_integration_tests
+            test_integration = True
+            test_integration_tests.clear()
+            try:
+                period = 1
+                iterations = 1
+                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+                anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
+                self.assertRest(len(test_integration_tests) * 3,
+                                anode,
+                                "/rest/?metrics=energy.production-forecast",
+                                True)
+            finally:
+                test_integration = False
+                test_integration_tests = 0
+
+    def test_oneoff(self):
+        period = 1
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        anode = self.anode_init(False, False, False, False, period=period, iterations=1)
+        self.assertRest(0,
+                        anode,
+                        "/rest/?metrics=ping.internet.perth&types=point",
+                        False, True)
 
 
 # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
@@ -1298,7 +1327,10 @@ class MockRequest:
 class MockHttpResponse:
     def __init__(self, url):
         self.url = url
-        self.code = 200 if url.split("?", 1)[0] in HTTP_GETS else 404
+        url_path = url.split("?", 1)[0]
+        self.code = 200 \
+            if test_integration and TEST_INTEGRATION and url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com") or \
+               url_path in HTTP_GETS else 404
 
     def addCallbacks(self, callback, errback=None, callbackKeywords=None):
         if callbackKeywords is None:
@@ -1310,8 +1342,23 @@ class MockHttpResponse:
 class MockHttpResponseContent:
     def __init__(self, response):
         self.response = response
-        self.content = ANodeTest.template_populate(
-            HTTP_GETS[response.url.split("?", 1)[0]]) if response.code == 200 else HTTP_GETS["http_404"]
+        url_path = response.url.split("?", 1)[0]
+        if test_integration and TEST_INTEGRATION and url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com"):
+            host = url_path[7:-1].split("/", 1)[0]
+            path = response.url.replace("http://" + url_path[7:-1].split("/", 1)[0], "").split("?", 1)[0]
+            params = response.url.split("?", 1)[1]
+            payload = auth.compute_hashed_payload(b"")
+            timestamp = datetime.datetime.utcnow()
+            headers = {"host": host, "x-amz-content-sha256": payload, "x-amz-date": timestamp.strftime(auth.ISO8601_FMT)}
+            headers["Authorization"] = auth.compute_auth_header(headers, "GET", timestamp, S3_REGION, S3_BUCKET, path, params, payload,
+                                                                os.environ["AWS_ACCESS_KEY"], os.environ["AWS_SECRET_KEY"])
+            self.content = requests.get(response.url, headers=headers).content
+            if "list-type=" not in params:
+                pickle_metadata = re.search(LIB_PATH_REGEX, response.url)
+                test_integration_tests.add((pickle_metadata.group(3)+ pickle_metadata.group(2)))
+        else:
+            self.content = ANodeTest.template_populate(
+                HTTP_GETS[url_path]) if response.code == 200 else HTTP_GETS["http_404"]
 
     def addCallbacks(self, callback, errback=None, callbackKeywords=None):
         if callbackKeywords is None:
@@ -1330,6 +1377,16 @@ class MockDeferToThread:
         callback(self.function(*self.arguments, **self.keyword_arguments), *arguments, **keyword_arguments)
 
 
+def is_connected():
+    try:
+        socket.create_connection(("www.google.com", 80))
+        return True
+    except:
+        pass
+    return False
+
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+
 test_ticks = 0
 test_clock = None
 test_svg_counter = -1
@@ -1337,6 +1394,10 @@ test_randomise = False
 test_repeats = True
 test_nulls = False
 test_corruptions = False
+test_integration = False
+test_integration_tests = set()
+
+TEST_INTEGRATION = os.environ["INTEGRATION_TEST_SKIP"].lower() == "false" if "INTEGRATION_TEST_SKIP" in os.environ else is_connected()
 
 TEMPLATE_INTEGER_MAX = 8
 
