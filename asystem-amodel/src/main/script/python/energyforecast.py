@@ -110,9 +110,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel/asystem/10.000.0002-SNAPSHOT/amodel/1002/energyforecast"
+        "s3a://asystem-amodel/asystem/10.000.0002/amodel/1002/energyforecast"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel/asystem/10.000.0002-SNAPSHOT/amodel/1002/energyforecast"
+        "s3a://asystem-amodel/asystem/10.000.0002/amodel/1002/energyforecast"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
