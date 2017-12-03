@@ -165,6 +165,6 @@ class Energyforecast(Plugin):
     def __init__(self, parent, name, config, reactor):
         super(Energyforecast, self).__init__(parent, name, config, reactor)
         self.pickled_get(os.path.join(self.config["db_dir"], "model"), name=self.name, warm=True)
-        for datum_metric in self.datums:
-            if datum_metric <= "energy__production_Dforecast_D" + MODEL_PRODUCTION_VERSION:
+        for datum_metric, datum in self.datums.items():
+            if datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION_VERSION + "__inverter"):
                 del self.datums[datum_metric]
