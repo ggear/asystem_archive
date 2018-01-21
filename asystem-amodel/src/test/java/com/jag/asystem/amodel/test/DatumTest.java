@@ -1,7 +1,7 @@
 package com.jag.asystem.amodel.test;
 
-import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.cloudera.framework.testing.TestConstants;
 import com.jag.asystem.amodel.DatumFactory;
@@ -105,7 +105,7 @@ public class DatumTest implements TestConstants {
     testDatum("indexed-50", DatumFactory.getDatumIndexed(50),
       "getDataUnit", DatumDataUnit._PC2_PB0, "getDataMetric", DatumMetric.energy__export__yield);
     testDatum("indexed-2147483647", DatumFactory.getDatumIndexed(21474836),
-      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.anode__fronius__up_Dtime);
+      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.energy__production_Dforecast_Daccuracy_D1008__inverter);
     testDatum("random", DatumFactory.getDatumRandom());
   }
 

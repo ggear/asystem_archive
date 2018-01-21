@@ -224,7 +224,7 @@ def pipeline():
             actual_powers = np.append(actual_powers, y_test.values[0])
             predicted_powers = np.append(predicted_powers, y_test_pred[0])
             print("Actual energy generation: {}\tPredicted energy generation: {}".
-                  format(y_test.values[0], y_test_pred[0]))
+                format(y_test.values[0], y_test_pred[0]))
 
             print("Train R^2 score: {}\tTest R^2 score:{}".format(train_r2_score, test_r2_score))
             print("Train RMSE: {}\tTest RMSE:{}\n".format(train_rmse_score, test_rmse_score))
@@ -232,11 +232,10 @@ def pipeline():
         # Standard deviation of training data is base line of RMSE
         # print("Standard deviation: {}".format(pd.DataFrame.std(energies_target)))
 
-
         print("Train average RMSE: {}\tTest average RMSE:{}".
-              format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
+            format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
         print("Train average R2: {}\tTest average R2:{}".
-              format(np.average(train_r2_scores), np.average(test_r2_scores)))
+            format(np.average(train_r2_scores), np.average(test_r2_scores)))
 
         return actual_powers, predicted_powers
 
@@ -255,7 +254,6 @@ def pipeline():
 
     # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    plot_predict_actual(actual_powers, predicted_powers)
 
-
     # Create model with dev data
 
     def train_and_predict(regr, cat_train, target, cat_test, test_target):
@@ -267,15 +265,14 @@ def pipeline():
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
         print("Dev RMSE: {}\tDev R2 score: {}".
-              format(dev_rmse, r2_score(target.values, pred_train)))
+            format(dev_rmse, r2_score(target.values, pred_train)))
         print("Test RMSE: {}\tTest R2 score: {}".
-              format(test_rmse, r2_score(test_target.values, pred)))
+            format(test_rmse, r2_score(test_target.values, pred)))
         print('Coefficients: \n', regr.coef_)
         # print(test.columns)
         print('Intercepts: \n', regr.intercept_)
 
         # plot_predict_actual(test_target, pred)
-
 
         return regr, dev_rmse, test_rmse
 
@@ -296,7 +293,7 @@ def pipeline():
             best_model_test_rmse = _test_rmse
 
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
-          .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
+        .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
     model_file = '/model/pickle/joblib/none/model.pkl'
     local_model_file = local_model_path + model_file
@@ -324,7 +321,7 @@ def pipeline():
         model['execute'](model=model, features=model['execute'](features=dfv, engineering=True), prediction=True)[0], 1)
     energy_production_accuracy = int(round(energy_production_prediction / energy_production_actual * 100))
     print("Model prediction [{}] versus actual [{}] at accuracy [{}%]"
-          .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
+        .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
 
     print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
     publish_model(local_model_file, remote_model_file)

@@ -110,8 +110,8 @@ public class DatumFactory {
       .setDataUnit(getEnumIndexed(DatumDataUnit.class, index))
       .setDataScale((float) index)
       .setDataString(null)
-      .setDataTimestamp(System.currentTimeMillis() / 1000 - ThreadLocalRandom.current().nextInt(10))
-      .setBinTimestamp(System.currentTimeMillis() / 1000)
+      .setDataTimestamp(System.currentTimeMillis() / 1000 - ThreadLocalRandom.current().nextInt(10) - index)
+      .setBinTimestamp(System.currentTimeMillis() / 1000 - index)
       .setBinWidth(index)
       .setBinUnit(getEnumIndexed(DatumBinUnit.class, index))
       .build();

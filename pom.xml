@@ -10,12 +10,12 @@
     <parent>
         <groupId>com.cloudera.framework</groupId>
         <artifactId>cloudera-framework-parent</artifactId>
-        <version>1.6.2-cdh5.12.1</version>
+        <version>1.6.3-cdh5.12.1-SNAPSHOT</version>
     </parent>
 
     <properties>
         <asystem-model.version>1000</asystem-model.version>
-        <asystem-model-energyforecast.version>1002</asystem-model-energyforecast.version>
+        <asystem-model-energyforecast.version>1003</asystem-model-energyforecast.version>
         <maven.install-flume.skip>true</maven.install-flume.skip>
         <maven.install-python.skip>true</maven.install-python.skip>
     </properties>

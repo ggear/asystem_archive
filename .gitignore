@@ -35,6 +35,7 @@ phantomjsdriver.log
 target
 build
 dist
+asystem-astore/src/repo
 asystem-arouter/src/main/resources/avro
 asystem-anode/src/main/python/anode/avro
 asystem-anode/src/main/python/config/*.pkl

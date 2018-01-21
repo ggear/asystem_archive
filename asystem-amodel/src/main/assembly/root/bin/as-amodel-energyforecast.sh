@@ -1,7 +1,4 @@
 #!/bin/bash
-#
-# Driver script
-#
 
 export ROOT_DIR=$( cd "$( dirname "$BASH_SOURCE" )" && pwd )/..
 
@@ -20,7 +17,7 @@ $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
 
 [[ "$DO_PREPARATION" = "true" ]] && $ROOT_DIR/bin/cldr-shell-spark2.sh \
   "false" \
-  "asystem-energyforecast-model-preparation" \
+  "asystem-energyforecast-preparation" \
   "com.jag.asystem.amodel.EnergyForecastPreparation" \
   "$S3_URL_ASTORE/ $S3_URL_AMODEL/asystem/$APP_VERSION/amodel/$MODEL_ENERGYFORECAST_VERSION/energyforecast/" \
   "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
@@ -28,7 +25,7 @@ $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
 
 [[ "$DO_TRAINING" = "true" ]] && $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
   "$WAIT_TASK" \
-  "asystem-energyforecast-model-training" \
+  "asystem-energyforecast-training" \
   "energyforecast.py" \
   "" \
   "--num-executors 1 --executor-cores 1 --executor-memory 1g" \

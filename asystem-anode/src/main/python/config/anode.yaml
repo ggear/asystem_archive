@@ -9,7 +9,7 @@ plugin:
     fronius:
       poll_seconds: 1
       buffer_ticks: 60
-      history_partitions: 25
+      history_partitions: 10
       history_ticks: 7000000
       history_partition_seconds: 86400
       repeat_seconds: 101
@@ -19,7 +19,7 @@ plugin:
     davis:
       poll_seconds: -1
       buffer_ticks: 30
-      history_partitions: 25
+      history_partitions: 10
       history_ticks: 2500000
       history_partition_seconds: 86400
       repeat_seconds: 103
@@ -29,7 +29,7 @@ plugin:
     netatmo:
       poll_seconds: 50
       buffer_ticks: 10
-      history_partitions: 25
+      history_partitions: 10
       history_ticks: 1500000
       history_partition_seconds: 86400
       repeat_seconds: 107
@@ -39,7 +39,7 @@ plugin:
     wunderground:
       poll_seconds: 300
       buffer_ticks: 5
-      history_partitions: 25
+      history_partitions: 10
       history_ticks: 2000000
       history_partition_seconds: 86400
       repeat_seconds: 111
@@ -49,7 +49,7 @@ plugin:
     speedtest:
       poll_seconds: -1
       buffer_ticks: 30
-      history_partitions: 25
+      history_partitions: 10
       history_ticks: 350000
       history_partition_seconds: 86400
       repeat_seconds: 113
@@ -59,8 +59,8 @@ plugin:
     energyforecast:
       poll_seconds: 30
       buffer_ticks: 5
-      history_partitions: 25
-      history_ticks: 1000000
+      history_partitions: 10
+      history_ticks: 200000
       history_partition_seconds: 86400
       repeat_seconds: 115
       repeat_partition: True

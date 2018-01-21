@@ -55,7 +55,7 @@ public class FlumeTest implements TestConstants {
 
   private static final Logger LOG = LoggerFactory.getLogger(FlumeTest.class);
 
-  private static final int DATUMS_COUNT = 50;
+  private static final int DATUMS_COUNT = 16;
 
   private MqttClient client;
 
@@ -70,6 +70,7 @@ public class FlumeTest implements TestConstants {
     client.disconnect();
   }
 
+  @SuppressWarnings("Duplicates")
   @Test
   public void testFlumePipeline() throws Exception {
     assertTrue(flumeServer.crankPipeline(
@@ -82,12 +83,14 @@ public class FlumeTest implements TestConstants {
       if (LOG.isInfoEnabled()) {
         LOG.info("FlumeTest sink has written file [" + path.getName() + "] with size [" + pathContents.length() + "] bytes");
       }
-      if (partitions.add(path.getParent().getParent().getParent().toString())) {
+      if (partitions.add(path.getParent().getParent().getParent().getParent().getParent().getParent().getParent().toString())) {
         hiveServer.execute(
           "CREATE EXTERNAL TABLE datum_" + (partitions.size() - 1) + " " +
-            "PARTITIONED BY (ingest_id STRING, ingest_timestamp BIGINT) " +
-            "STORED AS AVRO " +
-            "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/ingest_id")) + "' " +
+            "PARTITIONED BY (" +
+            "arouter_version STRING, arouter_id STRING, arouter_ingest BIGINT, " +
+            "arouter_start BIGINT, arouter_finish BIGINT, arouter_model INT" +
+            ") STORED AS AVRO " +
+            "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/arouter_version")) + "' " +
             "TBLPROPERTIES ('avro.schema.url'='" + FlumeTest.class.getResource("/avro/" +
             DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') "
         );
@@ -97,10 +100,10 @@ public class FlumeTest implements TestConstants {
     StringBuilder query = new StringBuilder();
     for (int index = 0; index < partitions.size(); index++) {
       if (partitions.size() == 1) {
-        query.append("SELECT data_metric FROM datum_0 ORDER BY data_metric");
+        query.append("SELECT bin_timestamp, data_metric FROM datum_0 ORDER BY data_metric");
       } else {
         if (index == 0) {
-          query.append("SELECT data_metric FROM ( SELECT * FROM datum_").append(index);
+          query.append("SELECT bin_timestamp, data_metric FROM ( SELECT * FROM datum_").append(index);
         } else if (index == partitions.size() - 1) {
           query.append(" UNION ALL SELECT * FROM datum_").append(index).append(" ) datum ORDER BY data_metric");
         } else {

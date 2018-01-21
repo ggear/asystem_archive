@@ -26,10 +26,10 @@ public class MetadataInterceptor implements Interceptor {
 
   public static final String HEADER_INGEST_ID = "iid";
   public static final String HEADER_INGEST_PARTITION = "ipt";
-  public static final String HEADER_INGEST_TIMESTAMP = "its";
+  public static final String HEADER_BATCH_START = "ibs";
+  public static final String HEADER_BATCH_FINISH = "ibf";
   public static final String HEADER_ANODE_ID = "aid";
   public static final String HEADER_AMODEL_VERSION = "amv";
-  public static final String HEADER_ASYSTEM_VERSION = "asv";
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataInterceptor.class);
 
@@ -38,15 +38,12 @@ public class MetadataInterceptor implements Interceptor {
   private static final String AVRO_SCHEMA_FILE = "datum.avsc";
   private static final String INSTANCE_ID = "flume-" + UUID.randomUUID().toString();
 
-  private final int batchSize;
+  private final int batchWindowSeconds;
   private final String avroSchemaUrl;
   private final boolean dropSnapshots;
 
-  private int batchCount;
-  private long batchTimestamp;
-
-  private MetadataInterceptor(int batchSize, String avroSchemaUrl, boolean dropSnapshots) {
-    this.batchSize = batchSize;
+  private MetadataInterceptor(int batchWindowSeconds, String avroSchemaUrl, boolean dropSnapshots) {
+    this.batchWindowSeconds = batchWindowSeconds;
     this.avroSchemaUrl = avroSchemaUrl;
     this.dropSnapshots = dropSnapshots;
   }
@@ -72,39 +69,40 @@ public class MetadataInterceptor implements Interceptor {
   public Event intercept(Event event) {
     String[] topicSegments;
     String topic = event.getHeaders().get(MqttSource.HEADER_TOPIC);
-    if (topic == null || (topicSegments = topic.split("/")).length != 6) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("MQTT event missing valid header attributes [" +
+    if (topic == null || (topicSegments = topic.split("/")).length != 6 || !topicSegments[3].startsWith("anode_version=") ||
+      !topicSegments[4].startsWith("anode_id=") || !topicSegments[5].startsWith("anode_model=")) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("MQTT event missing valid header attributes [" +
           Joiner.on(",").withKeyValueSeparator("=").join(event.getHeaders()) + "]");
       }
       return null;
     }
-    if (dropSnapshots && topicSegments[1].endsWith("SNAPSHOT")) {
+    String anode_version = topicSegments[3].replace("anode_version=", "");
+    String anode_id = topicSegments[4].replace("anode_id=", "");
+    String amodel_model = topicSegments[5].replace("anode_model=", "");
+    if (dropSnapshots && anode_version.endsWith("SNAPSHOT")) {
       if (LOG.isDebugEnabled()) {
-        LOG.debug("MQTT event being dropped since it has a snapshot version [" + topicSegments[1] + "]");
+        LOG.debug("MQTT event being dropped since it has a SNAPSHOT version [" + anode_version + "]");
       }
       return null;
     }
-    if (batchCount == 0 || batchCount >= batchSize) {
-      batchTimestamp = System.currentTimeMillis();
-    }
-    if (++batchCount >= batchSize) {
-      batchCount = 0;
-    }
     int size = event.getBody().length;
     Datum datum = DATUM_FACTORY.deserialize(event.getBody(), Datum.getClassSchema());
-    datum.setAnodeId(new DatumAnodeId(DatatypeConverter.parseHexBinary(topicSegments[3])));
+    datum.setAnodeId(new DatumAnodeId(DatatypeConverter.parseHexBinary(anode_id)));
     event.setBody(DATUM_FACTORY.serialize(datum));
     if (LOG.isDebugEnabled()) {
       LOG.debug("MQTT added event meta-data to datum with size increase of [" + (event.getBody().length - size) + "]");
     }
+    long batchStartTimestamp = datum.getBinTimestamp() - datum.getBinTimestamp() % batchWindowSeconds;
+    long batchFinishTimestamp = batchStartTimestamp + batchWindowSeconds;
+    long batchPartitionPrefix = batchStartTimestamp / batchWindowSeconds % 10;
     putHeader(event, HEADER_INGEST_ID, INSTANCE_ID, false);
-    putHeader(event, HEADER_INGEST_PARTITION, "" + batchTimestamp % 10, false);
-    putHeader(event, HEADER_INGEST_TIMESTAMP, "" + batchTimestamp, false);
-    putHeader(event, AVRO_SCHEMA_URL_HEADER, avroSchemaUrl + "/" + topicSegments[5] + "/" + AVRO_SCHEMA_FILE, false);
-    putHeader(event, HEADER_ASYSTEM_VERSION, topicSegments[1], false);
-    putHeader(event, HEADER_ANODE_ID, topicSegments[3], false);
-    putHeader(event, HEADER_AMODEL_VERSION, topicSegments[5], false);
+    putHeader(event, HEADER_INGEST_PARTITION, "" + batchPartitionPrefix, false);
+    putHeader(event, HEADER_BATCH_START, "" + batchStartTimestamp, false);
+    putHeader(event, HEADER_BATCH_FINISH, "" + batchFinishTimestamp, false);
+    putHeader(event, AVRO_SCHEMA_URL_HEADER, avroSchemaUrl + "/" + amodel_model + "/" + AVRO_SCHEMA_FILE, false);
+    putHeader(event, HEADER_ANODE_ID, anode_id, false);
+    putHeader(event, HEADER_AMODEL_VERSION, amodel_model, false);
     return event;
   }
 
@@ -121,11 +119,11 @@ public class MetadataInterceptor implements Interceptor {
   @SuppressWarnings("unused")
   public static class Builder implements Interceptor.Builder {
 
-    public static final String CONFIG_BATCH_SIZE = "batchSize";
+    public static final String CONFIG_BATCH_WINDOW_SECONDS = "batchWindowSeconds";
     public static final String CONFIG_AVRO_SCHEMA_URL = "avroSchemaURL";
     public static final String CONFIG_DROP_SNAPSHOTS = "dropSnapshots";
 
-    private int batchSize;
+    private int batchWindowSeconds;
     private String avroSchemaUrl;
     private boolean dropSnapshots;
 
@@ -134,12 +132,12 @@ public class MetadataInterceptor implements Interceptor {
 
     @Override
     public MetadataInterceptor build() {
-      return new MetadataInterceptor(batchSize, avroSchemaUrl, dropSnapshots);
+      return new MetadataInterceptor(batchWindowSeconds, avroSchemaUrl, dropSnapshots);
     }
 
     @Override
     public void configure(Context context) {
-      batchSize = context.getInteger(CONFIG_BATCH_SIZE, 1);
+      batchWindowSeconds = context.getInteger(CONFIG_BATCH_WINDOW_SECONDS, 60 * 60);
       avroSchemaUrl = context.getString(CONFIG_AVRO_SCHEMA_URL, "").trim();
       dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, false);
     }

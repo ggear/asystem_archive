@@ -125,7 +125,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                             datum.data_timeliness += "tomorrow";
                         } else { //noinspection EqualityComparisonWithCoercionJS
                             if (datum.bin_width == 3) {
-                                datum.data_timeliness += "ubermorrow";
+                                datum.data_timeliness += "overmorrow";
                             }
                         }
                     } else { //noinspection EqualityComparisonWithCoercionJS
@@ -135,7 +135,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                                 datum.data_timeliness += "tomorrow day time";
                             } else { //noinspection EqualityComparisonWithCoercionJS
                                 if (datum.bin_width == 3) {
-                                    datum.data_timeliness += "ubermorrow day time";
+                                    datum.data_timeliness += "overmorrow day time";
                                 }
                             }
                         } else { //noinspection EqualityComparisonWithCoercionJS
@@ -145,7 +145,7 @@ function ANode(uri, onopen, onclose, onmessage) {
                                     datum.data_timeliness += "tomorrow night time";
                                 } else { //noinspection EqualityComparisonWithCoercionJS
                                     if (datum.bin_width == 3) {
-                                        datum.data_timeliness += "ubermorrow night time";
+                                        datum.data_timeliness += "overmorrow night time";
                                     }
                                 }
                             }

@@ -426,7 +426,7 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=power&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 26,
+                    self.assertRest(0 if filter_scope == "publish" else 29,
                                     anode,
                                     "/rest/?metrics=energy.&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
@@ -964,7 +964,7 @@ class ANodeTest(TestCase):
         iterations_repeat = 2
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(33, anode, "/rest/?metrics=energy", True)[1]
+        metrics = self.assertRest(36, anode, "/rest/?metrics=energy", True)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,
@@ -1397,6 +1397,7 @@ class MockDeferToThread:
         self.arguments = arguments
         self.keyword_arguments = keyword_arguments
 
+    # noinspection PyArgumentList
     def addCallback(self, callback, *arguments, **keyword_arguments):
         callback(self.function(*self.arguments, **self.keyword_arguments), *arguments, **keyword_arguments)
 
@@ -1481,9 +1482,9 @@ HTTP_GETS = {
         ilio.read(DIR_TEST + "/template/netatmo_station_template.json"),
     "https://api.netatmo.com/api/gethomecoachsdata":
         ilio.read(DIR_TEST + "/template/netatmo_homecoach_template.json"),
-    "http://10.0.0.151/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
+    "http://fronius-inverter/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
         ilio.read(DIR_TEST + "/template/fronius_flow_template.json"),
-    "http://10.0.0.151/solar_api/v1/GetMeterRealtimeData.cgi":
+    "http://fronius-inverter/solar_api/v1/GetMeterRealtimeData.cgi":
         ilio.read(DIR_TEST + "/template/fronius_meter_template.json"),
     "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
         ilio.read(DIR_TEST + "/template/wunderground_10dayforecast_template.json"),

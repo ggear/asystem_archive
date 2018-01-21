@@ -265,12 +265,10 @@ class Plugin(object):
                    data_derived_max=False, data_derived_min=False, data_derived_period=1, data_derived_unit="day",
                    data_derived_force=False, data_push_force=False, data_transient=False):
         log_timer = anode.Log(logging.DEBUG).start()
-        asystem_version = APP_VERSION_NUMERIC if asystem_version is None else Plugin.datum_version_encode(asystem_version, 100000000)
-        data_version = 0 if data_version is None else Plugin.datum_version_encode(data_version, 1000)
         if data_value is not None:
             datum_dict = {
-                "asystem_version": asystem_version,
-                "data_version": data_version,
+                "asystem_version": APP_VERSION_NUMERIC if asystem_version is None else Plugin.datum_version_encode(asystem_version),
+                "data_version": 0 if data_version is None else Plugin.datum_version_encode(data_version, 1000),
                 "data_source": self.name,
                 "data_metric": data_metric,
                 "data_temporal": data_temporal,
@@ -344,7 +342,8 @@ class Plugin(object):
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MAX]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
                                             else data_derived_period, datum_dict["bin_unit"] if datum_dict["data_type"] == "integral"
-                                            else data_derived_unit, data_derived_force=data_derived_force, data_push_force=data_push_force,
+                                            else data_derived_unit, asystem_version=asystem_version, data_version=data_version,
+                                            data_derived_force=data_derived_force, data_push_force=data_push_force,
                                             data_transient=data_transient)
                     if data_derived_min:
                         if DATUM_QUEUE_MIN not in datums_deref or datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"] < bin_timestamp_derived \
@@ -362,7 +361,8 @@ class Plugin(object):
                                             datum_dict["data_timestamp"], datums_deref[DATUM_QUEUE_MIN]["bin_timestamp"],
                                             datum_dict["bin_width"] if datum_dict["data_type"] == "integral"
                                             else data_derived_period, datum_dict["bin_unit"] if datum_dict["data_type"] == "integral"
-                                            else data_derived_unit, data_derived_force=data_derived_force, data_push_force=data_push_force,
+                                            else data_derived_unit, asystem_version=asystem_version, data_version=data_version,
+                                            data_derived_force=data_derived_force, data_push_force=data_push_force,
                                             data_transient=data_transient)
                     datums_deref[DATUM_QUEUE_PUBLISH].append(datum_avro)
                     if "history_ticks" in self.config and self.config["history_ticks"] > 0 and \
@@ -1320,7 +1320,7 @@ class Plugin(object):
         return "" if field is None else "".join([ESCAPE_SWAPS.get(field_char, field_char) for field_char in field])
 
     @staticmethod
-    def datum_version_encode(version, base):
+    def datum_version_encode(version, base=100000000):
         return (-1 if version.endswith("-SNAPSHOT") else 1) * ((int(re.sub("[^0-9]", "", version)) - base + 1) if (
                 int(re.sub("[^0-9]", "", version)) > base) else int(re.sub("[^0-9]", "", version)))
 

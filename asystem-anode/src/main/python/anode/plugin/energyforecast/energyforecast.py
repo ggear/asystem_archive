@@ -3,6 +3,7 @@ from __future__ import print_function
 import logging
 import os
 
+import time
 import datetime
 import pandas
 import treq
@@ -82,6 +83,26 @@ class Energyforecast(Plugin):
             if self.name in models and \
                     self.anode.get_plugin("davis") is not None and \
                     self.anode.get_plugin("wunderground") is not None:
+                energy_production_today = self.anode.get_plugin("fronius").datum_get(
+                    DATUM_QUEUE_LAST, "energy__production__inverter", "integral", "Wh", 1, "day")
+                energy_production_today = energy_production_today["data_value"] / energy_production_today["data_scale"] \
+                    if energy_production_today is not None else None
+                sun_rise = self.anode.get_plugin("davis").datum_get(
+                    DATUM_QUEUE_LAST, "sun__outdoor__rise", "epoch", "scalar", 1, "day")
+                sun_rise = sun_rise["data_value"] / sun_rise["data_scale"] \
+                    if sun_rise is not None else None
+                sun_set = self.anode.get_plugin("davis").datum_get(
+                    DATUM_QUEUE_LAST, "sun__outdoor__set", "epoch", "scalar", 1, "day")
+                sun_set = sun_set["data_value"] / sun_set["data_scale"] \
+                    if sun_set is not None else None
+                sun_azimuth = self.anode.get_plugin("davis").datum_get(
+                    DATUM_QUEUE_LAST, "sun__outdoor__azimuth", "point", "_PC2_PB0", 2, "second")
+                sun_azimuth = sun_azimuth["data_value"] / sun_azimuth["data_scale"] \
+                    if sun_azimuth is not None else None
+                sun_altitude = self.anode.get_plugin("davis").datum_get(
+                    DATUM_QUEUE_LAST, "sun__outdoor__altitude", "point", "_PC2_PB0", 2, "second")
+                sun_altitude = sun_altitude["data_value"] / sun_altitude["data_scale"] \
+                    if sun_altitude is not None else None
                 for day in range(1, 4):
                     temperature_forecast = self.anode.get_plugin("wunderground").datum_get(
                         DATUM_QUEUE_LAST, "temperature__forecast__glen_Dforrest", "point", "_PC2_PB0C", day, "day")
@@ -99,22 +120,6 @@ class Energyforecast(Plugin):
                         DATUM_QUEUE_LAST, "wind__forecast__glen_Dforrest", "mean", "km_P2Fh", day, "day")
                     wind_forecast = wind_forecast["data_value"] / wind_forecast["data_scale"] \
                         if wind_forecast is not None else None
-                    sun_rise = self.anode.get_plugin("davis").datum_get(
-                        DATUM_QUEUE_LAST, "sun__outdoor__rise", "epoch", "scalar", 1, "day")
-                    sun_rise = sun_rise["data_value"] / sun_rise["data_scale"] \
-                        if sun_rise is not None else None
-                    sun_set = self.anode.get_plugin("davis").datum_get(
-                        DATUM_QUEUE_LAST, "sun__outdoor__set", "epoch", "scalar", 1, "day")
-                    sun_set = sun_set["data_value"] / sun_set["data_scale"] \
-                        if sun_set is not None else None
-                    sun_azimuth = self.anode.get_plugin("davis").datum_get(
-                        DATUM_QUEUE_LAST, "sun__outdoor__azimuth", "point", "_PC2_PB0", 2, "second")
-                    sun_azimuth = sun_azimuth["data_value"] / sun_azimuth["data_scale"] \
-                        if sun_azimuth is not None else None
-                    sun_altitude = self.anode.get_plugin("davis").datum_get(
-                        DATUM_QUEUE_LAST, "sun__outdoor__altitude", "point", "_PC2_PB0", 2, "second")
-                    sun_altitude = sun_altitude["data_value"] / sun_altitude["data_scale"] \
-                        if sun_altitude is not None else None
                     conditions_forecast = self.anode.get_plugin("wunderground").datum_get(
                         DATUM_QUEUE_LAST, "conditions__forecast__glen_Dforrest", "enumeration", "__", day, "day")
                     conditions_forecast = conditions_forecast["data_string"] \
@@ -136,6 +141,7 @@ class Energyforecast(Plugin):
                     for model_version in models[self.name]:
                         model = models[self.name][model_version][1]
                         energy_production_forecast = 0
+                        model_classifier = "" if model_version == MODEL_PRODUCTION_VERSION else ("_D" + model_version)
                         try:
                             energy_production_forecast = model['execute'](model=model, features=model['execute'](
                                 features=features_df, engineering=True), prediction=True)[0]
@@ -143,8 +149,7 @@ class Energyforecast(Plugin):
                             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
                                                          .format(self.name, exception, path), exception)
                         self.datum_push(
-                            "energy__production_Dforecast" + (
-                                "" if model_version == MODEL_PRODUCTION_VERSION else ("_D" + model_version)) + "__inverter",
+                            "energy__production_Dforecast" + model_classifier + "__inverter",
                             "forecast", "integral",
                             self.datum_value(energy_production_forecast, factor=10),
                             "Wh",
@@ -156,6 +161,41 @@ class Energyforecast(Plugin):
                             asystem_version=models[self.name][model_version][0],
                             data_version=model_version,
                             data_bound_lower=0)
+                        if day == 1:
+                            if model_classifier == "":
+                                self.datum_push(
+                                    "energy__production_Dforecast_Ddaylight__inverter",
+                                    "forecast", "integral",
+                                    self.datum_value(((time.time() - time.mktime(datetime.date.today().timetuple())) / (sun_set - sun_rise))
+                                                     if (
+                                            sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0),
+                                    "_P25",
+                                    1,
+                                    bin_timestamp,
+                                    bin_timestamp,
+                                    day,
+                                    "day",
+                                    asystem_version=models[self.name][model_version][0],
+                                    data_version=model_version,
+                                    data_bound_lower=0,
+                                    data_bound_upper=100)
+                            else:
+                                self.datum_push(
+                                    "energy__production_Dforecast_Daccuracy" + model_classifier + "__inverter",
+                                    "forecast", "integral",
+                                    self.datum_value((energy_production_forecast / energy_production_today)
+                                                     if (energy_production_today is not None and energy_production_today != 0) else 0),
+                                    "_P25",
+                                    1,
+                                    bin_timestamp,
+                                    bin_timestamp,
+                                    day,
+                                    "day",
+                                    asystem_version=models[self.name][model_version][0],
+                                    data_version=model_version,
+                                    data_bound_lower=0,
+                                    data_bound_upper=100,
+                                    data_derived_max=True)
                 self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing model [{}]"
