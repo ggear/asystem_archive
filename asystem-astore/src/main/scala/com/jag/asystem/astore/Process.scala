@@ -21,6 +21,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
 
   private var inputOutputPath: Path = _
 
+  private var filesCount = Array.fill[Int](10)(0)
   private val filesStagedTodo = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesStagedSkip = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedSets = mutable.Map[(String, String), mutable.SortedSet[String]]()
@@ -41,9 +42,9 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     val files = dfs.listFiles(inputOutputPath, true)
     while (files.hasNext) {
       val fileUri = files.next().getPath.toString
-      val fileLabelPattern = ".*/asystem/astore/(.*)/canonical/(.*)/(.*)/(.*)/.*".r
+      val fileLabelPattern = ".*/([0-9])/asystem/astore/(.*)/canonical/(.*)/(.*)/(.*)/.*".r
       fileUri match {
-        case fileLabelPattern(fileLabel, fileFormat, fileEncoding, fileCodec) => fileLabel match {
+        case fileLabelPattern(filePartition, fileLabel, fileFormat, fileEncoding, fileCodec) => fileLabel match {
           case "staged" => val filePartitionsPattern =
             ".*/arouter_version=(.*)/arouter_id=(.*)/arouter_ingest=(.*)/arouter_start=(.*)/arouter_finish=(.*)/arouter_model=(.*)/(.*)".r
             fileUri match {
@@ -60,15 +61,12 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
                     if (!filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) = mutable.SortedSet()
                     filesStagedTodo(fileStartFinish) += fileParent
                   }
+                  countFile(fileUri, filePartition)
                 }
                 catch {
-                  case _: NumberFormatException =>
-                    if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
-                  case exception: Exception =>
-                    if (Log.isErrorEnabled) Log.error("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "] " +
-                      "after unexpected exception", exception)
+                  case _: NumberFormatException => countFile(fileUri, filePartition, fileIgnore = true)
                 }
-              case _ => if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+              case _ => countFile(fileUri, filePartition, fileIgnore = true)
             }
           case "processed" => val filePartitionsPattern =
             ".*/astore_version=(.*)/astore_year=(.*)/astore_month=(.*)/astore_model=(.*)/astore_metric=(.*)/(.*)".r
@@ -88,17 +86,13 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
                   }
                 }
                 catch {
-                  case _: NumberFormatException =>
-                    if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
-                  case exception: Exception =>
-                    if (Log.isErrorEnabled) Log.error("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "] " +
-                      "after unexpected exception", exception)
+                  case _: NumberFormatException => countFile(fileUri, filePartition, fileIgnore = true)
                 }
-              case _ => if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+              case _ => countFile(fileUri, filePartition, fileIgnore = true)
             }
-          case _ => if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+          case _ => countFile(fileUri, filePartition, fileIgnore = true)
         }
-        case _ => if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+        case _ => countFile(fileUri, fileIgnore = true)
       }
     }
     for ((filesStagedTodoStartFinish, filesStagedTodoParents) <- filesStagedTodo) {
@@ -168,7 +162,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     val fileModel = lit(getModelProperty("MODEL_VERSION"))
     val fileVersion = lit(getApplicationProperty("APP_VERSION"))
     val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)
-    val filesProcessedPath = s"$inputOutputPath/${scala.util.Random.nextInt(10)}/asystem/astore/processed/canonical/parquet/dict/snappy"
+    val filesProcessedPath = s"$inputOutputPath/${filesCount.zipWithIndex.min._2}/asystem/astore/processed/canonical/parquet/dict/snappy"
     if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*"))
       .map(filesProcessedTodoParent => spark.read.avro(filesProcessedTodoParent))
       .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
@@ -207,10 +201,9 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
               }
             }
             catch {
-              case exception: Exception =>
-                if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+              case exception: Exception => countFile(fileUri, fileIgnore = true)
             }
-          case _ => if (Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+          case _ => countFile(fileUri, fileIgnore = true)
         }
       }
     }
@@ -230,6 +223,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   }
 
   override def reset(): Unit = {
+    filesCount = Array.fill[Int](10)(0)
     filesStagedTodo.clear
     filesStagedSkip.clear
     filesProcessedSets.clear
@@ -244,11 +238,16 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     SUCCESS
   }
 
-  private def logFiles(label: String, filesGroups: mutable.Map[(String, String), mutable.SortedSet[String]]) {
+  private def countFile(fileUri: String, filePartition: String = null, fileIgnore: Boolean = false): Unit = {
+    if (filePartition != null) filesCount(filePartition.toInt) += 1
+    if (fileIgnore && Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
+  }
+
+  private def logFiles(label: String, fileMaps: mutable.Map[(String, String), mutable.SortedSet[String]]) {
     Log.debug("  " + label + ":")
-    if (filesGroups.isEmpty) Log.debug("") else for ((timeframes, uris) <- ListMap(filesGroups.map {
+    if (fileMaps.isEmpty) Log.debug("") else for ((timeframes, uris) <- ListMap(fileMaps.map {
       case (timeframe, files) =>
-        ((timeframe._1, if (timeframe._2.length == 1 && timeframe._2 != "*") ("0" + timeframe._2) else timeframe._2), files)
+        ((timeframe._1, if (timeframe._2.length == 1 && timeframe._2 != "*") "0" + timeframe._2 else timeframe._2), files)
     }.toSeq.sortBy(_._1): _*)) {
       if (uris.isEmpty) Log.debug("") else {
         Log.debug("    " + timeframes)
