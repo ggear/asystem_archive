@@ -123,13 +123,13 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
-                            "amodel_version=10.000.0003/amodel_model=1003"),
+                            "amodel_version=10.000.0004-SNAPSHOT/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
 
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
-                            "amodel_version=10.000.0003/amodel_model=1003"),
+                            "amodel_version=10.000.0004-SNAPSHOT/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
 
@@ -305,7 +305,7 @@ def pipeline():
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0003/amodel_model=1003/model.pkl'
+                 'amodel_version=10.000.0004-SNAPSHOT/amodel_model=1003/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
