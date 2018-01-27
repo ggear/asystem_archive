@@ -1,10 +1,8 @@
 package com.jag.asystem.amodel.test;
 
-import static com.cloudera.framework.common.Driver.Counter.RECORDS_IN;
 import static com.cloudera.framework.common.Driver.Counter.RECORDS_OUT;
 import static com.cloudera.framework.common.Driver.SUCCESS;
 import static com.cloudera.framework.testing.Assert.assertCounterEquals;
-import static com.cloudera.framework.testing.Assert.assertCounterGreaterThan;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -21,6 +19,7 @@ import com.cloudera.framework.testing.server.SparkServer;
 import com.google.common.collect.ImmutableMap;
 import com.googlecode.zohhak.api.Coercion;
 import com.googlecode.zohhak.api.TestWith;
+import com.jag.asystem.amodel.Counter;
 import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.EnergyForecastPreparation;
 import org.junit.ClassRule;
@@ -41,7 +40,8 @@ public class EnergyForecastTest implements TestConstants {
   public final TestMetaData testMetaDataPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}})
     .dataSetDestinationDirs(DATASET_DIR_ASTORE).asserts(ImmutableMap.of(EnergyForecastPreparation.class.getName(), ImmutableMap.of(
-      RECORDS_OUT, 81L
+      Counter.RECORDS_TRAINING, 68L,
+      Counter.RECORDS_VALIDATION, 13L
     )));
 
   @TestWith({"testMetaDataPristine"})
@@ -55,15 +55,9 @@ public class EnergyForecastTest implements TestConstants {
   }
 
   private static final String DATASET_DIR_ASTORE = "/data/asystem-astore";
-  private static final String DATASET_DIR_AMODEL = "/data/asystem-amodel/asystem/" +
-    Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_ENERGYFORECAST_VERSION")
-    + "/energyforecast";
-  private static final String DATASET_ABS_AMODEL = "file://" + ABS_DIR_TARGET + "/asystem-amodel/asystem/" +
-    Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_ENERGYFORECAST_VERSION")
-    + "/energyforecast";
-  private static final String DATASET_TMP_AMODEL = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/" +
-    Driver.getApplicationProperty("APP_VERSION") + "/amodel/" + DatumFactory.getModelProperty("MODEL_ENERGYFORECAST_VERSION")
-    + "/energyforecast";
+  private static final String DATASET_DIR_AMODEL = "/data/asystem-amodel/asystem/amodel/energyforecast";
+  private static final String DATASET_ABS_AMODEL = "file://" + ABS_DIR_TARGET + "/asystem-amodel/asystem/amodel/energyforecast";
+  private static final String DATASET_TMP_AMODEL = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/amodel/energyforecast";
 
   @Coercion
   public TestMetaData toCdhMetaData(String field) {

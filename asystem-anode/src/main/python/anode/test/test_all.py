@@ -33,7 +33,7 @@ from anode.anode import main
 from anode.application import *
 from anode.plugin import PICKLE_PATH_REGEX
 from anode.plugin import Plugin
-from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION_VERSION
+from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION
 from anode.plugin.energyforecast.energyforecast import S3_BUCKET
 from anode.plugin.energyforecast.energyforecast import S3_REGION
 
@@ -51,9 +51,9 @@ class ANodeTest(TestCase):
         self.patch(MqttPublishService, "isConnected", lambda myself: True)
         self.patch(MqttPublishService, "publishMessage", lambda myself, message, queue, on_failure: succeed(None))
         shutil.rmtree(DIR_ANODE, ignore_errors=True)
-        state_dir = DIR_ANODE + "/config/state"
+        state_dir = DIR_ANODE + "/config"
         os.makedirs(state_dir)
-        shutil.copytree(DIR_ROOT + "/src/main/python/anode/test/pickle", state_dir + "/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION)
+        shutil.copytree(DIR_ROOT + "/src/main/python/anode/test/pickle", state_dir + "/anode")
         shutil.rmtree(DIR_ANODE_TMP, ignore_errors=True)
         os.makedirs(DIR_ANODE_DB_TMP)
         print("")
@@ -117,12 +117,12 @@ class ANodeTest(TestCase):
                      (("-" if floatingpoint_str != "null" else "") + floatingpoint_str) if floatingpoint_str != "null" else "") \
             .replace("\"${-FLOATINGPOINT}\"", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
             .replace("${-FLOATINGPOINT}", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
-            .replace("\\\"${MODEL_ENERGYFORECAST}\\\"", MODEL_PRODUCTION_VERSION) \
-            .replace("\"${MODEL_ENERGYFORECAST}\"", MODEL_PRODUCTION_VERSION) \
-            .replace("${MODEL_ENERGYFORECAST}", MODEL_PRODUCTION_VERSION) \
-            .replace("\\\"${MODEL_ENERGYFORECAST_ADD_1}\\\"", str(int(MODEL_PRODUCTION_VERSION) + 1)) \
-            .replace("\"${MODEL_ENERGYFORECAST_ADD_1}\"", str(int(MODEL_PRODUCTION_VERSION) + 1)) \
-            .replace("${MODEL_ENERGYFORECAST_ADD_1}", str(int(MODEL_PRODUCTION_VERSION) + 1))
+            .replace("\\\"${MODEL_ENERGYFORECAST}\\\"", MODEL_PRODUCTION) \
+            .replace("\"${MODEL_ENERGYFORECAST}\"", MODEL_PRODUCTION) \
+            .replace("${MODEL_ENERGYFORECAST}", MODEL_PRODUCTION) \
+            .replace("\\\"${MODEL_ENERGYFORECAST_ADD_1}\\\"", str(int(MODEL_PRODUCTION) + 1)) \
+            .replace("\"${MODEL_ENERGYFORECAST_ADD_1}\"", str(int(MODEL_PRODUCTION) + 1)) \
+            .replace("${MODEL_ENERGYFORECAST_ADD_1}", str(int(MODEL_PRODUCTION) + 1))
 
     @staticmethod
     def unwrap_deferred(deferred):
@@ -962,7 +962,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 1
         iterations_repeat = 2
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(36, anode, "/rest/?metrics=energy", True)[1]
         self.assertTrue(metrics > 0)
@@ -991,20 +991,32 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=energy",
                         True)
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + "90.000.0000" + "/amodel/" + str(int(APP_MODEL_VERSION)))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + str(int(APP_MODEL_VERSION) + 1))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + str(int(APP_MODEL_VERSION) + 2))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + "99.000.0000" + "/amodel/" + str(int(APP_MODEL_VERSION) + 1))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + "99.000.0000-SNAPSHOT" + "/amodel/" + str(int(APP_MODEL_VERSION) + 1))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + "99.000.0001" + "/amodel/" + str(int(APP_MODEL_VERSION) + 2))
-        shutil.copytree(DIR_ANODE_TMP + "/config/state/" + APP_VERSION + "/amodel/" + APP_MODEL_VERSION,
-                        DIR_ANODE_TMP + "/config/state/" + "99.000.0002" + "/amodel/" + str(int(APP_MODEL_VERSION) + 3))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + "90.000.0000")
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 1))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 2))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + "99.000.0000" +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 1))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + "99.000.0000-SNAPSHOT" +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 1))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + "99.000.0001" +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 2))
+        shutil.copytree(DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + APP_VERSION +
+                        "/amodel_model=" + APP_MODEL_VERSION,
+                        DIR_ANODE_TMP + "/config/anode/fronius/model/pickle/pandas/none/amodel_version=" + "99.000.002" +
+                        "/amodel_model=" + str(int(APP_MODEL_VERSION) + 3))
         anode.load_state()
         self.assertRest(metrics,
                         anode,
@@ -1352,9 +1364,8 @@ class MockHttpResponse:
     def __init__(self, url):
         self.url = url
         url_path = url.split("?", 1)[0]
-        self.code = 200 \
-            if test_integration and TEST_INTEGRATION and url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com") or \
-               url_path in HTTP_GETS else 404
+        self.code = 200 if (test_integration and TEST_INTEGRATION and \
+                           url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com") or url_path in HTTP_GETS) else 404
 
     def addCallbacks(self, callback, errback=None, callbackKeywords=None):
         if callbackKeywords is None:
@@ -1458,8 +1469,9 @@ FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL = DIR_TEST + "/config/anode_fronius_unbounde
 FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE = DIR_TEST + "/config/anode_fronius_unbounded_large.yaml"
 FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION = DIR_TEST + "/config/anode_fronius_unbounded_small_repeat_partition.yaml"
 
-FILE_MODEL_ENERGYFORECAST = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/" + APP_VERSION + "/amodel/" + \
-                            APP_MODEL_ENERGYFORECAST_VERSION + "/energyforecast/model/pickle/joblib/none/model.pkl"
+FILE_MODEL_ENERGYFORECAST = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecast" + \
+                            "/model/pickle/joblib/none/amodel_version=" + APP_VERSION + "/amodel_model=" + \
+                            APP_MODEL_ENERGYFORECAST_VERSION + "/model.pkl"
 
 HTTP_POSTS = {
     "davis": {
@@ -1491,15 +1503,17 @@ HTTP_GETS = {
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com/":
         ilio.read(DIR_TEST + "/template/energyforecast_list_template.xml"),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0000/amodel/" + MODEL_PRODUCTION_VERSION + "/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=" +
+    MODEL_PRODUCTION + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0001-SNAPSHOT/amodel/" + str(int(MODEL_PRODUCTION_VERSION) + 1) + "/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0001-SNAPSHOT/amodel_model=" +
+    str(int(MODEL_PRODUCTION) + 1) + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0000/amodel/1010/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=1010/model.pkl":
         "A CORRUPT PICKLE",
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem/10.000.0000/amodel/9000/energyforecast/model/pickle/joblib/none/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=9000/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST)
 }

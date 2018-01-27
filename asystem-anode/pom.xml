@@ -158,7 +158,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${dir.output.python}/config/state/${project.version}/amodel/${asystem-model.version}</outputDirectory>
+                            <outputDirectory>${dir.output.python}/config/amodel</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${dir.source.python}/anode/test/pickle</directory>
@@ -269,7 +269,7 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
-                                <copy todir="${dir.runtime.anode}/config/state/${project.version}/amodel/${asystem-model.version}">
+                                <copy todir="${dir.runtime.anode}/config/amodel">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
                                 <delete dir="${dir.runtime-tmp.anode}" />
@@ -334,7 +334,7 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
-                                <copy todir="${dir.runtime.anode}/config/state/${project.version}/amodel/${asystem-model.version}">
+                                <copy todir="${dir.runtime.anode}/config/amodel">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
                                 <delete dir="${dir.runtime-tmp.anode}" />

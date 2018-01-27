@@ -80,7 +80,7 @@ class Rewrite(configuration: Configuration) extends DriverSpark(configuration) {
       val filesBatchFinish = filesBatchBase * (filesPathPrefix + 1) + filesBatchModulusCount + filesBatchModulusIndexes(filesPathPrefix)
       filesBatchModulusCount += filesBatchModulusIndexes(filesPathPrefix)
       if (filesBatchStart != filesBatchFinish) {
-        var filesStagedTodoBatch = files.slice(filesBatchStart, filesBatchFinish)
+        val filesStagedTodoBatch = files.slice(filesBatchStart, filesBatchFinish)
         val fileId = lit("spark-" + UUID.randomUUID().toString)
         val fileRewriteRoot = s"$inputOutputPath/$filesPathPrefix/asystem/astore/staged/canonical/avro/binary/snappy"
         if (filesStagedTodoBatch.nonEmpty) filesStagedTodoBatch
@@ -99,7 +99,7 @@ class Rewrite(configuration: Configuration) extends DriverSpark(configuration) {
         val fileSuccess = new Path(fileRewriteRoot, "_SUCCESS")
         if (dfs.exists(fileSuccess)) {
           dfs.delete(fileSuccess, true)
-          incrementCounter(FILES_STAGED_DONE, filesStagedTodoBatch.size)
+          incrementCounter(FILES_STAGED_DONE, filesStagedTodoBatch.length)
         } else {
           if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] failed during batch processing files [" +
             filesStagedTodoBatch.mkString(", ") + "]")
@@ -125,7 +125,7 @@ class Rewrite(configuration: Configuration) extends DriverSpark(configuration) {
 
   private def logFiles(label: String, files: mutable.SortedSet[String]) {
     Log.debug("  " + label + ":")
-    if (files.isEmpty) Log.debug("") else for ((uri, count) <- files.zipWithIndex) Log.info("      (" + (count+1) + ") " + uri)
+    if (files.isEmpty) Log.debug("") else for ((uri, count) <- files.zipWithIndex) Log.info("      (" + (count + 1) + ") " + uri)
   }
 
 }

@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <!--
+    S3: aws s3 sync s3://asystem-amodel ./src/repo
     Energy: curl -s "http://janeandgraham.com:8091/rest/?metrics=energy.production.inverter&metrics=temperature.forecast.glen-forrest&metrics=rain.forecast.glen-forrest&metrics=humidity.forecast.glen-forrest&metrics=wind.forecast.glen-forrest&metrics=sun&types=point&types=integral&types=mean&types=epoch&types=high&bins=1day&format=csv&print=pretty&scope=history&period=86400&method=max"
     -->
 

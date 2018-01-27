@@ -19,7 +19,7 @@ $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
   "false" \
   "asystem-energyforecast-preparation" \
   "com.jag.asystem.amodel.EnergyForecastPreparation" \
-  "$S3_URL_ASTORE/ $S3_URL_AMODEL/asystem/$APP_VERSION/amodel/$MODEL_ENERGYFORECAST_VERSION/energyforecast/" \
+  "$S3_URL_ASTORE/ $S3_URL_AMODEL/asystem/amodel/energyforecast/" \
   "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
   "$S3_URL_ALIB/jar/"
 

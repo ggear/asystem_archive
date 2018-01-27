@@ -19,7 +19,7 @@ HTTP_TIMEOUT = 10
 S3_REGION = "ap-southeast-2"
 S3_BUCKET = "asystem-amodel"
 
-MODEL_PRODUCTION_VERSION = "1001"
+MODEL_PRODUCTION = "1001"
 
 
 class Energyforecast(Plugin):
@@ -53,8 +53,8 @@ class Energyforecast(Plugin):
         try:
             for key_remote in xmltodict.parse(content)["ListBucketResult"]["Contents"]:
                 path_remote = "s3://" + S3_BUCKET + "/" + key_remote["Key"].encode("utf-8")
-                path_status = self.pickled_status(os.path.join(self.config["db_dir"], "model"),
-                                                  path_remote, model_lower=MODEL_PRODUCTION_VERSION)
+                path_status = self.pickled_status(os.path.join(self.config["db_dir"], "amodel"),
+                                                  path_remote, model_lower=MODEL_PRODUCTION)
                 if not path_status[0] and path_status[1]:
                     self.http_get(S3_REGION, S3_BUCKET, "/" + path_remote.replace("s3://" + S3_BUCKET + "/", ""), "", self.pull_model)
                 elif not path_status[0]:
@@ -68,7 +68,7 @@ class Energyforecast(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             path_remote = url[:-1]
-            self.pickled_put(os.path.join(self.config["db_dir"], "model"), path_remote, content)
+            self.pickled_put(os.path.join(self.config["db_dir"], "amodel"), path_remote, content)
             self.push_forecast(path_remote)
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing binary response of length [{}]"
@@ -79,7 +79,7 @@ class Energyforecast(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             bin_timestamp = self.get_time()
-            models = self.pickled_get(os.path.join(self.config["db_dir"], "model"), path=path)
+            models = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), path=path)
             if self.name in models and \
                     self.anode.get_plugin("davis") is not None and \
                     self.anode.get_plugin("wunderground") is not None:
@@ -141,7 +141,7 @@ class Energyforecast(Plugin):
                     for model_version in models[self.name]:
                         model = models[self.name][model_version][1]
                         energy_production_forecast = 0
-                        model_classifier = "" if model_version == MODEL_PRODUCTION_VERSION else ("_D" + model_version)
+                        model_classifier = "" if model_version == MODEL_PRODUCTION else ("_D" + model_version)
                         try:
                             energy_production_forecast = model['execute'](model=model, features=model['execute'](
                                 features=features_df, engineering=True), prediction=True)[0]
@@ -204,7 +204,7 @@ class Energyforecast(Plugin):
 
     def __init__(self, parent, name, config, reactor):
         super(Energyforecast, self).__init__(parent, name, config, reactor)
-        self.pickled_get(os.path.join(self.config["db_dir"], "model"), name=self.name, warm=True)
+        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name, warm=True)
         for datum_metric, datum in self.datums.items():
-            if datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION_VERSION + "__inverter"):
+            if datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION + "__inverter"):
                 del self.datums[datum_metric]

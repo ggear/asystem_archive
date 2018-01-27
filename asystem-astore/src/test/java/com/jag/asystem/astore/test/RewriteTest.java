@@ -44,7 +44,7 @@ public class RewriteTest implements TestConstants {
   private static final Logger LOG = LoggerFactory.getLogger(RewriteTest.class);
 
   @TestWith({"testRewrite"})
-  public void testRewrite(TestMetaData test) throws Exception {
+  public void testRewrite(TestMetaData test) {
     Driver driver = new Rewrite(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(test, driver.getCounters());

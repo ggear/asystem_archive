@@ -307,7 +307,7 @@ class Plugin(object):
                 self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                     str(datum_dict["bin_width"]) + datum_dict["bin_unit"]] = {
                     DATUM_QUEUE_PUBLISH: deque(maxlen=(None if "publish_ticks" not in self.config or self.config["publish_ticks"] < 1
-                    else self.config["publish_ticks"])), DATUM_QUEUE_BUFFER: deque()}
+                                                       else self.config["publish_ticks"])), DATUM_QUEUE_BUFFER: deque()}
                 if not data_transient:
                     self.datums[datum_dict["data_metric"]][datum_dict["data_type"]][datum_dict["data_unit"]][
                         str(datum_dict["bin_width"]) + datum_dict["bin_unit"]][DATUM_QUEUE_HISTORY] = {}
@@ -1158,9 +1158,9 @@ class Plugin(object):
                         else:
                             self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_BUFFER].clear()
         if len(self.datums) > 0:
-            self.pickled_put(os.path.join(self.config["db_dir"], "state"), "/state/" + APP_VERSION + "/amodel/" +
-                             APP_MODEL_VERSION + "/" + self.name + "/model/pickle/pandas/none/" +
-                             self.name + ".pkl", self.datums, True)
+            self.pickled_put(os.path.join(self.config["db_dir"], "anode"), os.path.join(
+                "asystem", "anode", self.name, "model/pickle/pandas/none/amodel_version=" + APP_VERSION,
+                                               "amodel_model=" + APP_MODEL_VERSION, self.name + ".pkl"), self.datums, True)
         metrics_count = sum(len(units)
                             for metrics in self.datums.values()
                             for types in metrics.values()
@@ -1178,7 +1178,7 @@ class Plugin(object):
     def datums_load(self):
         log_timer = anode.Log(logging.INFO).start()
         metrics_count = 0
-        datums_pickled = self.pickled_get(os.path.join(self.config["db_dir"], "state"), name=self.name, cache=False)
+        datums_pickled = self.pickled_get(os.path.join(self.config["db_dir"], "anode"), name=self.name, cache=False)
         self.datums = datums_pickled[self.name][APP_MODEL_VERSION][1] \
             if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[self.name] else {}
         metrics_count = sum(len(units)
@@ -1220,15 +1220,15 @@ class Plugin(object):
         path_filtered = True
         pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
         if pickle_metadata is not None:
-            if (model_lower is None or model_lower <= pickle_metadata.group(2)) and \
-                    (model_upper is None or model_upper >= pickle_metadata.group(2)):
+            if (model_lower is None or model_lower <= pickle_metadata.group(4)) and \
+                    (model_upper is None or model_upper >= pickle_metadata.group(4)):
                 path_filtered = False
-                pickle_cache = self.pickled_get(store, name=pickle_metadata.group(3), model=pickle_metadata.group(2))
-                path_dirty = pickle_metadata.group(1).endswith("-SNAPSHOT") or \
-                             pickle_metadata.group(3) not in pickle_cache or \
-                             pickle_metadata.group(2) not in pickle_cache[pickle_metadata.group(3)] or \
-                             Plugin.compare_version(pickle_metadata.group(1),
-                                                    pickle_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][0]) > 0
+                pickle_cache = self.pickled_get(store, name=pickle_metadata.group(1), model=pickle_metadata.group(4))
+                path_dirty = pickle_metadata.group(3).endswith("-SNAPSHOT") or \
+                             pickle_metadata.group(1) not in pickle_cache or \
+                             pickle_metadata.group(4) not in pickle_cache[pickle_metadata.group(1)] or \
+                             Plugin.compare_version(pickle_metadata.group(3),
+                                                    pickle_cache[pickle_metadata.group(1)][pickle_metadata.group(4)][0]) > 0
         log_timer.log("Plugin", "timer", lambda: "[{}] status pickled [{}filtered, {}dirty] [{}]".format(
             self.name, "" if path_filtered else "not ", "" if path_dirty else "not ", path), context=self.pickled_status)
         return path_filtered, path_dirty
@@ -1238,11 +1238,12 @@ class Plugin(object):
         pickle_path = None
         pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
         if pickle_metadata is not None:
-            pickle_path = os.path.join(store, pickle_metadata.group(1), "amodel", pickle_metadata.group(2), pickle_metadata.group(3),
-                                       "model/pickle", pickle_metadata.group(4), "none", pickle_metadata.group(3) + ".pkl")
+            pickle_path = os.path.join(store, pickle_metadata.group(1), "model/pickle", pickle_metadata.group(2),
+                                       "none/amodel_version=" + pickle_metadata.group(3), "amodel_model=" + pickle_metadata.group(4),
+                                       pickle_metadata.group(1) + ".pkl")
             not os.path.exists(os.path.dirname(pickle_path)) and os.makedirs(os.path.dirname(pickle_path))
             if pickle:
-                if pickle_metadata.group(4) == "pandas":
+                if pickle_metadata.group(2) == "pandas":
                     pandas.to_pickle(library, pickle_path)
                 else:
                     raise Exception("Unknown pickle write format [{}]".format(pickle_metadata[0]))
@@ -1266,8 +1267,8 @@ class Plugin(object):
         if path is not None:
             pickle_metadata = re.search(PICKLE_PATH_REGEX, path)
             if pickle_metadata is not None:
-                name = pickle_metadata.group(3)
-                model = pickle_metadata.group(2)
+                name = pickle_metadata.group(1)
+                model = pickle_metadata.group(4)
         if not cache or warm:
             pickle_metadata_cache = {}
             for root_dir, parent_dirs, file_names in os.walk(store):
@@ -1275,14 +1276,14 @@ class Plugin(object):
                     file_path = os.path.join(root_dir, file_name)
                     pickle_metadata = re.search(PICKLE_PATH_REGEX, file_path)
                     if pickle_metadata is not None:
-                        if (name is None or name == pickle_metadata.group(3)) and (model is None or model == pickle_metadata.group(2)):
-                            if APP_VERSION.endswith("-SNAPSHOT") or not pickle_metadata.group(1).endswith("-SNAPSHOT"):
-                                if pickle_metadata.group(3) not in pickle_metadata_cache:
-                                    pickle_metadata_cache[pickle_metadata.group(3)] = {}
-                                if pickle_metadata.group(2) not in pickle_metadata_cache[pickle_metadata.group(3)]:
-                                    pickle_metadata_cache[pickle_metadata.group(3)][pickle_metadata.group(2)] = {}
-                                pickle_metadata_cache[pickle_metadata.group(3)][pickle_metadata.group(2)][pickle_metadata.group(1)] = \
-                                    (pickle_metadata.group(4), file_path)
+                        if (name is None or name == pickle_metadata.group(1)) and (model is None or model == pickle_metadata.group(4)):
+                            if APP_VERSION.endswith("-SNAPSHOT") or not pickle_metadata.group(3).endswith("-SNAPSHOT"):
+                                if pickle_metadata.group(1) not in pickle_metadata_cache:
+                                    pickle_metadata_cache[pickle_metadata.group(1)] = {}
+                                if pickle_metadata.group(4) not in pickle_metadata_cache[pickle_metadata.group(1)]:
+                                    pickle_metadata_cache[pickle_metadata.group(1)][pickle_metadata.group(4)] = {}
+                                pickle_metadata_cache[pickle_metadata.group(1)][pickle_metadata.group(4)][pickle_metadata.group(3)] = \
+                                    (pickle_metadata.group(2), file_path)
             for pickle_name in pickle_metadata_cache:
                 for pickle_model in pickle_metadata_cache[pickle_name]:
                     pickle_version = sorted(pickle_metadata_cache[pickle_name][pickle_model].keys(), cmp=Plugin.compare_version)[-1]
@@ -1300,7 +1301,7 @@ class Plugin(object):
                         self.name, pickle_name + "-" + pickle_model + "-" + pickle_version, pickle_metadata[0]))
         pickle_cache = pickle_cache if name is None else ({name: pickle_cache[name]} if name in pickle_cache else {name: {}})
         pickle_cache = pickle_cache if model is None else ({name: {model: pickle_cache[name][model]}}
-        if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
+                                                           if (name in pickle_cache and model in pickle_cache[name]) else {name: {}})
         pickle = pickle_cache[name] if name in pickle_cache else {}
         log_timer.log("Plugin", "timer", lambda: "[{}] got pickled [{}]".format(self.name, ", ".join(
             [name + "-{}-{}".format(model, pickle[model][0]) for model in pickle.keys()])), context=self.pickled_get)
@@ -1391,7 +1392,8 @@ class Plugin(object):
         self.datums_load()
 
 
-PICKLE_PATH_REGEX = ".*([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel/([1-9][0-9]{3})/([a-zA-z]*)/model/pickle/([a-zA-z]*).*\.pkl"
+PICKLE_PATH_REGEX = ".*/[a-zA-z]*/([a-zA-z]*)/model/pickle/([a-zA-z]*)/none/" \
+                    "amodel_version=([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel_model=([1-9][0-9]{3})/.*\.pkl"
 
 ID_BYTE = format(get_mac(), "x").decode("hex")
 ID_HEX = ID_BYTE.encode("hex").upper()
