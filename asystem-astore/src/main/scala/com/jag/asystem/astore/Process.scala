@@ -62,9 +62,11 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
                     filesStagedSkip(fileStartFinish) += fileParent
                     if (filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) -= fileParent
                   }
-                  else if (!(filesStagedSkip.contains(fileStartFinish) && filesStagedSkip(fileStartFinish).contains(fileParent))) {
-                    if (!filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) = mutable.SortedSet()
-                    filesStagedTodo(fileStartFinish) += fileParent
+                  else if (fileName.endsWith(".avro") && !fileName.startsWith(".")) {
+                    if (!(filesStagedSkip.contains(fileStartFinish) && filesStagedSkip(fileStartFinish).contains(fileParent))) {
+                      if (!filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) = mutable.SortedSet()
+                      filesStagedTodo(fileStartFinish) += fileParent
+                    }
                   }
                   countFile(fileUri, filePartition)
                 }
@@ -85,11 +87,11 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
                     filesProcessedSkip(fileYearMonth) += fileParent
                     if (filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) -= fileParent
                   }
-                  else if (!(filesProcessedSkip.contains(fileYearMonth) && filesProcessedSkip(fileYearMonth).contains(fileParent))) {
-                    if (!filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) = mutable.SortedSet()
-                    filesProcessedRedo(fileYearMonth) += fileParent
-                  }
-                  if (fileName.endsWith(".parquet")) {
+                  else if (fileName.endsWith(".parquet") && !fileName.startsWith(".")) {
+                    if (!(filesProcessedSkip.contains(fileYearMonth) && filesProcessedSkip(fileYearMonth).contains(fileParent))) {
+                      if (!filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) = mutable.SortedSet()
+                      filesProcessedRedo(fileYearMonth) += fileParent
+                    }
                     val fileYear = new Path(fileParent).getParent.getParent.getParent
                     filesProcessedYears(fileYear.toString) += 1
                     filesProcessedVersions(fileYear.getParent.toString) += 1

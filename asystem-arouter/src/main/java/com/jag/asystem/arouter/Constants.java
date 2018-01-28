@@ -26,7 +26,7 @@ public class Constants {
       .put("MQTT_BROKER_PORT", "2883")
       .put("MQTT_DROP_SNAPSHOTS", "false")
       .put("MQTT_BATCHSIZE", "4")
-      .put("HDFS_BATCHSIZE", "16")
+      .put("HDFS_BATCHSIZE", "4")
       .put("AVRO_SCHEMA_URL", Constants.class.getResource("/avro").toString())
       .put("FLUME_MQTT_JOURNAL_DIR", flumeLocalWorkingDir + "/store/journal")
       .put("FLUME_MQTT_CHECKPOINT_DIR", flumeLocalWorkingDir + "/store/checkpoint")

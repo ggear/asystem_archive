@@ -1,27 +1,27 @@
 package com.jag.asystem.amodel
 
-import java.util.TimeZone
+import java.util.{Calendar, GregorianCalendar, TimeZone}
 
-import com.cloudera.framework.common.Driver.Counter.{RECORDS_IN, RECORDS_OUT}
 import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, SUCCESS, getApplicationProperty}
-import com.cloudera.framework.common.{Driver, DriverSpark}
+import com.cloudera.framework.common.DriverSpark
 import com.jag.asystem.amodel.Counter.{RECORDS_TRAINING, RECORDS_VALIDATION}
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
-import org.apache.spark.sql.functions._
+import java.text.SimpleDateFormat
 
 class EnergyForecastPreparation(configuration: Configuration) extends DriverSpark(configuration) {
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
-  val outputPathSuffix = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
+  val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_VERSION")
 
-  val Log = LoggerFactory.getLogger(classOf[EnergyForecastPreparation])
+  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastPreparation])
 
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
@@ -62,7 +62,13 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
   override def execute(): Int = {
     if (inputPaths.nonEmpty) {
       val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
-      val defaultTimeZone = TimeZone.getDefault.getID
+      import spark.implicits._
+      val dateFormat = "YYYY/MM/dd"
+      val timezoneWorking = "Australia/Perth"
+      val timezoneDefault = TimeZone.getDefault.getID
+      val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
+      calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
+      val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime())
       val input = inputPaths
         .map(inputPath => spark.read.parquet(inputPath))
         .reduce((left: DataFrame, right: DataFrame) => left.union(right))
@@ -71,7 +77,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS energy__production__inverter
            | FROM global_temp.datums
            | WHERE
@@ -82,7 +88,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
            | FROM global_temp.datums
            | WHERE
@@ -93,7 +99,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
            | FROM global_temp.datums
            | WHERE
@@ -104,7 +110,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
            | FROM global_temp.datums
            | WHERE
@@ -115,7 +121,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
            | FROM global_temp.datums
            | WHERE
@@ -126,7 +132,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) AS sun__outdoor__rise
            | FROM global_temp.datums
            | WHERE
@@ -137,7 +143,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) AS sun__outdoor__set
            | FROM global_temp.datums
            | WHERE
@@ -148,7 +154,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS sun__outdoor__azimuth
            | FROM global_temp.datums
            | WHERE
@@ -159,7 +165,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS sun__outdoor__altitude
            | FROM global_temp.datums
            | WHERE
@@ -170,7 +176,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-           |   '$defaultTimeZone'), 'Australia/Perth'), 'YYYY/MM/dd') AS datum__bin__date,
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   last(data_string) AS conditions__forecast__glen_Dforrest
            | FROM global_temp.datums
            | WHERE
@@ -180,6 +186,18 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         """.stripMargin)
         .map(sql => spark.sql(sql))
         .reduce((left: DataFrame, right: DataFrame) => left.join(right, "datum__bin__date"))
+        .where($"datum__bin__date" =!= "2017/10/12")
+        .where($"datum__bin__date" =!= "2017/10/13")
+        .where($"datum__bin__date" =!= "2017/10/29")
+        .where($"datum__bin__date" =!= "2017/10/30")
+        .where($"datum__bin__date" =!= "2017/11/27")
+        .where($"datum__bin__date" =!= "2017/11/28")
+        // Potentially need to strip out these dates
+        .where($"datum__bin__date" =!= "2018/01/27")
+        .where($"datum__bin__date" =!= "2018/01/28")
+        .where($"datum__bin__date" =!= "2018/01/29")
+        .where($"datum__bin__date" =!= "2018/01/30")
+        .where($"datum__bin__date" =!= s"${dateCurrent}")
         .orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))

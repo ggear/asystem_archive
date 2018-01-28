@@ -37,7 +37,7 @@ public class RewriteTest implements TestConstants {
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Rewrite.class.getName(), ImmutableMap.builder()
       .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_DONE, 19L)
+      .put(FILES_STAGED_DONE, 20L)
       .build())
     );
 

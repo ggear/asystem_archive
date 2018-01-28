@@ -3,12 +3,19 @@ package com.jag.asystem.arouter;
 import static org.apache.flume.sink.hdfs.AvroEventSerializer.AVRO_SCHEMA_URL_HEADER;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.xml.bind.DatatypeConverter;
 
 import com.cloudera.framework.common.flume.MqttSource;
 import com.google.common.base.Joiner;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.avro.Datum;
 import com.jag.asystem.amodel.avro.DatumAnodeId;
@@ -25,7 +32,8 @@ import org.slf4j.LoggerFactory;
 public class MetadataInterceptor implements Interceptor {
 
   public static final String HEADER_INGEST_ID = "iid";
-  public static final String HEADER_INGEST_PARTITION = "ipt";
+  public static final String HEADER_INGEST_PARTITION = "ipp";
+  public static final String HEADER_INGEST_TIMESTAMP = "ipt";
   public static final String HEADER_BATCH_START = "ibs";
   public static final String HEADER_BATCH_FINISH = "ibf";
   public static final String HEADER_ANODE_ID = "aid";
@@ -38,14 +46,19 @@ public class MetadataInterceptor implements Interceptor {
   private static final String AVRO_SCHEMA_FILE = "datum.avsc";
   private static final String INSTANCE_ID = "flume-" + UUID.randomUUID().toString();
 
+  private final int batchWindowCount;
   private final int batchWindowSeconds;
   private final String avroSchemaUrl;
   private final boolean dropSnapshots;
 
-  private MetadataInterceptor(int batchWindowSeconds, String avroSchemaUrl, boolean dropSnapshots) {
+  private BatchMetaDataCache batchMetaDataCache;
+
+  private MetadataInterceptor(int batchWindowCount, int batchWindowSeconds, String avroSchemaUrl, boolean dropSnapshots) {
+    this.batchWindowCount = batchWindowCount;
     this.batchWindowSeconds = batchWindowSeconds;
     this.avroSchemaUrl = avroSchemaUrl;
     this.dropSnapshots = dropSnapshots;
+    batchMetaDataCache = new BatchMetaDataCache(batchWindowCount, batchWindowSeconds * 2);
   }
 
   @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
@@ -95,11 +108,12 @@ public class MetadataInterceptor implements Interceptor {
     }
     long batchStartTimestamp = datum.getBinTimestamp() - datum.getBinTimestamp() % batchWindowSeconds;
     long batchFinishTimestamp = batchStartTimestamp + batchWindowSeconds;
-    long batchPartitionPrefix = batchStartTimestamp / batchWindowSeconds % 10;
+    BatchMetaData batchMetaData = batchMetaDataCache.get(batchStartTimestamp, batchFinishTimestamp);
     putHeader(event, HEADER_INGEST_ID, INSTANCE_ID, false);
-    putHeader(event, HEADER_INGEST_PARTITION, "" + batchPartitionPrefix, false);
-    putHeader(event, HEADER_BATCH_START, "" + batchStartTimestamp, false);
-    putHeader(event, HEADER_BATCH_FINISH, "" + batchFinishTimestamp, false);
+    putHeader(event, HEADER_INGEST_PARTITION, batchMetaData.partition, false);
+    putHeader(event, HEADER_INGEST_TIMESTAMP, batchMetaData.timestamp, false);
+    putHeader(event, HEADER_BATCH_START, batchMetaData.start, false);
+    putHeader(event, HEADER_BATCH_FINISH, batchMetaData.finish, false);
     putHeader(event, AVRO_SCHEMA_URL_HEADER, avroSchemaUrl + "/" + amodel_model + "/" + AVRO_SCHEMA_FILE, false);
     putHeader(event, HEADER_ANODE_ID, anode_id, false);
     putHeader(event, HEADER_AMODEL_VERSION, amodel_model, false);
@@ -116,13 +130,65 @@ public class MetadataInterceptor implements Interceptor {
   public void close() {
   }
 
+  private class BatchMetaDataCache {
+
+    private int count;
+    private Cache<String, BatchMetaData> cache;
+
+    BatchMetaDataCache(int count, int time) {
+      this.count = count;
+      cache = CacheBuilder.newBuilder().expireAfterAccess(time, TimeUnit.SECONDS).build();
+    }
+
+    synchronized BatchMetaData get(long start, long finish) {
+      String batchMetaDataKey = "" + start + finish;
+      BatchMetaData batchMetaData = cache.getIfPresent(batchMetaDataKey);
+      if (batchMetaData == null) cache.put(batchMetaDataKey, batchMetaData = new BatchMetaData(start, finish, count));
+      return batchMetaData.iterate();
+    }
+
+  }
+
+  private class BatchMetaData {
+
+    String start;
+    String finish;
+    String timestamp;
+    String partition;
+
+    private int batch;
+    private int count;
+
+    BatchMetaData(long start, long finish, int batch) {
+      this.start = "" + start;
+      this.finish = "" + finish;
+      this.batch = batch;
+      reset();
+    }
+
+    BatchMetaData reset() {
+      count = 0;
+      timestamp = "" + System.currentTimeMillis() / 1000L;
+      partition = "" + ThreadLocalRandom.current().nextInt(10);
+      return this;
+    }
+
+    BatchMetaData iterate() {
+      if (++count == batch) reset();
+      return this;
+    }
+
+  }
+
   @SuppressWarnings("unused")
   public static class Builder implements Interceptor.Builder {
 
+    public static final String CONFIG_BATCH_WINDOW_COUNT = "batchWindowCount";
     public static final String CONFIG_BATCH_WINDOW_SECONDS = "batchWindowSeconds";
     public static final String CONFIG_AVRO_SCHEMA_URL = "avroSchemaURL";
     public static final String CONFIG_DROP_SNAPSHOTS = "dropSnapshots";
 
+    private int batchWindowCount;
     private int batchWindowSeconds;
     private String avroSchemaUrl;
     private boolean dropSnapshots;
@@ -132,11 +198,12 @@ public class MetadataInterceptor implements Interceptor {
 
     @Override
     public MetadataInterceptor build() {
-      return new MetadataInterceptor(batchWindowSeconds, avroSchemaUrl, dropSnapshots);
+      return new MetadataInterceptor(batchWindowCount, batchWindowSeconds, avroSchemaUrl, dropSnapshots);
     }
 
     @Override
     public void configure(Context context) {
+      batchWindowCount = context.getInteger(CONFIG_BATCH_WINDOW_COUNT, 10000);
       batchWindowSeconds = context.getInteger(CONFIG_BATCH_WINDOW_SECONDS, 60 * 60);
       avroSchemaUrl = context.getString(CONFIG_AVRO_SCHEMA_URL, "").trim();
       dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, false);

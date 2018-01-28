@@ -40,7 +40,7 @@ public class EnergyForecastTest implements TestConstants {
   public final TestMetaData testMetaDataPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}})
     .dataSetDestinationDirs(DATASET_DIR_ASTORE).asserts(ImmutableMap.of(EnergyForecastPreparation.class.getName(), ImmutableMap.of(
-      Counter.RECORDS_TRAINING, 68L,
+      Counter.RECORDS_TRAINING, 64L,
       Counter.RECORDS_VALIDATION, 13L
     )));
 

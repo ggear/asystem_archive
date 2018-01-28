@@ -117,8 +117,9 @@ public class FlumeTest implements TestConstants {
   @SuppressWarnings("SameReturnValue")
   private int mqttClientSendMessage(Integer iteration) {
     try {
+      Thread.sleep(1000);
       client.publish(MQTT_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
-    } catch (MqttException e) {
+    } catch (Exception e) {
       throw new RuntimeException("Could not publish message", e);
     }
     return 1;

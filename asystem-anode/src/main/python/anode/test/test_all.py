@@ -1364,8 +1364,8 @@ class MockHttpResponse:
     def __init__(self, url):
         self.url = url
         url_path = url.split("?", 1)[0]
-        self.code = 200 if (test_integration and TEST_INTEGRATION and \
-                           url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com") or url_path in HTTP_GETS) else 404
+        self.code = 200 if (test_integration and TEST_INTEGRATION and
+                            url_path.startswith("http://asystem-amodel.s3-ap-southeast-2.amazonaws.com") or url_path in HTTP_GETS) else 404
 
     def addCallbacks(self, callback, errback=None, callbackKeywords=None):
         if callbackKeywords is None:

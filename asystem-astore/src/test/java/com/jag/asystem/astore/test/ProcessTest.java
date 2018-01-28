@@ -135,6 +135,22 @@ public class ProcessTest implements TestConstants {
       .build())
     );
 
+  public final TestMetaData testTemp = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
+    .dataSetLabels(new String[][][]{{{"temp"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
+    .dataSetDestinationDirs(HDFS_DIR)
+    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(FILES_STAGED_SKIP, 0L)
+      .put(FILES_STAGED_REDO, 0L)
+      .put(FILES_STAGED_DONE, 0L)
+      .put(FILES_PROCESSED_SKIP, 0L)
+      .put(FILES_PROCESSED_REDO, 0L)
+      .put(FILES_PROCESSED_DONE, 0L)
+      .put(DATUMS_PROCESSED_COUNT, 0L)
+      .build())
+    );
+
   public final TestMetaData testRewrite = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
     .dataSetLabels(new String[][][]{{{"rewrite"}}})
@@ -148,6 +164,22 @@ public class ProcessTest implements TestConstants {
       .put(FILES_PROCESSED_REDO, 0L)
       .put(FILES_PROCESSED_DONE, 0L)
       .put(DATUMS_PROCESSED_COUNT, 0L)
+      .build())
+    );
+
+  public final TestMetaData testGenerated = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
+    .dataSetLabels(new String[][][]{{{"empty"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.TRUE))
+    .dataSetDestinationDirs(HDFS_DIR)
+    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(FILES_STAGED_SKIP, 0L)
+      .put(FILES_STAGED_REDO, 0L)
+      .put(FILES_STAGED_DONE, 2L)
+      .put(FILES_PROCESSED_SKIP, 0L)
+      .put(FILES_PROCESSED_REDO, 0L)
+      .put(FILES_PROCESSED_DONE, 2L)
+      .put(DATUMS_PROCESSED_COUNT, 4L)
       .build())
     );
 
@@ -167,27 +199,11 @@ public class ProcessTest implements TestConstants {
       .build())
     );
 
-  public final TestMetaData testGenerated = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
-    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
-    .dataSetLabels(new String[][][]{{{"empty"}}})
-    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.TRUE))
-    .dataSetDestinationDirs(HDFS_DIR)
-    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 16L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 2L)
-      .put(DATUMS_PROCESSED_COUNT, 16L)
-      .build())
-    );
-
   private static final DatumFactory DATUM_FACTORY = new DatumFactory();
 
   private static final Logger LOG = LoggerFactory.getLogger(ProcessTest.class);
 
-  private static final int DATUMS_COUNT = 16;
+  private static final int DATUMS_COUNT = 4;
 
   private MqttClient client;
 
@@ -203,7 +219,7 @@ public class ProcessTest implements TestConstants {
   }
 
   @SuppressWarnings("Duplicates")
-  @TestWith({"testPristine", "testOverlap", "testCorrupt", "testEmpty", "testRewrite", "testAll", "testGenerated"})
+  @TestWith({"testPristine", "testOverlap", "testCorrupt", "testEmpty", "testTemp", "testRewrite", "testAll", "testGenerated"})
   public void testProcess(TestMetaData test) throws Exception {
     if (test.<Boolean>getParameter(DATA_GENERATE)) {
       assertTrue(flumeServer.crankPipeline(
@@ -268,8 +284,9 @@ public class ProcessTest implements TestConstants {
   @SuppressWarnings("SameReturnValue")
   private int mqttClientSendMessage(Integer iteration) {
     try {
+      Thread.sleep(1000);
       client.publish(MQTT_TOPIC, DATUM_FACTORY.serialize(DatumFactory.getDatumIndexed(iteration)), 0, false);
-    } catch (MqttException e) {
+    } catch (Exception e) {
       throw new RuntimeException("Could not publish message", e);
     }
     return 1;
