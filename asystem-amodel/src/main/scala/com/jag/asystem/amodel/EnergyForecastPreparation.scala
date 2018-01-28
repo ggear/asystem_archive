@@ -197,6 +197,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         // .where($"datum__bin__date" =!= "2018/01/28")
         // .where($"datum__bin__date" =!= "2018/01/29")
         // .where($"datum__bin__date" =!= "2018/01/30")
+        // .where($"datum__bin__date" =!= "2018/01/31")
         .where($"datum__bin__date" =!= s"$dateCurrent")
         .orderBy("datum__bin__date")
       addResult("All data:")

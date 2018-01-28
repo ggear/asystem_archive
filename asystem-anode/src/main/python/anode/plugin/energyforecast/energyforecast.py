@@ -184,27 +184,24 @@ class Energyforecast(Plugin):
                                     data_bound_upper=100)
 
                             # TODO: Rewrite scaling function to more accurately reflect energy production curve
-                            energy_production_forecast_actual = int((energy_production_forecast / energy_production_today * 100) if (
-                                    energy_production_forecast is not None and energy_production_today is not None and
-                                    energy_production_today != 0) else 0)
-                            energy_production_forecast_actual = 0 if sun_percentage < 48 else energy_production_forecast_actual
-                            energy_production_forecast_actual = (energy_production_forecast_actual * 2) if \
-                                (sun_percentage <= 48 and sun_percentage <= 52) else energy_production_forecast_actual
-                            if sun_percentage <= 48 or sun_percentage > 80:
-                                self.datum_push(
-                                    "energy__production_Dforecast_Dactual" + model_classifier + "__inverter",
-                                    "forecast", "integral",
-                                    self.datum_value(energy_production_forecast_actual),
-                                    "_P25",
-                                    1,
-                                    bin_timestamp,
-                                    bin_timestamp,
-                                    day,
-                                    "day",
-                                    asystem_version=models[self.name][model_version][0],
-                                    data_version=model_version,
-                                    data_bound_lower=0,
-                                    data_derived_max=True)
+                            energy_production_forecast_actual = 0 if sun_percentage < 85 else \
+                                int((energy_production_forecast / energy_production_today * 100) if (
+                                        energy_production_forecast is not None and energy_production_today is not None and
+                                        energy_production_today != 0) else 0)
+                            self.datum_push(
+                                "energy__production_Dforecast_Dactual" + model_classifier + "__inverter",
+                                "forecast", "integral",
+                                self.datum_value(energy_production_forecast_actual),
+                                "_P25",
+                                1,
+                                bin_timestamp,
+                                bin_timestamp,
+                                day,
+                                "day",
+                                asystem_version=models[self.name][model_version][0],
+                                data_version=model_version,
+                                data_bound_lower=0,
+                                data_derived_max=True)
                 self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing model [{}]"
