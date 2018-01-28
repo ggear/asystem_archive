@@ -571,6 +571,7 @@ class Plugin(object):
             "ddddd" if datum["data_unit"] == "ms" else
             "eeeee" if datum["data_unit"] == "MB_P2Fs" else
             "eeeee" if datum["data_unit"] == "KB_P2Fs" else
+            "fffff" if datum["data_unit"] == "_P25" else
             "zzzzz" + datum["data_unit"],
             datum["data_metric"],
             "aaaaa" if datum["data_type"] == "point" else

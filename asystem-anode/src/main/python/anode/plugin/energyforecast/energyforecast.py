@@ -163,12 +163,14 @@ class Energyforecast(Plugin):
                             data_bound_lower=0)
                         if day == 1:
                             if model_classifier == "":
+                                current = int(time.time())
                                 self.datum_push(
                                     "energy__production_Dforecast_Ddaylight__inverter",
                                     "forecast", "integral",
-                                    self.datum_value(((time.time() - time.mktime(datetime.date.today().timetuple())) / (sun_set - sun_rise))
-                                                     if (
-                                            sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0),
+                                    self.datum_value(
+                                        (0 if current < sun_rise else (100 if current > sun_set else
+                                                                       int((current - sun_rise) / float(sun_set - sun_rise) * 100)))
+                                        if (sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0),
                                     "_P25",
                                     1,
                                     bin_timestamp,
@@ -179,23 +181,22 @@ class Energyforecast(Plugin):
                                     data_version=model_version,
                                     data_bound_lower=0,
                                     data_bound_upper=100)
-                            else:
-                                self.datum_push(
-                                    "energy__production_Dforecast_Daccuracy" + model_classifier + "__inverter",
-                                    "forecast", "integral",
-                                    self.datum_value((energy_production_forecast / energy_production_today)
-                                                     if (energy_production_today is not None and energy_production_today != 0) else 0),
-                                    "_P25",
-                                    1,
-                                    bin_timestamp,
-                                    bin_timestamp,
-                                    day,
-                                    "day",
-                                    asystem_version=models[self.name][model_version][0],
-                                    data_version=model_version,
-                                    data_bound_lower=0,
-                                    data_bound_upper=100,
-                                    data_derived_max=True)
+                            self.datum_push(
+                                "energy__production_Dforecast_Dactual" + model_classifier + "__inverter",
+                                "forecast", "integral",
+                                self.datum_value(int(energy_production_forecast / energy_production_today * 100)
+                                                 if (energy_production_forecast is not None and energy_production_today is not None and
+                                                     energy_production_today != 0) else 0),
+                                "_P25",
+                                1,
+                                bin_timestamp,
+                                bin_timestamp,
+                                day,
+                                "day",
+                                asystem_version=models[self.name][model_version][0],
+                                data_version=model_version,
+                                data_bound_lower=0,
+                                data_derived_max=True)
                 self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing model [{}]"

@@ -340,7 +340,7 @@
                                 <delete dir="${dir.runtime-tmp.anode}" />
                                 <mkdir dir="${dir.runtime-tmp.anode}/config" />
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
-                                    <arg value="--verbose" />
+                                    <arg value="--quiet" />
                                     <arg value="-c${dir.source.python}/config/anode.yaml" />
                                     <arg value="-d${dir.runtime-tmp.anode}/config" />
                                 </exec>

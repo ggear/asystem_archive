@@ -27,6 +27,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   private val filesStagedSkip = mutable.Map[(String, String), mutable.SortedSet[String]]()
 
   private val filesProcessedYears = mutable.Map[String, Int]().withDefaultValue(0)
+  private val filesProcessedVersions = mutable.Map[String, Int]().withDefaultValue(0)
   private val filesProcessedSets = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedTodo = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedRedo = mutable.Map[(String, String), mutable.SortedSet[String]]()
@@ -88,7 +89,11 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
                     if (!filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) = mutable.SortedSet()
                     filesProcessedRedo(fileYearMonth) += fileParent
                   }
-                  if (fileName.endsWith(".parquet")) filesProcessedYears(new Path(fileParent).getParent.getParent.getParent.toString) += 1
+                  if (fileName.endsWith(".parquet")) {
+                    val fileYear = new Path(fileParent).getParent.getParent.getParent
+                    filesProcessedYears(fileYear.toString) += 1
+                    filesProcessedVersions(fileYear.getParent.toString) += 1
+                  }
                 }
                 catch {
                   case _: NumberFormatException => countFile(fileUri, filePartition, fileIgnore = true)
@@ -167,10 +172,13 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
       val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
       filesProcessedMonths += filesProcessedMonth
       filesProcessedYears(filesProcessedMonth.getParent.toString) -= 1
+      filesProcessedVersions(filesProcessedMonth.getParent.getParent.toString) -= 1
     }
     filesProcessedMonths.foreach(dfs.delete(_, true))
     for ((filesProcessedYear, filesProcessedYearCount) <- filesProcessedYears)
       if (filesProcessedYearCount == 0) dfs.delete(new Path(filesProcessedYear), true)
+    for ((filesProcessedVersion, filesProcessedVersionCount) <- filesProcessedVersions)
+      if (filesProcessedVersionCount == 0) dfs.delete(new Path(filesProcessedVersion), true)
     val fileModel = lit(getModelProperty("MODEL_VERSION"))
     val fileVersion = lit(getApplicationProperty("APP_VERSION"))
     val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)

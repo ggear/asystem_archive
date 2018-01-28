@@ -28,8 +28,8 @@ To perform a release:
 
 ```bash
 # Change the following variables to appropriate values for the target release
-export AS_VERSION_RELEASE=10.000.0003
-export AS_VERSION_HEAD=10.000.0004
+export AS_VERSION_RELEASE=10.000.0004
+export AS_VERSION_HEAD=10.000.0003
 mvn clean install && \
 mvn release:prepare -B \
   -DreleaseVersion=$AS_VERSION_RELEASE \
