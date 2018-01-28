@@ -14,8 +14,8 @@ DELETE_CLUSTER=${2:-"false"}
 $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
 
 $ROOT_DIR/bin/cldr-shell-spark2.sh \
-  "false" \
-    "asystem-astore-process" \
+  "$WAIT_TASK" \
+  "asystem-astore-process" \
   "com.jag.asystem.astore.Process" \
   "$S3_URL_ASTORE/" \
   "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \

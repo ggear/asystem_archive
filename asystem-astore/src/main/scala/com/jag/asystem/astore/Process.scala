@@ -2,11 +2,12 @@ package com.jag.asystem.astore
 
 import java.util.Calendar
 
-import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, SUCCESS, getApplicationProperty}
+import com.cloudera.framework.common.Driver.{FAILURE_RUNTIME, FAILURE_ARGUMENTS, SUCCESS, getApplicationProperty}
 import com.cloudera.framework.common.DriverSpark
 import com.databricks.spark.avro._
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
 import com.jag.asystem.astore.Counter._
+import com.jag.asystem.astore.Process.OptionSnapshots
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkConf
@@ -26,12 +27,12 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   private val filesStagedTodo = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesStagedSkip = mutable.Map[(String, String), mutable.SortedSet[String]]()
 
-  private val filesProcessedYears = mutable.Map[String, Int]().withDefaultValue(0)
-  private val filesProcessedVersions = mutable.Map[String, Int]().withDefaultValue(0)
   private val filesProcessedSets = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedTodo = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedRedo = mutable.Map[(String, String), mutable.SortedSet[String]]()
   private val filesProcessedSkip = mutable.Map[(String, String), mutable.SortedSet[String]]()
+  private val filesProcessedYears = mutable.Map[String, Int]().withDefaultValue(0)
+  private val filesProcessedVersions = mutable.Map[String, Int]().withDefaultValue(0)
 
   private var dfs: FileSystem = _
 
@@ -129,7 +130,10 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         finish.setTimeInMillis(filesStagedSkipStartFinish._2.toLong * 1000)
         while (start.equals(finish) || start.before(finish)) {
           val fileYearMonth = (start.get(Calendar.YEAR).toString, (start.get(Calendar.MONTH) + 1).toString)
-          if (filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) ++= filesStagedSkipParents
+          if (filesProcessedSets.contains(fileYearMonth) || !filesProcessedSkip.contains(fileYearMonth)) {
+            if (!filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) = mutable.SortedSet()
+            filesProcessedSets(fileYearMonth) ++= filesStagedSkipParents
+          }
           start.add(Calendar.MONTH, 1)
         }
       }
@@ -147,10 +151,9 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     filesProcessedTodo(("*", "*")) = mutable.SortedSet()
     for ((filesProcessedSetsMonthYear, filesProcessedSetsParents) <- filesProcessedSets)
       filesProcessedTodo(("*", "*")) ++= filesProcessedSetsParents
-    if (Log.isInfoEnabled())
-      Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with input/output [" + inputOutputPath.toString + "]")
-    if (Log.isDebugEnabled()) {
-      Log.debug("Driver [" + this.getClass.getSimpleName + "] prepared with input files:")
+    if (Log.isInfoEnabled()) {
+      Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with input/output [" + inputOutputPath.toString + "] and input " +
+        "files:")
       logFiles("FILES_STAGED_TODO", filesStagedTodo)
       logFiles("FILES_STAGED_SKIP", filesStagedSkip)
       logFiles("FILES_PROCESSED_SETS", filesProcessedSets)
@@ -167,6 +170,12 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
+    if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT") && !getConf.getBoolean(OptionSnapshots, false)) {
+      if (Log.isErrorEnabled()) {
+        Log.error("Driver [" + this.getClass.getSimpleName + "] SNAPSHOT version attempted in production, bailing out without executing")
+      }
+      return FAILURE_RUNTIME
+    }
     val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process").getOrCreate()
     import spark.implicits._
     val filesProcessedMonths = mutable.Set[Path]()
@@ -202,7 +211,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     if (dfs.exists(filesProcessedSuccess)) {
       dfs.delete(filesProcessedSuccess, true)
       for ((_, filesStagedTodoParents) <- filesStagedTodo)
-        filesStagedTodoParents.foreach(filesStagedTodoParent => dfs.create(new Path(filesStagedTodoParent, "_SUCCESS")))
+        filesStagedTodoParents.foreach(filesStagedTodoParent => touchFile(new Path(filesStagedTodoParent, "_SUCCESS")))
       val filesProcessed = dfs.listFiles(filesProcessedSuccess.getParent, true)
       while (filesProcessed.hasNext) {
         val fileUri = filesProcessed.next().getPath.toString
@@ -213,7 +222,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
               val fileParent = fileUri.replace(fileName, "")
               val fileMonthYear = (astoreYear, astoreMonth)
               if (filesProcessedTodoRedo.contains(fileMonthYear)) {
-                dfs.create(new Path(fileParent, "_SUCCESS"))
+                touchFile(new Path(fileParent, "_SUCCESS"))
                 if (!filesProcessedDoneFiles.contains(fileMonthYear))
                   filesProcessedDoneFiles(fileMonthYear) = mutable.SortedSet()
                 filesProcessedDoneFiles(fileMonthYear) += fileUri
@@ -229,7 +238,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         }
       }
     }
-    if (Log.isDebugEnabled()) {
+    if (Log.isInfoEnabled()) {
       logFiles("FILES_PROCESSED_DONE", filesProcessedDoneFiles)
     }
     incrementCounter(FILES_STAGED_SKIP, filesStagedTodo.foldLeft(0)(_ + _._2.size) +
@@ -266,21 +275,29 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   }
 
   private def logFiles(label: String, fileMaps: mutable.Map[(String, String), mutable.SortedSet[String]]) {
-    Log.debug("  " + label + ":")
-    if (fileMaps.isEmpty) Log.debug("") else for ((timeframes, uris) <- ListMap(fileMaps.map {
+    Log.info("  " + label + ":")
+    if (fileMaps.isEmpty) Log.info("") else for ((timeframes, uris) <- ListMap(fileMaps.map {
       case (timeframe, files) =>
         ((timeframe._1, if (timeframe._2.length == 1 && timeframe._2 != "*") "0" + timeframe._2 else timeframe._2), files)
     }.toSeq.sortBy(_._1): _*)) {
-      if (uris.isEmpty) Log.debug("") else {
-        Log.debug("    " + timeframes)
+      if (uris.isEmpty) Log.info("") else {
+        Log.info("    " + timeframes)
         for ((uri, count) <- uris.zipWithIndex) Log.info("      (" + (count + 1) + ") " + uri)
       }
     }
   }
 
+  private def touchFile(path: Path): Unit = {
+    val os = dfs.create(path)
+    os.write("".getBytes)
+    os.close()
+  }
+
 }
 
 object Process {
+
+  var OptionSnapshots = "com.jag.allow.snapshots"
 
   def main(arguments: Array[String]): Unit = {
     new Process(null).runner(arguments: _*)
