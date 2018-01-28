@@ -99,19 +99,14 @@ public class FlumeTest implements TestConstants {
     }
     StringBuilder query = new StringBuilder();
     for (int index = 0; index < partitions.size(); index++) {
-      if (partitions.size() == 1) {
-        query.append("SELECT bin_timestamp, data_metric FROM datum_0 ORDER BY data_metric");
-      } else {
-        if (index == 0) {
-          query.append("SELECT bin_timestamp, data_metric FROM ( SELECT * FROM datum_").append(index);
-        } else if (index == partitions.size() - 1) {
-          query.append(" UNION ALL SELECT * FROM datum_").append(index).append(" ) datum ORDER BY data_metric");
-        } else {
-          query.append(" UNION ALL SELECT * FROM datum_").append(index);
-        }
+      if (partitions.size() == 1) query.append("SELECT count(bin_timestamp) FROM datum_0");
+      else {
+        if (index == 0) query.append("SELECT count(bin_timestamp) FROM ( SELECT * FROM datum_").append(index);
+        else if (index == partitions.size() - 1) query.append(" UNION ALL SELECT * FROM datum_").append(index).append(" ) datum");
+        else query.append(" UNION ALL SELECT * FROM datum_").append(index);
       }
     }
-    assertEquals(DATUMS_COUNT, hiveServer.execute(query.toString()).size());
+    assertEquals(DATUMS_COUNT, new Integer(hiveServer.execute(query.toString()).iterator().next()).intValue());
   }
 
   @SuppressWarnings("SameReturnValue")

@@ -10,12 +10,12 @@ import static com.jag.asystem.arouter.Constants.MODEL_1_SOURCE;
 import static com.jag.asystem.arouter.Constants.MQTT_TOPIC;
 import static com.jag.asystem.arouter.Constants.getFlumeEnv;
 import static com.jag.asystem.astore.Counter.DATUMS_PROCESSED_COUNT;
-import static com.jag.asystem.astore.Counter.FILES_PROCESSED_DONE;
-import static com.jag.asystem.astore.Counter.FILES_PROCESSED_REDO;
-import static com.jag.asystem.astore.Counter.FILES_PROCESSED_SKIP;
-import static com.jag.asystem.astore.Counter.FILES_STAGED_DONE;
-import static com.jag.asystem.astore.Counter.FILES_STAGED_REDO;
-import static com.jag.asystem.astore.Counter.FILES_STAGED_SKIP;
+import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_DONE;
+import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_REDO;
+import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_SKIP;
+import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_DONE;
+import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_REDO;
+import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_SKIP;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -70,35 +70,19 @@ public class ProcessTest implements TestConstants {
   @ClassRule
   public static final HiveServer hiveServer = HiveServer.getInstance(Runtime.LOCAL_MR2);
 
-  public final TestMetaData testPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+  public final TestMetaData testGenerated = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
-    .dataSetLabels(new String[][][]{{{"pristine"}}})
-    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
+    .dataSetLabels(new String[][][]{{{"empty"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.TRUE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 18L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 49L)
-      .put(DATUMS_PROCESSED_COUNT, 100L)
-      .build())
-    );
-
-  public final TestMetaData testOverlap = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
-    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
-    .dataSetLabels(new String[][][]{{{"overlap"}}})
-    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
-    .dataSetDestinationDirs(HDFS_DIR)
-    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 2L)
-      .put(FILES_STAGED_DONE, 1L)
-      .put(FILES_PROCESSED_SKIP, 1L)
-      .put(FILES_PROCESSED_REDO, 1L)
-      .put(FILES_PROCESSED_DONE, 48L)
-      .put(DATUMS_PROCESSED_COUNT, 100L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 2L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 2L)
+      .put(DATUMS_PROCESSED_COUNT, 4L)
       .build())
     );
 
@@ -108,13 +92,13 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 0L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 0L)
-      .put(DATUMS_PROCESSED_COUNT, 100L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 0L)
+      .put(DATUMS_PROCESSED_COUNT, 10594L)
       .build())
     );
 
@@ -124,12 +108,12 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 0L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 0L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 0L)
       .put(DATUMS_PROCESSED_COUNT, 0L)
       .build())
     );
@@ -140,45 +124,77 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 0L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 0L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 0L)
       .put(DATUMS_PROCESSED_COUNT, 0L)
       .build())
     );
 
-  public final TestMetaData testRewrite = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+  public final TestMetaData testFresh = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
-    .dataSetLabels(new String[][][]{{{"rewrite"}}})
+    .dataSetLabels(new String[][][]{{{"fresh"}}})
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 1L)
-      .put(FILES_STAGED_REDO, 2L)
-      .put(FILES_STAGED_DONE, 0L)
-      .put(FILES_PROCESSED_SKIP, 1L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 41L)
-      .put(DATUMS_PROCESSED_COUNT, 100L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 3L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 32L)
+      .put(DATUMS_PROCESSED_COUNT, 103420L)
       .build())
     );
 
-  public final TestMetaData testGenerated = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+  public final TestMetaData testClean = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
-    .dataSetLabels(new String[][][]{{{"empty"}}})
-    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.TRUE))
+    .dataSetLabels(new String[][][]{{{"clean"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 0L)
-      .put(FILES_STAGED_DONE, 2L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 0L)
-      .put(FILES_PROCESSED_DONE, 2L)
-      .put(DATUMS_PROCESSED_COUNT, 4L)
+      .put(PARTITIONS_STAGED_SKIP, 0L)
+      .put(PARTITIONS_STAGED_REDO, 3L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 32L)
+      .put(DATUMS_PROCESSED_COUNT, 103420L)
+      .build())
+    );
+
+  public final TestMetaData testDirty = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
+    .dataSetLabels(new String[][][]{{{"dirty"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
+    .dataSetDestinationDirs(HDFS_DIR)
+    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(PARTITIONS_STAGED_SKIP, 4L)
+      .put(PARTITIONS_STAGED_REDO, 8L)
+      .put(PARTITIONS_STAGED_DONE, 1L)
+      .put(PARTITIONS_PROCESSED_SKIP, 1L)
+      .put(PARTITIONS_PROCESSED_REDO, 1L)
+      .put(PARTITIONS_PROCESSED_DONE, 48L)
+      .put(DATUMS_PROCESSED_COUNT, 302057L)
+      .build())
+    );
+
+  public final TestMetaData testDone = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
+    .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}})
+    .dataSetLabels(new String[][][]{{{"done"}}})
+    .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
+    .dataSetDestinationDirs(HDFS_DIR)
+    .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(PARTITIONS_STAGED_SKIP, 13L)
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, 3L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_DONE, 0L)
+      .put(DATUMS_PROCESSED_COUNT, 69905L)
       .build())
     );
 
@@ -188,13 +204,13 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(FILES_STAGED_SKIP, 0L)
-      .put(FILES_STAGED_REDO, 5L)
-      .put(FILES_STAGED_DONE, 19L)
-      .put(FILES_PROCESSED_SKIP, 0L)
-      .put(FILES_PROCESSED_REDO, 3L)
-      .put(FILES_PROCESSED_DONE, 73L)
-      .put(DATUMS_PROCESSED_COUNT, 100L)
+      .put(PARTITIONS_STAGED_SKIP, 4L)
+      .put(PARTITIONS_STAGED_REDO, 10L)
+      .put(PARTITIONS_STAGED_DONE, 4L)
+      .put(PARTITIONS_PROCESSED_SKIP, 1L)
+      .put(PARTITIONS_PROCESSED_REDO, 2L)
+      .put(PARTITIONS_PROCESSED_DONE, 48L)
+      .put(DATUMS_PROCESSED_COUNT, 416255L)
       .build())
     );
 
@@ -218,7 +234,7 @@ public class ProcessTest implements TestConstants {
   }
 
   @SuppressWarnings("Duplicates")
-  @TestWith({"testPristine", "testOverlap", "testCorrupt", "testEmpty", "testTemp", "testRewrite", "testAll", "testGenerated"})
+  @TestWith({"testGenerated", "testCorrupt", "testEmpty", "testTemp", "testFresh", "testClean", "testDirty", "testDone", "testAll"})
   public void testProcess(TestMetaData test) throws Exception {
     if (test.<Boolean>getParameter(DATA_GENERATE)) {
       assertTrue(flumeServer.crankPipeline(
@@ -251,34 +267,27 @@ public class ProcessTest implements TestConstants {
     }
     StringBuilder query = new StringBuilder();
     for (int index = 0; index < partitions.size(); index++) {
-      if (partitions.size() == 1) {
-        query.append("SELECT bin_timestamp, data_metric FROM datum_0 ORDER BY data_metric");
-      } else {
-        if (index == 0) {
-          query.append("SELECT bin_timestamp, data_metric FROM ( SELECT * FROM datum_").append(index);
-        } else if (index == partitions.size() - 1) {
-          query.append(" UNION ALL SELECT * FROM datum_").append(index).append(" ) datum ORDER BY data_metric");
-        } else {
-          query.append(" UNION ALL SELECT * FROM datum_").append(index);
-        }
+      if (partitions.size() == 1) query.append("SELECT count(bin_timestamp) FROM datum_0");
+      else {
+        if (index == 0) query.append("SELECT count(bin_timestamp) FROM ( SELECT * FROM datum_").append(index);
+        else if (index == partitions.size() - 1) query.append(" UNION ALL SELECT * FROM datum_").append(index).append(" ) datum");
+        else query.append(" UNION ALL SELECT * FROM datum_").append(index);
       }
     }
     assertEquals(test.<Long>getAssert(DATUMS_PROCESSED_COUNT),
-      query.length() > 0 ? new Long(hiveServer.execute(query.toString()).size()) : new Long(0));
+      new Long(query.length() > 0 ? hiveServer.execute(query.toString()).iterator().next() : "0"));
     driver.reset();
     assertEquals(SUCCESS, driver.runner(
       dfsServer.getPath(HDFS_DIR).toString()));
-
-    // TODO: Re-enable once I add Ausust datums to arouter_start=1503360000/arouter_finish=1509120000
-    //    assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-    //      .put(FILES_STAGED_SKIP, test.<Long>getAssert(FILES_STAGED_SKIP) +
-    //        test.<Long>getAssert(FILES_STAGED_REDO) + test.<Long>getAssert(FILES_STAGED_DONE))
-    //      .put(FILES_STAGED_REDO, 0L)
-    //      .put(FILES_STAGED_DONE, 0L)
-    //      .put(FILES_PROCESSED_REDO, 0L)
-    //      .put(FILES_PROCESSED_SKIP, test.<Long>getAssert(FILES_PROCESSED_SKIP) + test.<Long>getAssert(FILES_PROCESSED_DONE))
-    //      .put(FILES_PROCESSED_DONE, 0L)
-    //      .build()), driver.getCounters());
+    assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(PARTITIONS_STAGED_SKIP, test.<Long>getAssert(PARTITIONS_STAGED_SKIP) +
+        test.<Long>getAssert(PARTITIONS_STAGED_REDO) + test.<Long>getAssert(PARTITIONS_STAGED_DONE))
+      .put(PARTITIONS_STAGED_REDO, 0L)
+      .put(PARTITIONS_STAGED_DONE, 0L)
+      .put(PARTITIONS_PROCESSED_REDO, 0L)
+      .put(PARTITIONS_PROCESSED_SKIP, test.<Long>getAssert(PARTITIONS_PROCESSED_SKIP) + test.<Long>getAssert(PARTITIONS_PROCESSED_DONE))
+      .put(PARTITIONS_PROCESSED_DONE, 0L)
+      .build()), driver.getCounters());
   }
 
   private static final String DATA_GENERATE = "DATA_GENERATE";

@@ -154,12 +154,12 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     if (Log.isInfoEnabled()) {
       Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with input/output [" + inputOutputPath.toString + "] and input " +
         "files:")
-      logFiles("FILES_STAGED_TODO", filesStagedTodo)
-      logFiles("FILES_STAGED_SKIP", filesStagedSkip)
-      logFiles("FILES_PROCESSED_SETS", filesProcessedSets)
-      logFiles("FILES_PROCESSED_TODO", filesProcessedTodo)
-      logFiles("FILES_PROCESSED_REDO", filesProcessedRedo)
-      logFiles("FILES_PROCESSED_SKIP", filesProcessedSkip)
+      logFiles("PARTITIONS_STAGED_TODO", filesStagedTodo)
+      logFiles("PARTITIONS_STAGED_SKIP", filesStagedSkip)
+      logFiles("PARTITIONS_PROCESSED_SETS", filesProcessedSets)
+      logFiles("PARTITIONS_PROCESSED_TODO", filesProcessedTodo)
+      logFiles("PARTITIONS_PROCESSED_REDO", filesProcessedRedo)
+      logFiles("PARTITIONS_PROCESSED_SKIP", filesProcessedSkip)
     }
     SUCCESS
   }
@@ -207,7 +207,6 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
       .parquet(filesProcessedPath)
     val filesProcessedSuccess = new Path(filesProcessedPath, "_SUCCESS")
     val filesProcessedDone = mutable.Map[(String, String), mutable.SortedSet[String]]()
-    val filesProcessedDoneFiles = mutable.Map[(String, String), mutable.SortedSet[String]]()
     if (dfs.exists(filesProcessedSuccess)) {
       dfs.delete(filesProcessedSuccess, true)
       for ((_, filesStagedTodoParents) <- filesStagedTodo)
@@ -223,9 +222,6 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
               val fileMonthYear = (astoreYear, astoreMonth)
               if (filesProcessedTodoRedo.contains(fileMonthYear)) {
                 touchFile(new Path(fileParent, "_SUCCESS"))
-                if (!filesProcessedDoneFiles.contains(fileMonthYear))
-                  filesProcessedDoneFiles(fileMonthYear) = mutable.SortedSet()
-                filesProcessedDoneFiles(fileMonthYear) += fileUri
                 if (!filesProcessedDone.contains(fileMonthYear))
                   filesProcessedDone(fileMonthYear) = mutable.SortedSet()
                 filesProcessedDone(fileMonthYear) += fileParent
@@ -239,16 +235,16 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
       }
     }
     if (Log.isInfoEnabled()) {
-      logFiles("FILES_PROCESSED_DONE", filesProcessedDoneFiles)
+      logFiles("PARTITIONS_PROCESSED_DONE", filesProcessedDone)
     }
-    incrementCounter(FILES_STAGED_SKIP, filesStagedTodo.foldLeft(0)(_ + _._2.size) +
+    incrementCounter(PARTITIONS_STAGED_SKIP, filesStagedTodo.foldLeft(0)(_ + _._2.size) +
       filesStagedSkip.foldLeft(0)(_ + _._2.size) - filesProcessedTodo.foldLeft(0)(_ + _._2.size))
-    incrementCounter(FILES_STAGED_REDO, filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
+    incrementCounter(PARTITIONS_STAGED_REDO, filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
       filesStagedTodo.foldLeft(0)(_ + _._2.size))
-    incrementCounter(FILES_STAGED_DONE, filesStagedTodo.foldLeft(0)(_ + _._2.size))
-    incrementCounter(FILES_PROCESSED_SKIP, filesProcessedSkip.foldLeft(0)(_ + _._2.size))
-    incrementCounter(FILES_PROCESSED_REDO, filesProcessedRedo.foldLeft(0)(_ + _._2.size))
-    incrementCounter(FILES_PROCESSED_DONE, filesProcessedDone.foldLeft(0)(_ + _._2.size))
+    incrementCounter(PARTITIONS_STAGED_DONE, filesStagedTodo.foldLeft(0)(_ + _._2.size))
+    incrementCounter(PARTITIONS_PROCESSED_SKIP, filesProcessedSkip.foldLeft(0)(_ + _._2.size))
+    incrementCounter(PARTITIONS_PROCESSED_REDO, filesProcessedRedo.foldLeft(0)(_ + _._2.size))
+    incrementCounter(PARTITIONS_PROCESSED_DONE, filesProcessedDone.foldLeft(0)(_ + _._2.size))
     spark.close()
     SUCCESS
   }
