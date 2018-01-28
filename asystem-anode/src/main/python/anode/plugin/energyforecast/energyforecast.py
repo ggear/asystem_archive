@@ -184,7 +184,7 @@ class Energyforecast(Plugin):
                                     data_bound_upper=100)
 
                             # TODO: Rewrite scaling function to more accurately reflect energy production curve
-                            energy_production_forecast_actual = 0 if sun_percentage < 85 else \
+                            energy_production_forecast_actual = 0 if sun_percentage < 100 else \
                                 int((energy_production_forecast / energy_production_today * 100) if (
                                         energy_production_forecast is not None and energy_production_today is not None and
                                         energy_production_today != 0) else 0)
