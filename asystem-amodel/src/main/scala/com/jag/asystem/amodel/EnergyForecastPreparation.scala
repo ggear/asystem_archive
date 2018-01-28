@@ -68,7 +68,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
       val timezoneDefault = TimeZone.getDefault.getID
       val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
       calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
-      val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime())
+      val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime)
       val input = inputPaths
         .map(inputPath => spark.read.parquet(inputPath))
         .reduce((left: DataFrame, right: DataFrame) => left.union(right))
@@ -192,12 +192,12 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
         .where($"datum__bin__date" =!= "2017/10/30")
         .where($"datum__bin__date" =!= "2017/11/27")
         .where($"datum__bin__date" =!= "2017/11/28")
-        // Potentially need to strip out these dates
-        .where($"datum__bin__date" =!= "2018/01/27")
-        .where($"datum__bin__date" =!= "2018/01/28")
-        .where($"datum__bin__date" =!= "2018/01/29")
-        .where($"datum__bin__date" =!= "2018/01/30")
-        .where($"datum__bin__date" =!= s"${dateCurrent}")
+        // Potentially need to strip out these dates since arouter was borked
+        // .where($"datum__bin__date" =!= "2018/01/27")
+        // .where($"datum__bin__date" =!= "2018/01/28")
+        // .where($"datum__bin__date" =!= "2018/01/29")
+        // .where($"datum__bin__date" =!= "2018/01/30")
+        .where($"datum__bin__date" =!= s"$dateCurrent")
         .orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))

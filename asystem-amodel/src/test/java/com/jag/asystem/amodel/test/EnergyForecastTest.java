@@ -1,6 +1,5 @@
 package com.jag.asystem.amodel.test;
 
-import static com.cloudera.framework.common.Driver.Counter.RECORDS_OUT;
 import static com.cloudera.framework.common.Driver.SUCCESS;
 import static com.cloudera.framework.testing.Assert.assertCounterEquals;
 import static org.junit.Assert.assertEquals;
@@ -8,7 +7,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.util.Arrays;
 
-import com.cloudera.framework.common.Driver;
 import com.cloudera.framework.testing.TestConstants;
 import com.cloudera.framework.testing.TestMetaData;
 import com.cloudera.framework.testing.TestRunner;
@@ -20,7 +18,6 @@ import com.google.common.collect.ImmutableMap;
 import com.googlecode.zohhak.api.Coercion;
 import com.googlecode.zohhak.api.TestWith;
 import com.jag.asystem.amodel.Counter;
-import com.jag.asystem.amodel.DatumFactory;
 import com.jag.asystem.amodel.EnergyForecastPreparation;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;

@@ -3,12 +3,9 @@ package com.jag.asystem.arouter;
 import static org.apache.flume.sink.hdfs.AvroEventSerializer.AVRO_SCHEMA_URL_HEADER;
 
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -28,7 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Add meata-data to Flume header of each event
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "unused", "FieldCanBeLocal"})
 public class MetadataInterceptor implements Interceptor {
 
   public static final String HEADER_INGEST_ID = "iid";
@@ -46,19 +43,18 @@ public class MetadataInterceptor implements Interceptor {
   private static final String AVRO_SCHEMA_FILE = "datum.avsc";
   private static final String INSTANCE_ID = "flume-" + UUID.randomUUID().toString();
 
-  private final int batchWindowCount;
   private final int batchWindowSeconds;
   private final String avroSchemaUrl;
   private final boolean dropSnapshots;
 
-  private BatchMetaDataCache batchMetaDataCache;
+  private final BatchMetaDataCache batchMetaDataCache;
 
-  private MetadataInterceptor(int batchWindowCount, int batchWindowSeconds, String avroSchemaUrl, boolean dropSnapshots) {
-    this.batchWindowCount = batchWindowCount;
+  private MetadataInterceptor(
+    int batchWindowCount, int batchWindowSeconds, int batchTimeoutSeconds, String avroSchemaUrl, boolean dropSnapshots) {
     this.batchWindowSeconds = batchWindowSeconds;
     this.avroSchemaUrl = avroSchemaUrl;
     this.dropSnapshots = dropSnapshots;
-    batchMetaDataCache = new BatchMetaDataCache(batchWindowCount, batchWindowSeconds * 2);
+    batchMetaDataCache = new BatchMetaDataCache(batchWindowCount, batchWindowSeconds + batchTimeoutSeconds);
   }
 
   @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
@@ -94,8 +90,8 @@ public class MetadataInterceptor implements Interceptor {
     String anode_id = topicSegments[4].replace("anode_id=", "");
     String amodel_model = topicSegments[5].replace("anode_model=", "");
     if (dropSnapshots && anode_version.endsWith("SNAPSHOT")) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("MQTT event being dropped since it has a SNAPSHOT version [" + anode_version + "]");
+      if (LOG.isWarnEnabled()) {
+        LOG.warn("MQTT event being dropped since it has a SNAPSHOT version [" + anode_version + "]");
       }
       return null;
     }
@@ -132,8 +128,8 @@ public class MetadataInterceptor implements Interceptor {
 
   private class BatchMetaDataCache {
 
-    private int count;
-    private Cache<String, BatchMetaData> cache;
+    private final int count;
+    private final Cache<String, BatchMetaData> cache;
 
     BatchMetaDataCache(int count, int time) {
       this.count = count;
@@ -149,14 +145,15 @@ public class MetadataInterceptor implements Interceptor {
 
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   private class BatchMetaData {
 
-    String start;
-    String finish;
+    final String start;
+    final String finish;
     String timestamp;
     String partition;
 
-    private int batch;
+    private final int batch;
     private int count;
 
     BatchMetaData(long start, long finish, int batch) {
@@ -185,11 +182,13 @@ public class MetadataInterceptor implements Interceptor {
 
     public static final String CONFIG_BATCH_WINDOW_COUNT = "batchWindowCount";
     public static final String CONFIG_BATCH_WINDOW_SECONDS = "batchWindowSeconds";
+    public static final String CONFIG_BATCH_TIMEOUT_SECONDS = "batchTimeoutSeconds";
     public static final String CONFIG_AVRO_SCHEMA_URL = "avroSchemaURL";
     public static final String CONFIG_DROP_SNAPSHOTS = "dropSnapshots";
 
     private int batchWindowCount;
     private int batchWindowSeconds;
+    private int batchTimeoutSeconds;
     private String avroSchemaUrl;
     private boolean dropSnapshots;
 
@@ -198,13 +197,14 @@ public class MetadataInterceptor implements Interceptor {
 
     @Override
     public MetadataInterceptor build() {
-      return new MetadataInterceptor(batchWindowCount, batchWindowSeconds, avroSchemaUrl, dropSnapshots);
+      return new MetadataInterceptor(batchWindowCount, batchWindowSeconds, batchTimeoutSeconds, avroSchemaUrl, dropSnapshots);
     }
 
     @Override
     public void configure(Context context) {
       batchWindowCount = context.getInteger(CONFIG_BATCH_WINDOW_COUNT, 10000);
       batchWindowSeconds = context.getInteger(CONFIG_BATCH_WINDOW_SECONDS, 60 * 60);
+      batchTimeoutSeconds = context.getInteger(CONFIG_BATCH_TIMEOUT_SECONDS, 5 * 60);
       avroSchemaUrl = context.getString(CONFIG_AVRO_SCHEMA_URL, "").trim();
       dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, false);
     }

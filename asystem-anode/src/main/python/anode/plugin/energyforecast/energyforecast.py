@@ -162,12 +162,12 @@ class Energyforecast(Plugin):
                             data_version=model_version,
                             data_bound_lower=0)
                         if day == 1:
+                            current = int(time.time())
                             sun_percentage = \
                                 (0 if current < sun_rise else (100 if current > sun_set else int(
                                     (current - sun_rise) / float(sun_set - sun_rise) * 100))) \
                                     if (sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0
                             if model_classifier == "":
-                                current = int(time.time())
                                 self.datum_push(
                                     "energy__production_Dforecast_Ddaylight__inverter",
                                     "forecast", "integral",

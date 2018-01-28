@@ -3,7 +3,7 @@
 
     <!--
     Run: mvn clean install antrun:run@python-run -PCMP
-    Deploy: mvn clean deploy -pl asystem-anode -PPKG -U -Dmaven.install-python.skip=false
+    Deploy: git checkout master; git clean -d -x -f; git pull -a; git checkout $(git describe \-\-tags | cut -c1-19); mvn clean deploy -pl asystem-anode -PPKG -Dmaven.install-python.skip=false
     -->
 
     <modelVersion>4.0.0</modelVersion>
