@@ -69,9 +69,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
       val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
       calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
       val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime)
-      val input = inputPaths
-        .map(inputPath => spark.read.parquet(inputPath))
-        .reduce((left: DataFrame, right: DataFrame) => left.union(right))
+      val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
       input.createGlobalTempView("datums")
       val outputAll = List(
         s"""
@@ -184,33 +182,34 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
            | GROUP BY datum__bin__date
         """.stripMargin)
-        .map(sql => spark.sql(sql))
-        .reduce((left: DataFrame, right: DataFrame) => left.join(right, "datum__bin__date"))
+        .map(spark.sql(_)).reduce(_.join(_, "datum__bin__date"))
         .where($"datum__bin__date" =!= "2017/10/12")
         .where($"datum__bin__date" =!= "2017/10/13")
         .where($"datum__bin__date" =!= "2017/10/29")
         .where($"datum__bin__date" =!= "2017/10/30")
         .where($"datum__bin__date" =!= "2017/11/27")
         .where($"datum__bin__date" =!= "2017/11/28")
-        // Potentially need to strip out these dates since arouter was borked
-        // .where($"datum__bin__date" =!= "2018/01/27")
-        // .where($"datum__bin__date" =!= "2018/01/28")
-        // .where($"datum__bin__date" =!= "2018/01/29")
-        // .where($"datum__bin__date" =!= "2018/01/30")
-        // .where($"datum__bin__date" =!= "2018/01/31")
+        .where($"datum__bin__date" =!= "2018/12/31")
         .where($"datum__bin__date" =!= s"$dateCurrent")
-        .orderBy("datum__bin__date")
+        .repartition(1).orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))
       outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
-      val outputTrainingDays = outputAll.
-        select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest").
-        groupBy("conditions__forecast__glen_Dforrest").agg(first("datum__bin__date").as("datum__bin__date")).
-        drop("temperature__forecast__glen_Dforrest").drop("conditions__forecast__glen_Dforrest").union(outputAll.
-        select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest").
-        groupBy("conditions__forecast__glen_Dforrest").agg(last("datum__bin__date").as("datum__bin__date")).
-        drop("temperature__forecast__glen_Dforrest").drop("conditions__forecast__glen_Dforrest")
-      ).dropDuplicates()
+      val outputTrainingDays = outputAll
+        .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+        .groupBy("conditions__forecast__glen_Dforrest")
+        .agg(first("datum__bin__date").as("datum__bin__date"))
+        .drop("temperature__forecast__glen_Dforrest")
+        .drop("conditions__forecast__glen_Dforrest")
+        .orderBy("datum__bin__date")
+        .union(outputAll
+          .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+          .groupBy("conditions__forecast__glen_Dforrest")
+          .agg(last("datum__bin__date").as("datum__bin__date"))
+          .drop("temperature__forecast__glen_Dforrest")
+          .drop("conditions__forecast__glen_Dforrest")
+          .orderBy("datum__bin__date")
+        ).dropDuplicates()
       val outputTraining = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "leftanti").
         sort(asc("datum__bin__date")).coalesce(1)
       outputTraining.write.format("com.databricks.spark.csv").option("header", "true").
