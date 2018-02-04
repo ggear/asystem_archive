@@ -316,7 +316,7 @@ class Fronius(Plugin):
                     (self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) + HOUR_PEAK_START * 60 * 60):
                 self.datum_push(
                     "energy__consumption_Dpeak_Dmorning__grid",
-                    "derived", "integral",
+                    "current", "integral",
                     energy_consumption_grid_alltime,
                     "Wh",
                     10,
@@ -328,7 +328,7 @@ class Fronius(Plugin):
                 )
                 self.datum_push(
                     "energy__consumption_Dpeak_Dmorning__inverter",
-                    "derived", "integral",
+                    "current", "integral",
                     energy_production_inverter_day - energy_export_grid_day,
                     "Wh",
                     10,
@@ -350,7 +350,7 @@ class Fronius(Plugin):
                     (self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) + HOUR_PEAK_FINISH * 60 * 60):
                 self.datum_push(
                     "energy__consumption_Dpeak_Devening__grid",
-                    "derived", "integral",
+                    "current", "integral",
                     energy_consumption_grid_alltime,
                     "Wh",
                     10,
@@ -362,7 +362,7 @@ class Fronius(Plugin):
                 )
                 self.datum_push(
                     "energy__consumption_Dpeak_Devening__inverter",
-                    "derived", "integral",
+                    "current", "integral",
                     energy_production_inverter_day - energy_export_grid_day,
                     "Wh",
                     10,

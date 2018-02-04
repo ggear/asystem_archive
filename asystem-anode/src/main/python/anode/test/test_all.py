@@ -557,7 +557,7 @@ class ANodeTest(TestCase):
         self.patch(MqttPublishService, "isConnected", lambda myself: False)
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_PUBLISH, "-d" + DIR_ANODE_DB_TMP, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
-        metrics = self.assertRest(41, anode, "/rest/?scope=publish&format=csv", True)[1]
+        metrics = self.assertRest(23, anode, "/rest/?scope=publish&format=csv", True)[1]
         self.assertRest(metrics,
                         anode,
                         "/rest/?scope=publish&format=csv",

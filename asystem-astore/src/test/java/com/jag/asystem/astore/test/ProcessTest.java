@@ -9,13 +9,19 @@ import static com.jag.asystem.arouter.Constants.MODEL_1_SINK;
 import static com.jag.asystem.arouter.Constants.MODEL_1_SOURCE;
 import static com.jag.asystem.arouter.Constants.MQTT_TOPIC;
 import static com.jag.asystem.arouter.Constants.getFlumeEnv;
-import static com.jag.asystem.astore.Counter.DATUMS_PROCESSED_COUNT;
-import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_DONE;
-import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_REDO;
-import static com.jag.asystem.astore.Counter.PARTITIONS_PROCESSED_SKIP;
-import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_DONE;
-import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_REDO;
-import static com.jag.asystem.astore.Counter.PARTITIONS_STAGED_SKIP;
+import static com.jag.asystem.astore.Counter.PROCESSED_FILES_PURE;
+import static com.jag.asystem.astore.Counter.PROCESSED_ROWS_PURE;
+import static com.jag.asystem.astore.Counter.PROCESSED_PARTITIONS_DONE;
+import static com.jag.asystem.astore.Counter.PROCESSED_FILES_FAIL;
+import static com.jag.asystem.astore.Counter.PROCESSED_PARTITIONS_REDO;
+import static com.jag.asystem.astore.Counter.PROCESSED_PARTITIONS_SKIP;
+import static com.jag.asystem.astore.Counter.STAGED_FILES_PURE;
+import static com.jag.asystem.astore.Counter.STAGED_FILES_TEMP;
+import static com.jag.asystem.astore.Counter.STAGED_PARTITIONS_DONE;
+import static com.jag.asystem.astore.Counter.STAGED_FILES_FAIL;
+import static com.jag.asystem.astore.Counter.STAGED_PARTITIONS_REDO;
+import static com.jag.asystem.astore.Counter.STAGED_PARTITIONS_SKIP;
+import static com.jag.asystem.astore.Counter.STAGED_PARTITIONS_TEMP;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -76,13 +82,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.TRUE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 2L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 2L)
-      .put(DATUMS_PROCESSED_COUNT, 4L)
+      .put(STAGED_FILES_FAIL, 1L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 2L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 2L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 2L)
+      .put(PROCESSED_ROWS_PURE, 4L)
       .build())
     );
 
@@ -92,13 +104,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 0L)
-      .put(DATUMS_PROCESSED_COUNT, 10594L)
+      .put(STAGED_FILES_FAIL, 8L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 0L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, 4L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_ROWS_PURE, 10594L)
       .build())
     );
 
@@ -108,13 +126,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 0L)
-      .put(DATUMS_PROCESSED_COUNT, 0L)
+      .put(STAGED_FILES_FAIL, 1L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 0L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_ROWS_PURE, 0L)
       .build())
     );
 
@@ -124,13 +148,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 0L)
-      .put(DATUMS_PROCESSED_COUNT, 0L)
+      .put(STAGED_FILES_FAIL, 0L)
+      .put(STAGED_FILES_TEMP, 2L)
+      .put(STAGED_FILES_PURE, 2L)
+      .put(STAGED_PARTITIONS_TEMP, 2L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_ROWS_PURE, 0L)
       .build())
     );
 
@@ -140,13 +170,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 3L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 32L)
-      .put(DATUMS_PROCESSED_COUNT, 103420L)
+      .put(STAGED_FILES_FAIL, 0L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 5L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 3L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 32L)
+      .put(PROCESSED_ROWS_PURE, 103420L)
       .build())
     );
 
@@ -156,13 +192,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 0L)
-      .put(PARTITIONS_STAGED_REDO, 3L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 32L)
-      .put(DATUMS_PROCESSED_COUNT, 103420L)
+      .put(STAGED_FILES_FAIL, 0L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 5L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, 3L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 32L)
+      .put(PROCESSED_ROWS_PURE, 103420L)
       .build())
     );
 
@@ -172,13 +214,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 4L)
-      .put(PARTITIONS_STAGED_REDO, 8L)
-      .put(PARTITIONS_STAGED_DONE, 1L)
-      .put(PARTITIONS_PROCESSED_SKIP, 1L)
-      .put(PARTITIONS_PROCESSED_REDO, 1L)
-      .put(PARTITIONS_PROCESSED_DONE, 48L)
-      .put(DATUMS_PROCESSED_COUNT, 302057L)
+      .put(STAGED_FILES_FAIL, 0L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 15L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 4L)
+      .put(STAGED_PARTITIONS_REDO, 8L)
+      .put(STAGED_PARTITIONS_DONE, 1L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 48L)
+      .put(PROCESSED_PARTITIONS_SKIP, 24L)
+      .put(PROCESSED_PARTITIONS_REDO, 24L)
+      .put(PROCESSED_PARTITIONS_DONE, 48L)
+      .put(PROCESSED_ROWS_PURE, 292565L)
       .build())
     );
 
@@ -188,13 +236,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 13L)
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, 3L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_DONE, 0L)
-      .put(DATUMS_PROCESSED_COUNT, 69905L)
+      .put(STAGED_FILES_FAIL, 0L)
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, 15L)
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, 13L)
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, 0L)
+      .put(PROCESSED_FILES_PURE, 72L)
+      .put(PROCESSED_PARTITIONS_SKIP, 72L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_ROWS_PURE, 49861L)
       .build())
     );
 
@@ -204,13 +258,19 @@ public class ProcessTest implements TestConstants {
     .parameters(ImmutableMap.of(DATA_GENERATE, Boolean.FALSE))
     .dataSetDestinationDirs(HDFS_DIR)
     .asserts(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, 4L)
-      .put(PARTITIONS_STAGED_REDO, 10L)
-      .put(PARTITIONS_STAGED_DONE, 4L)
-      .put(PARTITIONS_PROCESSED_SKIP, 1L)
-      .put(PARTITIONS_PROCESSED_REDO, 2L)
-      .put(PARTITIONS_PROCESSED_DONE, 48L)
-      .put(DATUMS_PROCESSED_COUNT, 416255L)
+      .put(STAGED_FILES_FAIL, 5L)
+      .put(STAGED_FILES_TEMP, 2L)
+      .put(STAGED_FILES_PURE, 24L)
+      .put(STAGED_PARTITIONS_TEMP, 2L)
+      .put(STAGED_PARTITIONS_SKIP, 4L)
+      .put(STAGED_PARTITIONS_REDO, 10L)
+      .put(STAGED_PARTITIONS_DONE, 4L)
+      .put(PROCESSED_FILES_FAIL, 4L)
+      .put(PROCESSED_FILES_PURE, 72L)
+      .put(PROCESSED_PARTITIONS_SKIP, 24L)
+      .put(PROCESSED_PARTITIONS_REDO, 48L)
+      .put(PROCESSED_PARTITIONS_DONE, 48L)
+      .put(PROCESSED_ROWS_PURE, 406763L)
       .build())
     );
 
@@ -242,10 +302,13 @@ public class ProcessTest implements TestConstants {
         FLUME_AGENT, MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(),
         HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     }
-    Driver driver = new Process(dfsServer.getConf());
-    driver.getConf().setBoolean(Process.OptionSnapshots(), true);
-    assertEquals(SUCCESS, driver.runner(dfsServer.getPath(HDFS_DIR).toString()));
-    assertCounterEquals(test, driver.getCounters());
+    Driver driverRead = new Process(dfsServer.getConf());
+    driverRead.getConf().setBoolean(Process.OptionSnapshots(), true);
+    Driver driverWrite = new Process(dfsServer.getConf());
+    driverWrite.getConf().setBoolean(Process.OptionSnapshots(), true);
+    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    assertCounterEquals(test, driverWrite.getCounters());
     Set<String> partitions = new HashSet<>();
     for (Path path : dfsServer.listFilesDfs(HDFS_DIR)) {
       if (path.toString().endsWith(".parquet") &&
@@ -255,13 +318,11 @@ public class ProcessTest implements TestConstants {
             "PARTITIONED BY (astore_version STRING, astore_year STRING, astore_month STRING, astore_model STRING, astore_metric STRING) " +
             "STORED AS AVRO " +
             "TBLPROPERTIES ('avro.schema.url'='" + ProcessTest.class.getResource("/avro/" +
-            DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') "
-        );
+            DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') ");
         hiveServer.execute(
           "CREATE EXTERNAL TABLE datum_" + (partitions.size() - 1) + " LIKE datum_" + (partitions.size() - 1) + "_avro " +
             "STORED AS PARQUET " + "" +
-            "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/astore_version")) + "'"
-        );
+            "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/astore_version")) + "'");
         hiveServer.execute("MSCK REPAIR TABLE datum_" + (partitions.size() - 1));
       }
     }
@@ -274,20 +335,60 @@ public class ProcessTest implements TestConstants {
         else query.append(" UNION ALL SELECT * FROM datum_").append(index);
       }
     }
-    assertEquals(test.<Long>getAssert(DATUMS_PROCESSED_COUNT),
+    assertEquals(test.<Long>getAssert(PROCESSED_ROWS_PURE),
       new Long(query.length() > 0 ? hiveServer.execute(query.toString()).iterator().next() : "0"));
-    driver.reset();
-    assertEquals(SUCCESS, driver.runner(
-      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
-      .put(PARTITIONS_STAGED_SKIP, test.<Long>getAssert(PARTITIONS_STAGED_SKIP) +
-        test.<Long>getAssert(PARTITIONS_STAGED_REDO) + test.<Long>getAssert(PARTITIONS_STAGED_DONE))
-      .put(PARTITIONS_STAGED_REDO, 0L)
-      .put(PARTITIONS_STAGED_DONE, 0L)
-      .put(PARTITIONS_PROCESSED_REDO, 0L)
-      .put(PARTITIONS_PROCESSED_SKIP, test.<Long>getAssert(PARTITIONS_PROCESSED_SKIP) + test.<Long>getAssert(PARTITIONS_PROCESSED_DONE))
-      .put(PARTITIONS_PROCESSED_DONE, 0L)
-      .build()), driver.getCounters());
+      .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
+      .put(STAGED_FILES_TEMP, test.<Long>getAssert(STAGED_FILES_TEMP))
+      .put(STAGED_FILES_PURE, test.<Long>getAssert(STAGED_FILES_PURE))
+      .put(STAGED_PARTITIONS_TEMP, test.<Long>getAssert(STAGED_PARTITIONS_TEMP))
+      .put(STAGED_PARTITIONS_SKIP, test.<Long>getAssert(STAGED_PARTITIONS_SKIP) +
+        test.<Long>getAssert(STAGED_PARTITIONS_REDO) + test.<Long>getAssert(STAGED_PARTITIONS_DONE))
+      .put(STAGED_PARTITIONS_REDO, 0L)
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, test.<Long>getAssert(PROCESSED_FILES_FAIL))
+      .put(PROCESSED_FILES_PURE, test.<Long>getAssert(PROCESSED_PARTITIONS_SKIP) + test.<Long>getAssert(PROCESSED_PARTITIONS_DONE))
+      .put(PROCESSED_PARTITIONS_SKIP, test.<Long>getAssert(PROCESSED_PARTITIONS_SKIP) + test.<Long>getAssert(PROCESSED_PARTITIONS_DONE))
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, 0L)
+      .build()), driverWrite.getCounters());
+    assertEquals(SUCCESS, driverWrite.runner("clean", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
+    assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
+      .put(STAGED_FILES_TEMP, test.<Long>getAssert(STAGED_FILES_TEMP))
+      .put(STAGED_FILES_PURE, test.<Long>getAssert(STAGED_FILES_PURE))
+      .put(STAGED_PARTITIONS_TEMP, test.<Long>getAssert(STAGED_PARTITIONS_TEMP))
+      .put(STAGED_PARTITIONS_SKIP, 0L)
+      .put(STAGED_PARTITIONS_REDO, test.<Long>getAssert(STAGED_PARTITIONS_SKIP) +
+        test.<Long>getAssert(STAGED_PARTITIONS_REDO) + test.<Long>getAssert(STAGED_PARTITIONS_DONE))
+      .put(STAGED_PARTITIONS_DONE, 0L)
+      .put(PROCESSED_FILES_FAIL, test.<Long>getAssert(PROCESSED_FILES_FAIL))
+      .put(PROCESSED_FILES_PURE, 0L)
+      .put(PROCESSED_PARTITIONS_SKIP, 0L)
+      .put(PROCESSED_PARTITIONS_REDO, 0L)
+      .put(PROCESSED_PARTITIONS_DONE, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_SKIP))
+      .build()), driverWrite.getCounters());
+    assertEquals(SUCCESS, driverRead.runner("repair", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
+      .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
+      .put(STAGED_FILES_TEMP, 0L)
+      .put(STAGED_FILES_PURE, test.<Long>getAssert(STAGED_FILES_PURE) + test.<Long>getAssert(STAGED_FILES_TEMP))
+      .put(STAGED_PARTITIONS_TEMP, 0L)
+      .put(STAGED_PARTITIONS_SKIP, driverRead.getCounters().get(Process.class.getName()).get(STAGED_PARTITIONS_SKIP))
+      .put(STAGED_PARTITIONS_REDO, driverRead.getCounters().get(Process.class.getName()).get(STAGED_PARTITIONS_REDO))
+      .put(STAGED_PARTITIONS_DONE, test.<Long>getAssert(STAGED_PARTITIONS_TEMP))
+      .put(PROCESSED_FILES_FAIL, test.<Long>getAssert(PROCESSED_FILES_FAIL))
+      .put(PROCESSED_FILES_PURE, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_FILES_PURE))
+      .put(PROCESSED_PARTITIONS_SKIP, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_SKIP))
+      .put(PROCESSED_PARTITIONS_REDO, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_REDO))
+      .put(PROCESSED_PARTITIONS_DONE, driverWrite.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_DONE))
+      .build()), driverWrite.getCounters());
   }
 
   private static final String DATA_GENERATE = "DATA_GENERATE";

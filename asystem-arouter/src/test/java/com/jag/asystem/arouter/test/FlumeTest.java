@@ -92,8 +92,7 @@ public class FlumeTest implements TestConstants {
             ") STORED AS AVRO " +
             "LOCATION '" + path.toString().substring(0, path.toString().indexOf("/arouter_version")) + "' " +
             "TBLPROPERTIES ('avro.schema.url'='" + FlumeTest.class.getResource("/avro/" +
-            DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') "
-        );
+            DatumFactory.getModelProperty("MODEL_VERSION") + "/datum.avsc").toString() + "') ");
         hiveServer.execute("MSCK REPAIR TABLE datum_" + (partitions.size() - 1));
       }
     }

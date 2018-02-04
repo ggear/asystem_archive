@@ -82,7 +82,7 @@ class Speedtest(Plugin):
                             100,
                             bin_timestamp,
                             bin_timestamp,
-                            2,
+                            5,
                             "minute",
                             data_bound_lower=0,
                             data_derived_max=True,

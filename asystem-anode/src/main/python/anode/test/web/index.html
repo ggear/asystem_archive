@@ -11,7 +11,7 @@
         var uri_count = uri_params[1].split("=")[1];
         var div_graphs = "";
         for (var i = 0; i < uri_count; i++) {
-            div_graphs += "<a href='#" + i + "'><div class='datum' id='" + i + "' ><img src='" + uri_dir + "anode_" + i + ".svg' class='datum-plot'/></div></a><hr/>";
+            div_graphs += "<a href='#" + i + "'><div class='datum' id='" + i + "' ><img src='" + uri_dir + "/anode_" + i + ".svg' class='datum-plot'/></div></a><hr/>";
         }
         window.onload = function () {
             document.getElementById("graphs").innerHTML = div_graphs;
