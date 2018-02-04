@@ -203,6 +203,8 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         Log.error("Driver [" + this.getClass.getSimpleName + "] SNAPSHOT version attempted in production, bailing out without executing")
       return FAILURE_RUNTIME
     }
+    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process").getOrCreate()
+    import spark.implicits._
     inputMode match {
       case CLEAN =>
         filesProcessedTodo.flatMap(_._2).toSet.union(filesProcessedSkip.flatMap(_._2).toSet).foreach(fileProcessed =>
@@ -221,8 +223,6 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
           if (fileSuccess) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
         })
       case BATCH =>
-        val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process").getOrCreate()
-        import spark.implicits._
         val filesProcessedMonths = mutable.Set[Path]()
         for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
           val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
@@ -276,9 +276,9 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         if (Log.isInfoEnabled()) {
           logFiles("PROCESSED_PARTITIONS_DONE", filesProcessedDone)
         }
-        spark.close()
       case _ =>
     }
+    spark.close()
     incrementCounter(STAGED_FILES_FAIL, filesStageFail.size)
     incrementCounter(STAGED_FILES_TEMP, filesStageTemp.size)
     incrementCounter(STAGED_FILES_PURE, filesStagePure.size)
