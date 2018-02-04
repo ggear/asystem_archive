@@ -106,7 +106,7 @@ public class FlumeTest implements TestConstants {
         else query.append(" UNION ALL SELECT * FROM datum_").append(index);
       }
     }
-    assertEquals(DATUMS_COUNT, new Integer(hiveServer.execute(query.toString()).iterator().next()).intValue());
+    assertEquals(DATUMS_COUNT, Integer.parseInt(hiveServer.execute(query.toString()).iterator().next()));
   }
 
   @SuppressWarnings("SameReturnValue")

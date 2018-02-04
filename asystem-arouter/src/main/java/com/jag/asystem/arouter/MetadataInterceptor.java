@@ -54,7 +54,7 @@ public class MetadataInterceptor implements Interceptor {
     this.batchWindowSeconds = batchWindowSeconds;
     this.avroSchemaUrl = avroSchemaUrl;
     this.dropSnapshots = dropSnapshots;
-    batchMetaDataCache = new BatchMetaDataCache(batchWindowCount, batchWindowSeconds + batchTimeoutSeconds);
+    batchMetaDataCache = new BatchMetaDataCache(batchWindowCount, batchTimeoutSeconds);
   }
 
   @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})

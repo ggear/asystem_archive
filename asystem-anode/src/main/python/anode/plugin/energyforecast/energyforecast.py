@@ -165,7 +165,7 @@ class Energyforecast(Plugin):
                             current = int(time.time())
                             sun_percentage = \
                                 (0 if current < sun_rise else (100 if current > sun_set else int(
-                                    (current - sun_rise) / float(sun_set - sun_rise) * 100))) \
+                                    (current - sun_rise) / float(sun_set - sun_rise) * 1000))) \
                                     if (sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0
                             if model_classifier == "":
                                 self.datum_push(
@@ -173,7 +173,7 @@ class Energyforecast(Plugin):
                                     "forecast", "integral",
                                     self.datum_value(sun_percentage),
                                     "_P25",
-                                    1,
+                                    10,
                                     bin_timestamp,
                                     bin_timestamp,
                                     day,
@@ -184,7 +184,7 @@ class Energyforecast(Plugin):
                                     data_bound_upper=100)
 
                             # TODO: Rewrite scaling function to more accurately reflect energy production curve
-                            energy_production_forecast_actual = 0 if sun_percentage < 100 else \
+                            energy_production_forecast_actual = 0 if sun_percentage < 1000 else \
                                 int((energy_production_forecast / energy_production_today * 100) if (
                                         energy_production_forecast is not None and energy_production_today is not None and
                                         energy_production_today != 0) else 0)

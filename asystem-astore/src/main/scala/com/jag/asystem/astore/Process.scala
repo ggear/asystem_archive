@@ -165,7 +165,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   }
 
   override def parameters(): Array[String] = {
-    Array("input-output-path")
+    Array("uri")
   }
 
   //noinspection ScalaUnusedSymbol
@@ -257,6 +257,8 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     filesProcessedTodo.clear
     filesProcessedRedo.clear
     filesProcessedSkip.clear
+    filesProcessedYears.clear
+    filesProcessedVersions.clear
     super.reset()
   }
 
@@ -270,13 +272,14 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
     if (fileIgnore && Log.isWarnEnabled()) Log.warn("Driver [" + this.getClass.getSimpleName + "] ignoring [" + fileUri + "]")
   }
 
+
   private def logFiles(label: String, fileMaps: mutable.Map[(String, String), mutable.SortedSet[String]]) {
     Log.info("  " + label + ":")
-    if (fileMaps.isEmpty) Log.info("") else for ((timeframes, uris) <- ListMap(fileMaps.map {
+    if (fileMaps.nonEmpty) for ((timeframes, uris) <- ListMap(fileMaps.map {
       case (timeframe, files) =>
         ((timeframe._1, if (timeframe._2.length == 1 && timeframe._2 != "*") "0" + timeframe._2 else timeframe._2), files)
     }.toSeq.sortBy(_._1): _*)) {
-      if (uris.isEmpty) Log.info("") else {
+      if (uris.nonEmpty) {
         Log.info("    " + timeframes)
         for ((uri, count) <- uris.zipWithIndex) Log.info("      (" + (count + 1) + ") " + uri)
       }
@@ -293,7 +296,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
 
 object Process {
 
-  var OptionSnapshots = "com.jag.allow.snapshots"
+  val OptionSnapshots = "com.jag.allow.snapshots"
 
   def main(arguments: Array[String]): Unit = {
     new Process(null).runner(arguments: _*)

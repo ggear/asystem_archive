@@ -830,7 +830,7 @@ class Plugin(object):
         datums_axes.spines["left"].set_color(datums_plot_colour)
         datums_axes.spines["right"].set_color(datums_plot_colour)
         datums_axes.patch.set_facecolor(datums_plot_colour_background)
-        if datums_plot_title is not None and len(datums_plot_title) > 20:
+        if datums_plot_title is not None and (len(max(datums_df.columns.values, key=len)) + len(datums_plot_title)) > 40:
             datums_plot_legend = datums_axes.legend(loc="lower left", ncol=1)
         else:
             datums_plot_legend = datums_axes.legend(loc="upper left", ncol=1)
@@ -845,21 +845,15 @@ class Plugin(object):
         datums_canvas.draw()
         if datums_plot_title is not None:
             datums_axes.text(0.98, 0.975, datums_plot_title, horizontalalignment="right", verticalalignment="top",
-                             transform=datums_axes.transAxes,
-                             color=datums_plot_colour, fontsize=datums_plot_font_size,
+                             transform=datums_axes.transAxes, color=datums_plot_colour, fontsize=datums_plot_font_size,
                              bbox=dict(facecolor=datums_plot_colour_background, edgecolor=datums_plot_colour_background,
-                                       alpha=datums_plot_alpha,
-                                       boxstyle="round,pad=0.2"))
+                                       alpha=datums_plot_alpha, boxstyle="round,pad=0.2"))
         datums_axes_x_labels = [tick.get_text() for tick in datums_axes.get_xticklabels()]
         if len(datums_axes_x_labels) > 1:
             datums_axes_x_labels[0] = u""
         datums_axes.set_xticklabels(datums_axes_x_labels)
         datums_axes.set_ylim([datums_axes.get_ylim()[0] * 0.9, datums_axes.get_ylim()[1] * 1.15])
-        datums_canvas.print_figure(datums_plot_buffer,
-                                   facecolor=datums_plot_colour_background,
-                                   figsize=(8.68, 12),
-                                   dpi=1200,
-                                   format="svg")
+        datums_canvas.print_figure(datums_plot_buffer, facecolor=datums_plot_colour_background, figsize=(8.68, 12), dpi=1200, format="svg")
         datums_figure.clf()
         plot.close()
         del datums_canvas

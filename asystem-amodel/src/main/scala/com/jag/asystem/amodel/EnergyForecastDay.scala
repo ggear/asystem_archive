@@ -14,14 +14,14 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 import java.text.SimpleDateFormat
 
-class EnergyForecastPreparation(configuration: Configuration) extends DriverSpark(configuration) {
+class EnergyForecastDay(configuration: Configuration) extends DriverSpark(configuration) {
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
   val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_VERSION")
 
-  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastPreparation])
+  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastDay])
 
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
@@ -30,7 +30,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
     outputPath = dfs.makeQualified(outputPath)
     for (path <- List(new Path(outputPath, "training" + outputPathSuffix), new Path(outputPath, "validation" + outputPathSuffix))) {
       if (dfs.exists(path)) if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true) else {
-        if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastPreparation].getSimpleName +
+        if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastDay].getSimpleName +
           "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "]")
         return FAILURE_ARGUMENTS
       }
@@ -48,7 +48,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
       }
     }
     if (Log.isInfoEnabled()) {
-      Log.info("Driver [" + classOf[EnergyForecastPreparation].getSimpleName +
+      Log.info("Driver [" + classOf[EnergyForecastDay].getSimpleName +
         "] prepared with input [" + inputPath.toString + "] and inputs:")
       for (inputPath <- inputPaths) Log.info("  " + inputPath)
     }
@@ -56,7 +56,7 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
   }
 
   override def parameters(): Array[String] = {
-    Array("input-path", "output-path")
+    Array("input-uri", "output-uri")
   }
 
   override def execute(): Int = {
@@ -238,10 +238,10 @@ class EnergyForecastPreparation(configuration: Configuration) extends DriverSpar
 
 }
 
-object EnergyForecastPreparation {
+object EnergyForecastDay {
 
   def main(arguments: Array[String]): Unit = {
-    new EnergyForecastPreparation(null).runner(arguments: _*)
+    new EnergyForecastDay(null).runner(arguments: _*)
   }
 
 }
