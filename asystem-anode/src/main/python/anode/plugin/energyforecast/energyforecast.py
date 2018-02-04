@@ -19,7 +19,7 @@ HTTP_TIMEOUT = 10
 S3_REGION = "ap-southeast-2"
 S3_BUCKET = "asystem-amodel"
 
-MODEL_PRODUCTION = "1001"
+MODEL_PRODUCTION = "1003"
 
 
 class Energyforecast(Plugin):
@@ -165,7 +165,7 @@ class Energyforecast(Plugin):
                             current = int(time.time())
                             sun_percentage = \
                                 (0 if current < sun_rise else (100 if current > sun_set else (
-                                    (current - sun_rise) / float(sun_set - sun_rise) * 100))) \
+                                        (current - sun_rise) / float(sun_set - sun_rise) * 100))) \
                                     if (sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0
                             if model_classifier == "":
                                 self.datum_push(
@@ -212,5 +212,10 @@ class Energyforecast(Plugin):
         super(Energyforecast, self).__init__(parent, name, config, reactor)
         self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name, warm=True)
         for datum_metric, datum in self.datums.items():
-            if datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION + "__inverter"):
+            if datum_metric.startswith("energy__production_Dforecast_Dactual") and \
+                    datum_metric <= ("energy__production_Dforecast_Dactual_D" + MODEL_PRODUCTION + "__inverter"):
+                del self.datums[datum_metric]
+        for datum_metric, datum in self.datums.items():
+            if datum_metric.startswith("energy__production_Dforecast") and \
+                    datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION + "__inverter"):
                 del self.datums[datum_metric]

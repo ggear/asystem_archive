@@ -13,9 +13,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DatumTest implements TestConstants {
+public class DatumFactoryTest implements TestConstants {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DatumTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DatumFactoryTest.class);
 
   private static final DatumFactory DATUM_FACTORY = new DatumFactory();
 

@@ -52,7 +52,7 @@ from sklearn.linear_model import LassoCV
 from sklearn.feature_extraction import DictVectorizer
 from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
-from model_util import publish_model
+from publish_util import publish
 
 
 def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
@@ -106,12 +106,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 
 
 def pipeline():
-    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel/asystem/amodel/energyforecast"
-    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel/asystem/amodel/energyforecast"
-    local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
-        tempfile.mkdtemp()
+    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-amodel/asystem/amodel/energyforecast"
+    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else "s3a://asystem-amodel/asystem/amodel/energyforecast"
+    local_model_path = sys.argv[3] if len(sys.argv) > 3 else tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
 
@@ -120,14 +117,14 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
-                            "amodel_version=10.000.0011-SNAPSHOT/amodel_model=1003"),
+                            "amodel_version=10.000.0013-SNAPSHOT/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
-
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
-                            "amodel_version=10.000.0011-SNAPSHOT/amodel_model=1003"),
+                            "amodel_version=10.000.0013-SNAPSHOT/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
+    spark.stop()
     dfv2 = execute(features=dfv, engineering=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
@@ -298,7 +295,7 @@ def pipeline():
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0011-SNAPSHOT/amodel_model=1003/model.pkl'
+                 'amodel_version=10.000.0013-SNAPSHOT/amodel_model=1003/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
@@ -327,7 +324,7 @@ def pipeline():
           .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
 
     print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
-    publish_model(local_model_file, remote_model_file)
+    publish(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)
 
 # Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()

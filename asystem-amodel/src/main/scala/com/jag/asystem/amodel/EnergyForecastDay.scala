@@ -70,14 +70,14 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
       calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
       val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime)
       val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
-      input.createGlobalTempView("datums")
+      input.createTempView("datums")
       val outputAll = List(
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS energy__production__inverter
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='energy' AND data_metric='energy__production__inverter' AND
            |   data_type='integral' AND bin_width=1 AND bin_unit='day'
@@ -88,7 +88,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='temperature' AND data_metric='temperature__forecast__glen_Dforrest' AND
            |   data_type='high' AND bin_width=1 AND bin_unit='day'
@@ -99,7 +99,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='rain' AND data_metric='rain__forecast__glen_Dforrest' AND
            |   data_type='integral' AND bin_width=1 AND bin_unit='day_Dtime'
@@ -110,7 +110,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='humidity' AND data_metric='humidity__forecast__glen_Dforrest' AND
            |   data_type='mean' AND bin_width=1 AND bin_unit='day'
@@ -121,7 +121,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='wind' AND data_metric='wind__forecast__glen_Dforrest' AND
            |   data_type='mean' AND bin_width=1 AND bin_unit='day'
@@ -132,7 +132,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) AS sun__outdoor__rise
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='sun' AND data_metric='sun__outdoor__rise' AND
            |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
@@ -143,7 +143,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) AS sun__outdoor__set
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='sun' AND data_metric='sun__outdoor__set' AND
            |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
@@ -154,7 +154,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS sun__outdoor__azimuth
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='sun' AND data_metric='sun__outdoor__azimuth' AND
            |   data_type='point' AND bin_width=2 AND bin_unit='second'
@@ -165,7 +165,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   max(data_value) / first(data_scale) AS sun__outdoor__altitude
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='sun' AND data_metric='sun__outdoor__altitude'
            |   AND data_type='point' AND bin_width=2 AND bin_unit='second'
@@ -176,7 +176,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
            |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
            |   last(data_string) AS conditions__forecast__glen_Dforrest
-           | FROM global_temp.datums
+           | FROM datums
            | WHERE
            |   astore_metric='conditions' AND data_metric='conditions__forecast__glen_Dforrest'
            |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'

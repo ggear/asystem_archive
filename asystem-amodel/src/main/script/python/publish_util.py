@@ -11,7 +11,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
 
-def publish_model(local_file, publish_url):
+def publish(local_file, publish_url):
     is_snapshot = re.search('.*/[1-9][0-9]\.[0-9]{3}.[0-9]{4}-SNAPSHOT/.*', publish_url) is not None
     if publish_url.startswith('s3a://'):
         s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*', publish_url).group(1)
