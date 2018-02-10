@@ -53,19 +53,17 @@ def pipeline():
             print("Pipeline loaded path [{}]".format(path_uri))
         except AnalysisException:
             continue
-    if len(datasets) == 0: spark.stop(); return
+    if len(datasets) == 0: return
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView("dataset")
     dataframe = spark.sql("""
         SELECT data_metric AS metric, count(data_metric) AS count
         FROM dataset
-        WHERE astore_year='2017' AND astore_month='10'
         GROUP BY data_metric
-        ORDER BY data_metric ASC
+        ORDER BY count DESC
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
 
-    spark.stop()
     print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
 # Run pipeline
