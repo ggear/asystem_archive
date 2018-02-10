@@ -46,7 +46,8 @@ def pipeline():
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
 
     datasets = []
-    for path in [remote_data_path + "/" + str(i) + "/asystem/astore/processed/canonical/parquet/dict/snappy" for i in range(10)]:
+    for path in [remote_data_path + "/" + str(i) + 
+                 "/asystem/astore/processed/canonical/parquet/dict/snappy" for i in range(10)]:
         try:
             path_uri = hdfs_make_qualified(path)
             datasets.append(spark.read.parquet(path_uri))
