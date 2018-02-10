@@ -1,11 +1,9 @@
 package com.jag.asystem.amodel.test;
 
-import static com.cloudera.framework.common.Driver.SUCCESS;
-import static com.cloudera.framework.testing.Assert.assertCounterEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Collections;
 
 import com.cloudera.framework.testing.TestConstants;
 import com.cloudera.framework.testing.TestMetaData;
@@ -14,11 +12,8 @@ import com.cloudera.framework.testing.server.DfsServer;
 import com.cloudera.framework.testing.server.DfsServer.Runtime;
 import com.cloudera.framework.testing.server.PythonServer;
 import com.cloudera.framework.testing.server.SparkServer;
-import com.google.common.collect.ImmutableMap;
 import com.googlecode.zohhak.api.Coercion;
 import com.googlecode.zohhak.api.TestWith;
-import com.jag.asystem.amodel.Counter;
-import com.jag.asystem.amodel.EnergyForecastDay;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
@@ -40,7 +35,7 @@ public class DatasetTest implements TestConstants {
   @TestWith({"testMetaDataPristine"})
   public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "dataset.py"),
-      Arrays.asList(DATASET_DIR_ASTORE)));
+      Collections.singletonList(DATASET_DIR_ASTORE)));
   }
 
   private static final String DATASET_DIR_ASTORE = "/data/asystem-astore";

@@ -182,7 +182,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
            | GROUP BY datum__bin__date
         """.stripMargin)
-        .map(spark.sql(_)).reduce(_.join(_, "datum__bin__date"))
+        .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
         .where($"datum__bin__date" =!= "2017/10/12")
         .where($"datum__bin__date" =!= "2017/10/13")
         .where($"datum__bin__date" =!= "2017/10/29")
