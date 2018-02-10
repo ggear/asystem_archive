@@ -124,7 +124,6 @@ def pipeline():
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
                             "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast.version}"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
-    spark.stop()
     dfv2 = execute(features=dfv, engineering=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.

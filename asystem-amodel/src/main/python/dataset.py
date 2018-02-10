@@ -41,13 +41,15 @@ def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
     print("Pipeline started")
-    time_start = int(round(time.time() * 1000))
-    spark = SparkSession.builder.appName("asystem-amodel-datums").getOrCreate()
+    time_start = int(round(time.time()))
+    spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
 
     datasets = []
     for path in [remote_data_path + "/" + str(i) + "/asystem/astore/processed/canonical/parquet/dict/snappy" for i in range(10)]:
         try:
-            datasets.append(spark.read.parquet(hdfs_make_qualified(path)))
+            path_uri = hdfs_make_qualified(path)
+            datasets.append(spark.read.parquet(path_uri))
+            print("Pipeline loaded path [{}]".format(path_uri))
         except AnalysisException:
             continue
     if len(datasets) == 0: spark.stop(); return
@@ -56,13 +58,14 @@ def pipeline():
     dataframe = spark.sql("""
         SELECT data_metric AS metric, count(data_metric) AS count
         FROM dataset
+        WHERE astore_year='2017' AND astore_month='10'
         GROUP BY data_metric
         ORDER BY data_metric ASC
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
 
     spark.stop()
-    print("Pipeline finished in [{}] ms".format(int(round(time.time() * 1000)) - time_start))
+    print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
 # Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()
 
