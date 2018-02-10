@@ -57,10 +57,10 @@ def pipeline():
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView("dataset")
     dataframe = spark.sql("""
-        SELECT data_metric AS metric, count(data_metric) AS count
+        SELECT data_metric, count(data_metric) AS data_metric_count
         FROM dataset
         GROUP BY data_metric
-        ORDER BY count DESC
+        ORDER BY data_metric_count DESC
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
 
