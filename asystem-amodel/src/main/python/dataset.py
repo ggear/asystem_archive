@@ -30,6 +30,7 @@
 # Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 import sys
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 
@@ -39,6 +40,8 @@ from script_util import hdfs_make_qualified
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
+    print("Pipeline started")
+    time_start = int(round(time.time() * 1000))
     spark = SparkSession.builder.appName("asystem-amodel-datums").getOrCreate()
 
     datasets = []
@@ -51,13 +54,15 @@ def pipeline():
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView("dataset")
     dataframe = spark.sql("""
-        SELECT count(*) AS datums_count
+        SELECT data_metric AS metric, count(data_metric) AS count
         FROM dataset
+        GROUP BY data_metric
+        ORDER BY data_metric ASC
     """).toPandas()
-
-    print(dataframe)
+    print("Datums summary:\n" + str(dataframe))
 
     spark.stop()
+    print("Pipeline finished in [{}] ms".format(int(round(time.time() * 1000)) - time_start))
 
 # Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()
 
