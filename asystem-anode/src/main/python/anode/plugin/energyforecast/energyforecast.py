@@ -11,6 +11,7 @@ import xmltodict
 from twisted_s3 import auth
 
 import anode
+from anode.plugin.plugin import DATUM_QUEUE_MAX
 from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import Plugin
 
@@ -105,7 +106,7 @@ class Energyforecast(Plugin):
                     if sun_altitude is not None else None
                 for day in range(1, 4):
                     temperature_forecast = self.anode.get_plugin("wunderground").datum_get(
-                        DATUM_QUEUE_LAST, "temperature__forecast__glen_Dforrest", "point", "_PC2_PB0C", day, "day")
+                        DATUM_QUEUE_MAX, "temperature__forecast__glen_Dforrest", "point", "_PC2_PB0C", day, "day")
                     temperature_forecast = temperature_forecast["data_value"] / temperature_forecast["data_scale"] \
                         if temperature_forecast is not None else None
                     rain_forecast = self.anode.get_plugin("wunderground").datum_get(

@@ -29,6 +29,7 @@
 
 # Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
+import os.path
 import sys
 import time
 from pyspark.sql import SparkSession
@@ -38,24 +39,27 @@ from script_util import hdfs_make_qualified
 
 
 def pipeline():
+    # Set remote path based on passed parameters or default
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
+    # Start the pipeline session
     print("Pipeline started")
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
 
+    # Marshall the Spark dataset
     datasets = []
-    for path in [remote_data_path + "/" + str(i) +
-                 "/asystem/astore/processed/canonical/parquet/dict/snappy" for i in range(10)]:
+    for path in [os.path.join(remote_data_path, str(i), "asystem/astore/processed/canonical/parquet/dict/snappy") for i in range(10)]:
         try:
             path_uri = hdfs_make_qualified(path)
             datasets.append(spark.read.parquet(path_uri))
-            print("Pipeline loaded path [{}]".format(path_uri))
+            print("Loaded path [{}]".format(path_uri))
         except AnalysisException:
             continue
-    if len(datasets) == 0: return
     dataset = reduce(lambda x, y: x.union(y), datasets)
-    dataset.createOrReplaceTempView("dataset")
+    dataset.createOrReplaceTempView('dataset')
+
+    # Filter/aggregate to a Spark dataframe
     dataframe = spark.sql("""
         SELECT data_metric, count(data_metric) AS data_metric_count
         FROM dataset

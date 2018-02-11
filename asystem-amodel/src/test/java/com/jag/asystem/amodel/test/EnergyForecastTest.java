@@ -22,7 +22,6 @@ import com.jag.asystem.amodel.Counter;
 import com.jag.asystem.amodel.EnergyForecastDay;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
-import scala.annotation.meta.field;
 
 @RunWith(TestRunner.class)
 public class EnergyForecastTest implements TestConstants {

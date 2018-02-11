@@ -73,21 +73,8 @@ class Wunderground(Plugin):
                     data_timestamp,
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
-                    "day"
-                )
-                self.datum_push(
-                    "temperature__forecast__glen_Dforrest",
-                    "forecast", "high",
-                    None if self.datum_value(dict_content,
-                                             ["forecast", "simpleforecast", "forecastday", forecast_index, "high",
-                                              "celsius"]) is None else int(
-                        self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "high", "celsius"])),
-                    "_PC2_PB0C",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day"
+                    "day",
+                    data_derived_max=True
                 )
                 self.datum_push(
                     "temperature__forecast__glen_Dforrest",
