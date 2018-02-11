@@ -42,7 +42,7 @@ def pipeline():
 
     print("Pipeline started")
     time_start = int(round(time.time()))
-    spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
+    spark = SparkSession.builder.appName("asystem-amodel-energyforecastintraday").getOrCreate()
 
     datasets = []
     for path in [remote_data_path + "/" + str(i) +
@@ -57,10 +57,17 @@ def pipeline():
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView("dataset")
     dataframe = spark.sql("""
-        SELECT data_metric, count(data_metric) AS data_metric_count
+        SELECT
+          bin_timestamp,
+          data_value / data_scale AS data_scaled
         FROM dataset
-        GROUP BY data_metric
-        ORDER BY data_metric_count DESC
+        WHERE
+          astore_metric='energy' AND
+          data_metric='energy__production__inverter' AND 
+          data_type='integral' AND
+          bin_width=1 AND
+          bin_unit='day'
+        ORDER BY bin_timestamp ASC
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
 

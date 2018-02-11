@@ -4,7 +4,7 @@
     <!--
     S3: rm -rf ./src/repo/*; aws s3 sync s3://asystem-amodel ./src/repo
     Energy: curl -s "http://janeandgraham.com:8091/rest/?metrics=energy.production.inverter&metrics=temperature.forecast.glen-forrest&metrics=rain.forecast.glen-forrest&metrics=humidity.forecast.glen-forrest&metrics=wind.forecast.glen-forrest&metrics=sun&types=point&types=integral&types=mean&types=epoch&types=high&bins=1day&format=csv&print=pretty&scope=history&period=86400&method=max"
-    Merge: FILE=dataset.py; git status; git diff $(git rev-parse HEAD)^ $(git rev-parse HEAD) src/main/script/python/$FILE | tee /dev/tty | patch -p1 src/main/template/python/$FILE; rm -rf src/main/template/python/$FILE\.*; mvn clean install -PCMP > /dev/null; git diff src/main/script/python/$FILE; git status
+    Merge: FILE=dataset.py; git status; git diff $(git rev-parse HEAD)^ $(git rev-parse HEAD) src/main/script/python/$FILE | tee /dev/tty | patch -p1 src/main/template/python/$FILE; rm -rf src/main/template/python/$FILE\.*; mvn clean install -PCMP > /dev/null; git diff src/main/script/python/$FILE; git diff; git status
     -->
 
     <modelVersion>4.0.0</modelVersion>

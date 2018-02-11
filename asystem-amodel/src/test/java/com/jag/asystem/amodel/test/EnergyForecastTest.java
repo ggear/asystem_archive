@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 
 import com.cloudera.framework.testing.TestConstants;
 import com.cloudera.framework.testing.TestMetaData;
@@ -21,6 +22,7 @@ import com.jag.asystem.amodel.Counter;
 import com.jag.asystem.amodel.EnergyForecastDay;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
+import scala.annotation.meta.field;
 
 @RunWith(TestRunner.class)
 public class EnergyForecastTest implements TestConstants {
@@ -40,6 +42,12 @@ public class EnergyForecastTest implements TestConstants {
       Counter.RECORDS_TRAINING, 30L,
       Counter.RECORDS_VALIDATION, 11L
     )));
+
+  @TestWith({"testMetaDataPristine"})
+  public void testEnergyForecastIntraDay(TestMetaData testMetaData) throws Exception {
+    assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast_intraday.py"),
+      Collections.singletonList(DATASET_DIR_ASTORE)));
+  }
 
   @TestWith({"testMetaDataPristine"})
   public void testEnergyForecast(TestMetaData testMetaData) throws Exception {

@@ -1,8 +1,8 @@
 ###############################################################################
 #
-# ${TEMPLATE.PRE-PROCESSOR.RAW_TEMPLATE}
+# PRE-PROCESSED LIBRARY - EDITS WILL BE CLOBBERED BY MAVEN BUILD
 #
-# This file is in the ${TEMPLATE.PRE-PROCESSOR.STATE} pre-processed state with template available by the
+# This file is in the LIBRARY pre-processed state with template available by the
 # same package and file name under the modules src/main/template directory.
 #
 # When editing the template directly (as indicated by the presence of the
@@ -27,7 +27,7 @@
 #
 ###############################################################################
 
-# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+# Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 import sys
 import time
@@ -42,7 +42,7 @@ def pipeline():
 
     print("Pipeline started")
     time_start = int(round(time.time()))
-    spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
+    spark = SparkSession.builder.appName("asystem-amodel-energyforecastintraday").getOrCreate()
 
     datasets = []
     for path in [remote_data_path + "/" + str(i) +
@@ -57,16 +57,25 @@ def pipeline():
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView("dataset")
     dataframe = spark.sql("""
-        SELECT data_metric, count(data_metric) AS data_metric_count
+        SELECT
+          bin_timestamp,
+          data_value / data_scale AS data_scaled
         FROM dataset
-        GROUP BY data_metric
-        ORDER BY data_metric_count DESC
+        WHERE
+          astore_metric='energy' AND
+          data_metric='energy__production__inverter' AND 
+          data_type='integral' AND
+          bin_width=1 AND
+          bin_unit='day'
+        ORDER BY bin_timestamp ASC
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
 
     print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
-# Run pipeline${TEMPLATE.PRE-PROCESSOR.OPEN}pipeline()
+# Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()
 
-# Main function${TEMPLATE.PRE-PROCESSOR.UNOPEN}if __name__ == "__main__":
-# Run pipeline${TEMPLATE.PRE-PROCESSOR.UNOPEN}    pipeline()
+# Main function
+if __name__ == "__main__":
+# Run pipeline
+    pipeline()
