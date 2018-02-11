@@ -74,7 +74,7 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_derived_max=True
+                    data_derived_max=(1 == (forecast_index - day_index_start + 1))
                 )
                 self.datum_push(
                     "temperature__forecast__glen_Dforrest",
