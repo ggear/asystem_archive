@@ -10,12 +10,12 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-anode</artifactId>
     <packaging>pom</packaging>
-    <version>10.000.0016</version>
+    <version>10.000.0017-SNAPSHOT</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>10.000.0016</version>
+        <version>10.000.0017-SNAPSHOT</version>
     </parent>
 
     <properties>
