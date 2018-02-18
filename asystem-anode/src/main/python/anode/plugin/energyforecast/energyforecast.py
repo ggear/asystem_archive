@@ -93,28 +93,33 @@ class Energyforecast(Plugin):
                     model_features = pandas.DataFrame([model_features_dict]).apply(pandas.to_numeric, errors='ignore')
                     for model_version in model_day[self.name]:
                         if model_version >= MODEL_PRODUCTION_ENERGYFORECAST:
-                            model = model_day[self.name][model_version][1]
                             energy_production_forecast = 0
                             model_classifier = "" if model_version == MODEL_PRODUCTION_ENERGYFORECAST else ("_D" + model_version)
-                            try:
-                                energy_production_forecast = model['execute'](model=model, features=model['execute'](
-                                    features=model_features, engineering=True), prediction=True)[0]
-                            except Exception as exception:
-                                anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
-                                                             .format(self.name, exception, model_version), exception)
-                            self.datum_push(
-                                "energy__production_Dforecast" + model_classifier + "__inverter",
-                                "forecast", "integral",
-                                self.datum_value(energy_production_forecast, factor=10),
-                                "Wh",
-                                10,
-                                bin_timestamp,
-                                bin_timestamp,
-                                day,
-                                "day",
-                                asystem_version=model_day[self.name][model_version][0],
-                                data_version=model_version,
-                                data_bound_lower=0)
+                            if day > 1 or sun_percentage < 60:
+                                model = model_day[self.name][model_version][1]
+                                try:
+                                    energy_production_forecast = model['execute'](model=model, features=model['execute'](
+                                        features=model_features, engineering=True), prediction=True)[0]
+                                except Exception as exception:
+                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
+                                                                 .format(self.name, exception, model_version), exception)
+                                self.datum_push(
+                                    "energy__production_Dforecast" + model_classifier + "__inverter",
+                                    "forecast", "integral",
+                                    self.datum_value(energy_production_forecast, factor=10),
+                                    "Wh",
+                                    10,
+                                    bin_timestamp,
+                                    bin_timestamp,
+                                    day,
+                                    "day",
+                                    asystem_version=model_day[self.name][model_version][0],
+                                    data_version=model_version,
+                                    data_bound_lower=0)
+                            else:
+                                energy_production_forecast = self.anode.get_plugin("energyforecast").datum_get(
+                                    DATUM_QUEUE_LAST,
+                                    "energy__production_Dforecast" + model_classifier + "__inverter", "integral", "Wh", day, "day")
                             if day == 1:
                                 if model_classifier == "":
                                     self.datum_push(
