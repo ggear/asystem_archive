@@ -74,7 +74,7 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_derived_max=(1 == (forecast_index - day_index_start + 1))
+                    data_derived_max=forecast_index == day_index_start
                 )
                 self.datum_push(
                     "temperature__forecast__glen_Dforrest",
@@ -100,31 +100,9 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "high",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "low",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=forecast_index == day_index_start,
+                    data_derived_min=forecast_index == day_index_start
                 )
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
@@ -136,31 +114,9 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day_Dtime",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "high",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day_Dtime",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "low",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day_Dtime",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=forecast_index == day_index_start,
+                    data_derived_min=forecast_index == day_index_start
                 )
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
@@ -172,31 +128,9 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "night_Dtime",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "high",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "night_Dtime",
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "rain__forecast__glen_Dforrest",
-                    "forecast", "low",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
-                    "mm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "night_Dtime",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=forecast_index == day_index_start,
+                    data_derived_min=forecast_index == day_index_start
                 )
                 self.datum_push(
                     "wind__forecast__glen_Dforrest",
@@ -208,7 +142,8 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_min=forecast_index == day_index_start
                 )
                 self.datum_push(
                     "wind__forecast__glen_Dforrest",
@@ -223,18 +158,6 @@ class Wunderground(Plugin):
                     data_bound_lower=0
                 )
                 self.datum_push(
-                    "wind__forecast__glen_Dforrest",
-                    "forecast", "low",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avewind", "kph"]),
-                    "km_P2Fh",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day",
-                    data_bound_lower=0
-                )
-                self.datum_push(
                     "humidity__forecast__glen_Dforrest",
                     "forecast", "mean",
                     self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
@@ -245,33 +168,9 @@ class Wunderground(Plugin):
                     forecast_index - day_index_start + 1,
                     "day",
                     data_bound_upper=100,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "humidity__forecast__glen_Dforrest",
-                    "forecast", "high",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                    "_P25",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day",
-                    data_bound_upper=100,
-                    data_bound_lower=0
-                )
-                self.datum_push(
-                    "humidity__forecast__glen_Dforrest",
-                    "forecast", "low",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "avehumidity"]),
-                    "_P25",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    forecast_index - day_index_start + 1,
-                    "day",
-                    data_bound_upper=100,
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_max=forecast_index == day_index_start,
+                    data_derived_min=forecast_index == day_index_start
                 )
             self.publish()
         except Exception as exception:

@@ -32,12 +32,15 @@ import numpy
 import operator
 import pandas
 import time
+import treq
+import xmltodict
 from avro.io import AvroTypeException
 from cycler import cycler
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.externals import joblib
 from twisted.internet.task import Clock
+from twisted_s3 import auth
 
 import anode
 import anode.plugin
@@ -1413,6 +1416,11 @@ ESCAPE_SEQUENCES = {
     "_P": "%"
 }
 
+HTTP_TIMEOUT = 10
+
+S3_REGION = "ap-southeast-2"
+S3_BUCKET = "asystem-amodel"
+
 BUFFER_BATCH_DEFAULT = 60
 
 SERIALISATION_BATCH = 1000
@@ -1436,3 +1444,65 @@ DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON["fields"][i]["name"].encode("utf-8"): i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"]))}
 DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"][i].encode("utf-8")):
                             i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"]))}
+
+
+class ModelPull(Plugin):
+
+    def poll(self):
+        self.http_get(S3_REGION, S3_BUCKET, "/", "list-type=2&max-keys=1000000&prefix=asystem", self.list_models)
+
+    def http_get(self, region, bucket, path, params, callback):
+        host = bucket + ".s3-" + region + ".amazonaws.com"
+        url = "http://" + host + path + "?" + params
+        payload = auth.compute_hashed_payload(b"")
+        timestamp = datetime.datetime.utcnow()
+        headers = {"host": host, "x-amz-content-sha256": payload, "x-amz-date": timestamp.strftime(auth.ISO8601_FMT)}
+        headers["Authorization"] = auth.compute_auth_header(headers, "GET", timestamp, region, bucket, path, params, payload,
+                                                            os.environ["AWS_ACCESS_KEY"], os.environ["AWS_SECRET_KEY"])
+        connection_pool = self.config["pool"] if "pool" in self.config else None
+        treq.get(url, headers=headers, timeout=HTTP_TIMEOUT, pool=connection_pool).addCallbacks(
+            lambda response, url=url, callback=callback: self.http_response(response, url, callback),
+            errback=lambda error, url=url: anode.Log(logging.ERROR).log("Plugin", "error",
+                                                                        lambda: "[{}] error processing HTTP GET [{}] with [{}]".format(
+                                                                            self.name, url, error.getErrorMessage())))
+
+    def http_response(self, response, url, callback):
+        if response.code == 200:
+            treq.content(response).addCallbacks(callback, callbackKeywords={"url": url})
+        else:
+            anode.Log(logging.ERROR).log("Plugin", "error",
+                                         lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
+
+    def list_models(self, content, url):
+        log_timer = anode.Log(logging.DEBUG).start()
+        try:
+            for key_remote in xmltodict.parse(content)["ListBucketResult"]["Contents"]:
+                path_remote = "s3://" + S3_BUCKET + "/" + key_remote["Key"].encode("utf-8")
+                path_status = self.pickled_status(os.path.join(self.config["db_dir"], "amodel"), path_remote)
+                if not path_status[0] and path_status[1]:
+                    self.http_get(S3_REGION, S3_BUCKET, "/" +
+                                  path_remote.replace("s3://" + S3_BUCKET + "/", ""), "", self.pull_model)
+                elif not path_status[0]:
+                    self.verified_model(path_remote)
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n{}"
+                                         .format(self.name, exception, content), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.list_models)
+
+    def pull_model(self, content, url):
+        log_timer = anode.Log(logging.DEBUG).start()
+        try:
+            path_remote = url[:-1]
+            self.pickled_put(os.path.join(self.config["db_dir"], "amodel"), path_remote, content)
+            self.verified_model(path_remote)
+        except Exception as exception:
+            anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing binary response of length [{}]"
+                                         .format(self.name, exception, len(content)), exception)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.pull_model)
+
+    def verified_model(self, path=None):
+        anode.Log(logging.INFO).log("Plugin", "state", lambda: "[{}] verified model [{}]".format(self.name, path))
+
+    def __init__(self, parent, name, config, reactor):
+        super(ModelPull, self).__init__(parent, name, config, reactor)
+        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), warm=True)

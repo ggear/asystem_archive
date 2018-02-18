@@ -1,0 +1,18 @@
+[
+  {
+    "data_metric": "conditions.forecast.glen-forrest",
+    "data_string": "partly cloudy",
+    "data_value": 0,
+    "data_type": "enumeration",
+    "data_version": 0,
+    "data_unit": ".",
+    "data_temporal": "forecast",
+    "asystem_version": 15,
+    "data_scale": 1,
+    "bin_width": 1,
+    "bin_timestamp": 1518687542,
+    "bin_unit": "day",
+    "data_source": "wunderground",
+    "data_timestamp": 1518707220
+  }
+]

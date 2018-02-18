@@ -315,7 +315,7 @@ def pipeline():
     dill.dump(execute, pickled_execute)
     pickled_execute.flush()
 
-    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model, 'execute': pickled_execute}, local_model_file)
+    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model, 'execute': pickled_execute}, local_model_file, compress=True)
 
     # Example of serialized model usage
     model = joblib.load(local_model_file)

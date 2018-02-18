@@ -31,14 +31,20 @@
 
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
 
+import dill
 import numpy as np
 import os.path
 import pandas as pd
+import shutil
 import sys
+import tempfile
 import time
+from StringIO import StringIO
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
+from sklearn.externals import joblib
 
+from publish_util import publish
 from script_util import hdfs_make_qualified
 
 DAYS_VETTED = '2018/02/08'
@@ -84,10 +90,18 @@ DAYS_PLOT = False
 # noinspection PyRedeclaration
 # Enable plotting# IGNORE SCRIPT BOILERPLATE #DAYS_PLOT = True
 
+def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
+    if prediction:
+        return model['pipeline'].loc[features['energy__production_Dforecast_Ddaylight__inverter']] \
+            .reset_index().drop('standardised', axis=1) \
+            .rename(columns={'normalised': 'energy__production_Dforecast_Dintraday_Dscale__inverter'})
+
 
 # noinspection PyStatementEffect
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
+    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else "s3a://asystem-amodel/asystem/amodel/energyforecastintraday"
+    local_model_path = sys.argv[3] if len(sys.argv) > 3 else tempfile.mkdtemp()
 
     print("Pipeline started")
     time_start = int(round(time.time()))
@@ -197,9 +211,29 @@ def pipeline():
     print("Energy Mean Distribution:\n{}".format(dfnsa))
     if DAYS_PLOT: dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
-    dfnsa.loc[500]['normalised']
+    model_file = '/model/pickle/joblib/none/' \
+                 'amodel_version=10.000.0015-SNAPSHOT/amodel_model=${asystem-model-energyforecastintraday.version}/model.pkl'
+    local_model_file = local_model_path + model_file
+    remote_model_file = remote_model_path + model_file
+    if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
+    os.makedirs(os.path.dirname(local_model_file))
+    pickled_execute = StringIO()
+    dill.dump(execute, pickled_execute)
+    pickled_execute.flush()
+    joblib.dump({'pipeline': dfnsa, 'execute': pickled_execute}, local_model_file, compress=True)
 
-    # TODO: write out pipeline, generalise from energyforecast
+    model = joblib.load(local_model_file)
+    dfi = pd.DataFrame([
+        {"energy__production_Dforecast_Ddaylight__inverter": 0},
+        {"energy__production_Dforecast_Ddaylight__inverter": 250},
+        {"energy__production_Dforecast_Ddaylight__inverter": 500},
+        {"energy__production_Dforecast_Ddaylight__inverter": 750},
+        {"energy__production_Dforecast_Ddaylight__inverter": 1000}
+    ]).apply(pd.to_numeric, errors='ignore')
+    dfo = dill.load(StringIO(model['execute'].getvalue()))(model=model, features=dfi, prediction=True)
+    print("Energy Mean Input:\n{}\nEnergy Mean Output:\n{}".format(dfi, dfo))
+    publish(local_model_file, remote_model_file)
+    shutil.rmtree(local_model_path)
 
     print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 

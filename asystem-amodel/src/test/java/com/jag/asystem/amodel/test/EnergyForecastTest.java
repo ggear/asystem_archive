@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 
 import com.cloudera.framework.testing.TestConstants;
 import com.cloudera.framework.testing.TestMetaData;
@@ -45,23 +44,27 @@ public class EnergyForecastTest implements TestConstants {
   @TestWith({"testMetaDataPristine"})
   public void testEnergyForecastIntraDay(TestMetaData testMetaData) throws Exception {
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast_intraday.py"),
-      Collections.singletonList(DATASET_DIR_ASTORE)));
+      Arrays.asList(DATASET_DIR_ASTORE, DATASET_ABS_AMODEL_ENERGYFORECAST_INTRADAY, DATASET_TMP_AMODEL_ENERGYFORECAST_INTRADAY)));
   }
 
   @TestWith({"testMetaDataPristine"})
   public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
     EnergyForecastDay driver = new EnergyForecastDay(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(
-      dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL).toString()));
+      dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST).toString()));
     assertCounterEquals(testMetaData, driver.getCounters());
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast.py"),
-      Arrays.asList(DATASET_DIR_AMODEL, DATASET_ABS_AMODEL, DATASET_TMP_AMODEL)));
+      Arrays.asList(DATASET_DIR_AMODEL_ENERGYFORECAST, DATASET_ABS_AMODEL_ENERGYFORECAST, DATASET_TMP_AMODEL_ENERGYFORECAST)));
   }
 
   private static final String DATASET_DIR_ASTORE = "/data/asystem-astore";
-  private static final String DATASET_DIR_AMODEL = "/data/asystem-amodel/asystem/amodel/energyforecast";
-  private static final String DATASET_ABS_AMODEL = "file://" + ABS_DIR_TARGET + "/asystem-amodel/asystem/amodel/energyforecast";
-  private static final String DATASET_TMP_AMODEL = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/amodel/energyforecast";
+  private static final String DATASET_REL_AMODEL_ENERGYFORECAST = "/asystem-amodel/asystem/amodel/energyforecast";
+  private static final String DATASET_DIR_AMODEL_ENERGYFORECAST = "/data" + DATASET_REL_AMODEL_ENERGYFORECAST;
+  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST = "file://" + ABS_DIR_TARGET + DATASET_REL_AMODEL_ENERGYFORECAST;
+  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/amodel/energyforecast";
+
+  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST_INTRADAY = DATASET_ABS_AMODEL_ENERGYFORECAST + "intraday";
+  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST_INTRADAY = DATASET_TMP_AMODEL_ENERGYFORECAST + "intraday";
 
   @Coercion
   public TestMetaData toCdhMetaData(String field) {

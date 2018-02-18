@@ -33,9 +33,10 @@ from anode.anode import main
 from anode.application import *
 from anode.plugin import PICKLE_PATH_REGEX
 from anode.plugin import Plugin
-from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION
-from anode.plugin.energyforecast.energyforecast import S3_BUCKET
-from anode.plugin.energyforecast.energyforecast import S3_REGION
+from anode.plugin import S3_BUCKET
+from anode.plugin import S3_REGION
+from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION_ENERGYFORECAST
+from anode.plugin.energyforecast.energyforecast import MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
@@ -117,12 +118,15 @@ class ANodeTest(TestCase):
                      (("-" if floatingpoint_str != "null" else "") + floatingpoint_str) if floatingpoint_str != "null" else "") \
             .replace("\"${-FLOATINGPOINT}\"", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
             .replace("${-FLOATINGPOINT}", ("-" if floatingpoint_str != "null" else "") + floatingpoint_str) \
-            .replace("\\\"${MODEL_ENERGYFORECAST}\\\"", MODEL_PRODUCTION) \
-            .replace("\"${MODEL_ENERGYFORECAST}\"", MODEL_PRODUCTION) \
-            .replace("${MODEL_ENERGYFORECAST}", MODEL_PRODUCTION) \
-            .replace("\\\"${MODEL_ENERGYFORECAST_ADD_1}\\\"", str(int(MODEL_PRODUCTION) + 1)) \
-            .replace("\"${MODEL_ENERGYFORECAST_ADD_1}\"", str(int(MODEL_PRODUCTION) + 1)) \
-            .replace("${MODEL_ENERGYFORECAST_ADD_1}", str(int(MODEL_PRODUCTION) + 1))
+            .replace("\\\"${MODEL_ENERGYFORECAST_INTRADAY}\\\"", MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY) \
+            .replace("\"${MODEL_ENERGYFORECAST_INTRADAY}\"", MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY) \
+            .replace("${MODEL_ENERGYFORECAST_INTRADAY}", MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY) \
+            .replace("\\\"${MODEL_ENERGYFORECAST}\\\"", MODEL_PRODUCTION_ENERGYFORECAST) \
+            .replace("\"${MODEL_ENERGYFORECAST}\"", MODEL_PRODUCTION_ENERGYFORECAST) \
+            .replace("${MODEL_ENERGYFORECAST}", MODEL_PRODUCTION_ENERGYFORECAST) \
+            .replace("\\\"${MODEL_ENERGYFORECAST_ADD_1}\\\"", str(int(MODEL_PRODUCTION_ENERGYFORECAST) + 1)) \
+            .replace("\"${MODEL_ENERGYFORECAST_ADD_1}\"", str(int(MODEL_PRODUCTION_ENERGYFORECAST) + 1)) \
+            .replace("${MODEL_ENERGYFORECAST_ADD_1}", str(int(MODEL_PRODUCTION_ENERGYFORECAST) + 1))
 
     @staticmethod
     def unwrap_deferred(deferred):
@@ -1329,7 +1333,7 @@ class ANodeTest(TestCase):
             try:
                 period = 1
                 iterations = 1
-                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
+                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
                 anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
                 self.assertRest(len(test_integration_tests) * 3,
                                 anode,
@@ -1472,6 +1476,9 @@ FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION = DIR_TEST + "/config/anode
 FILE_MODEL_ENERGYFORECAST = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecast" + \
                             "/model/pickle/joblib/none/amodel_version=" + APP_VERSION + "/amodel_model=" + \
                             APP_MODEL_ENERGYFORECAST_VERSION + "/model.pkl"
+FILE_MODEL_ENERGYFORECAST_INTRADAY = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecastintraday" + \
+                                     "/model/pickle/joblib/none/amodel_version=" + APP_VERSION + "/amodel_model=" + \
+                                     APP_MODEL_ENERGYFORECAST_INTRADAY_VERSION + "/model.pkl"
 
 HTTP_POSTS = {
     "davis": {
@@ -1503,12 +1510,16 @@ HTTP_GETS = {
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com/":
         ilio.read(DIR_TEST + "/template/energyforecast_list_template.xml"),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
+    "/asystem-amodel/asystem/amodel/energyforecastintraday/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=" +
+    MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY + "/model.pkl":
+        ilio.read(FILE_MODEL_ENERGYFORECAST_INTRADAY),
+    "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
     "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=" +
-    MODEL_PRODUCTION + "/model.pkl":
+    MODEL_PRODUCTION_ENERGYFORECAST + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
     "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0001-SNAPSHOT/amodel_model=" +
-    str(int(MODEL_PRODUCTION) + 1) + "/model.pkl":
+    str(int(MODEL_PRODUCTION_ENERGYFORECAST) + 1) + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
     "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=1010/model.pkl":

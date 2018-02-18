@@ -29,11 +29,19 @@ from twisted.web import client
 from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
+import logging
+import os
+
+import datetime
+import treq
+import xmltodict
+from twisted_s3 import auth
 
 from application import *
 from plugin import DATUM_QUEUE_LAST
 from plugin import ID_HEX
 from plugin import Plugin
+from plugin import ModelPull
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
@@ -70,10 +78,17 @@ class ANode:
                 (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
                 KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
             self.publish_mqtt.startService()
+
+        def looping_call(loop_function, loop_seconds):
+            loop_call = LoopingCall(loop_function)
+            loop_call.clock = self.core_reactor
+            loop_call.start(loop_seconds)
+
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
-            save_loopingcall = LoopingCall(self.store_state)
-            save_loopingcall.clock = self.core_reactor
-            save_loopingcall.start(self.config["save_seconds"])
+            looping_call(self.store_state, self.config["save_seconds"])
+        if "model_pull_seconds" in self.config and self.config["model_pull_seconds"] > 0:
+            model_pull = ModelPull(self, "pullmodel", {"pool": self.web_pool, "db_dir": self.options.db_dir}, self.core_reactor)
+            looping_call(model_pull.poll, self.config["model_pull_seconds"])
         for plugin_name in self.config["plugin"]:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
@@ -84,13 +99,9 @@ class ANode:
                 self.config["plugin"][plugin_name]["publish_service"] = self.publish_mqtt
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
-                plugin_pollingcall = LoopingCall(self.plugins[plugin_name].poll)
-                plugin_pollingcall.clock = self.core_reactor
-                plugin_pollingcall.start(self.config["plugin"][plugin_name]["poll_seconds"])
+                looping_call(self.plugins[plugin_name].poll, self.config["plugin"][plugin_name]["poll_seconds"])
             if "repeat_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["repeat_seconds"] > 0:
-                plugin_repeatingcall = LoopingCall(self.plugins[plugin_name].repeat)
-                plugin_repeatingcall.clock = self.core_reactor
-                plugin_repeatingcall.start(self.config["plugin"][plugin_name]["repeat_seconds"])
+                looping_call(self.plugins[plugin_name].repeat, self.config["plugin"][plugin_name]["repeat_seconds"])
         for plugin in self.plugins.itervalues():
             if "history_partition_seconds" in self.config["plugin"][plugin.name] and \
                     self.config["plugin"][plugin.name]["history_partition_seconds"] > 0 and \
@@ -106,9 +117,7 @@ class ANode:
                                             plugin_partitioncall, time_partition)
         if self.publish_upstream and self.publish_upstream_plugin and \
                 "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
-            plugin_pushcall = LoopingCall(self.publish_datums)
-            plugin_pushcall.clock = self.core_reactor
-            plugin_pushcall.start(self.config["publish_seconds"])
+            looping_call(self.publish_datums, self.config["publish_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def get_plugin(self, plugin):

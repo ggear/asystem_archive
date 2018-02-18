@@ -5,6 +5,7 @@ publish_port: 8093
 publish_seconds: 4
 save_on_exit: True
 save_seconds: 14400
+model_pull_seconds: 30
 plugin:
     fronius:
       poll_seconds: 1
@@ -57,7 +58,7 @@ plugin:
       publish_ticks: -1
       publish_upstream: True
     energyforecast:
-      poll_seconds: 30
+      poll_seconds: 15
       buffer_ticks: 5
       history_partitions: 10
       history_ticks: 200000

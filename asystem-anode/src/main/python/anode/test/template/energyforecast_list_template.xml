@@ -6,6 +6,13 @@
     <MaxKeys>1000000</MaxKeys>
     <IsTruncated>false</IsTruncated>
     <Contents>
+        <Key>asystem-amodel/asystem/amodel/energyforecastintraday/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=${MODEL_ENERGYFORECAST_INTRADAY}/model.pkl</Key>
+        <LastModified>2017-11-28T11:45:44.000Z</LastModified>
+        <ETag>&quot;a064cf8b20feab355d15d53c89843039&quot;</ETag>
+        <Size>1239</Size>
+        <StorageClass>STANDARD</StorageClass>
+    </Contents>
+    <Contents>
         <Key>asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=${MODEL_ENERGYFORECAST}/model.pkl</Key>
         <LastModified>2017-11-28T11:45:44.000Z</LastModified>
         <ETag>&quot;a064cf8b20feab355d15d53c89843039&quot;</ETag>
