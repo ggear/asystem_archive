@@ -8,6 +8,7 @@ import pandas
 import time
 
 import anode
+from scipy.stats import norm
 from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import DATUM_QUEUE_MAX
 from anode.plugin.plugin import Plugin
@@ -58,10 +59,10 @@ class Energyforecast(Plugin):
                     temperature_forecast = temperature_forecast["data_value"] / temperature_forecast["data_scale"] \
                         if temperature_forecast is not None else None
                     rain_forecast = self.anode.get_plugin("wunderground").datum_get(
-                        DATUM_QUEUE_LAST,
+                        DATUM_QUEUE_MAX if day == 1 else DATUM_QUEUE_LAST,
                         "rain__forecast__glen_Dforrest", "integral", "mm", day, "day_Dtime")
                     rain_forecast = rain_forecast["data_value"] / rain_forecast["data_scale"] \
-                        if rain_forecast is not None else None
+                        if rain_forecast is not None else 0
                     humidity_forecast = self.anode.get_plugin("wunderground").datum_get(
                         DATUM_QUEUE_MAX if day == 1 else DATUM_QUEUE_LAST,
                         "humidity__forecast__glen_Dforrest", "mean", "_P25", day, "day")
@@ -105,7 +106,7 @@ class Energyforecast(Plugin):
                                                                  .format(self.name, exception, model_version), exception)
                                 self.datum_push(
                                     "energy__production_Dforecast" + model_classifier + "__inverter",
-                                    "forecast", "integral",
+                                    "forecast", "high" if day == 1 else "integral",
                                     self.datum_value(energy_production_forecast, factor=10),
                                     "Wh",
                                     10,
@@ -116,15 +117,39 @@ class Energyforecast(Plugin):
                                     asystem_version=model_day[self.name][model_version][0],
                                     data_version=model_version,
                                     data_bound_lower=0)
-                            else:
+                            if day == 1:
                                 energy_production_forecast = self.anode.get_plugin("energyforecast").datum_get(
                                     DATUM_QUEUE_LAST,
-                                    "energy__production_Dforecast" + model_classifier + "__inverter", "integral", "Wh", day, "day")
-                            if day == 1:
+                                    "energy__production_Dforecast" + model_classifier + "__inverter", "high", "Wh", day, "day")
+                                energy_production_forecast = energy_production_forecast["data_value"] / \
+                                                             energy_production_forecast["data_scale"] \
+                                    if energy_production_forecast is not None else 0
+                                energy_production_forecast_scaled = 0
+                                if "energyforecastintraday" in model_day_intra and \
+                                        MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY in model_day_intra["energyforecastintraday"] and \
+                                        energy_production_forecast is not None:
+                                    model_day_intra = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
+                                    energy_production_forecast_scaled = energy_production_forecast * model_day_intra['execute'](
+                                        model=model_day_intra, features=pandas.DataFrame([{
+                                            "energy__production_Dforecast_Ddaylight__inverter": int(sun_percentage * 10)
+                                        }]).apply(pandas.to_numeric, errors='ignore'), prediction=True).iloc[0][0].item()
+                                self.datum_push(
+                                    "energy__production_Dforecast" + model_classifier + "__inverter",
+                                    "forecast", "integral",
+                                    self.datum_value(energy_production_forecast_scaled, factor=10),
+                                    "Wh",
+                                    10,
+                                    bin_timestamp,
+                                    bin_timestamp,
+                                    day,
+                                    "day",
+                                    asystem_version=model_day[self.name][model_version][0],
+                                    data_version=model_version,
+                                    data_bound_lower=0)
                                 if model_classifier == "":
                                     self.datum_push(
                                         "energy__production_Dforecast_Ddaylight__inverter",
-                                        "forecast", "integral",
+                                        "forecast", "point",
                                         self.datum_value(sun_percentage, factor=10),
                                         "_P25",
                                         10,
@@ -136,20 +161,14 @@ class Energyforecast(Plugin):
                                         data_version=model_version,
                                         data_bound_lower=0,
                                         data_bound_upper=100)
-                                energy_production_forecast_actual = 0
-                                if "energyforecastintraday" in model_day_intra and \
-                                        MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY in model_day_intra["energyforecastintraday"] and \
-                                        energy_production_forecast is not None and energy_production_today is not None and \
-                                        energy_production_today != 0:
-                                    model_day_intra = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
-                                    energy_production_forecast_actual = int(energy_production_forecast * model_day_intra['execute'](
-                                        model=model_day_intra, features=pandas.DataFrame([{
-                                            "energy__production_Dforecast_Ddaylight__inverter": sun_percentage * 10
-                                        }]).apply(pandas.to_numeric, errors='ignore'), prediction=True)
-                                                                            .iloc[0][0].item() / energy_production_today * 100)
+                                energy_production_forecast_actual = 100 if energy_production_today is not None else 0
+                                if energy_production_today is not None and energy_production_today != 0:
+                                    energy_production_forecast_actual = int(((energy_production_forecast_scaled -
+                                                                              energy_production_today) * norm.cdf(sun_percentage, 15, 5) +
+                                                                             energy_production_today) / energy_production_today * 100)
                                 self.datum_push(
                                     "energy__production_Dforecast_Dactual" + model_classifier + "__inverter",
-                                    "forecast", "integral",
+                                    "forecast", "point",
                                     self.datum_value(energy_production_forecast_actual),
                                     "_P25",
                                     1,

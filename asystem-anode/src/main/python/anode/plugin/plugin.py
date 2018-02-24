@@ -94,9 +94,6 @@ class Plugin(object):
                                             Plugin.get_seconds(self.config["history_partition_seconds"], "second"):
                                         if datum["data_type"] == "integral":
                                             datum_value = 0
-                                        elif datum["data_type"] == "forecast":
-                                            datum_value = None
-
                                     if datum_value is not None:
                                         self.datum_push(
                                             datum["data_metric"],
@@ -838,12 +835,13 @@ class Plugin(object):
             datums_plot_legend = datums_axes.legend(loc="lower left", ncol=1)
         else:
             datums_plot_legend = datums_axes.legend(loc="upper left", ncol=1)
-        for datums_plot_legend_text in datums_plot_legend.get_texts():
-            datums_plot_legend_text.set_fontsize(datums_plot_font_size)
-            datums_plot_legend_text.set_color(datums_plot_colour)
-        datums_plot_legend.get_frame().set_alpha(datums_plot_alpha)
-        datums_plot_legend.get_frame().set_edgecolor(datums_plot_colour_foreground)
-        datums_plot_legend.get_frame().set_facecolor(datums_plot_colour_background)
+        if datums_plot_legend is not None:
+            for datums_plot_legend_text in datums_plot_legend.get_texts():
+                datums_plot_legend_text.set_fontsize(datums_plot_font_size)
+                datums_plot_legend_text.set_color(datums_plot_colour)
+            datums_plot_legend.get_frame().set_alpha(datums_plot_alpha)
+            datums_plot_legend.get_frame().set_edgecolor(datums_plot_colour_foreground)
+            datums_plot_legend.get_frame().set_facecolor(datums_plot_colour_background)
         datums_figure.subplots_adjust(left=0, right=0.9, top=0.9725, bottom=0.05)
         datums_canvas = FigureCanvas(datums_figure)
         datums_canvas.draw()

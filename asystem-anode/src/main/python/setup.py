@@ -58,6 +58,7 @@ setup(
         "pandas",
         "numpy",
         "matplotlib",
+        "scipy",
         "scikit-learn"
     ],
     tests_require=["mock"],
