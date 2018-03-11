@@ -843,7 +843,7 @@ class Plugin(object):
             datums_plot_legend.get_frame().set_alpha(datums_plot_alpha)
             datums_plot_legend.get_frame().set_edgecolor(datums_plot_colour_foreground)
             datums_plot_legend.get_frame().set_facecolor(datums_plot_colour_background)
-        datums_figure.subplots_adjust(left=0, right=0.9, top=0.9725, bottom=0.05)
+        datums_figure.subplots_adjust(left=0, right=0.9, top=0.9725, bottom=0.08)
         datums_canvas = FigureCanvas(datums_figure)
         datums_canvas.draw()
         if datums_plot_title is not None:
@@ -856,7 +856,8 @@ class Plugin(object):
             datums_axes_x_labels[0] = u""
         datums_axes.set_xticklabels(datums_axes_x_labels)
         datums_axes.set_ylim([datums_axes.get_ylim()[0] * 0.9, datums_axes.get_ylim()[1] * 1.15])
-        datums_canvas.print_figure(datums_plot_buffer, facecolor=datums_plot_colour_background, figsize=(8.68, 12), dpi=1200, format="svg")
+        datums_figure.set_size_inches(6, 3.35)
+        datums_canvas.print_figure(datums_plot_buffer, facecolor=datums_plot_colour_background, format="svg")
         datums_figure.clf()
         plot.close()
         del datums_canvas

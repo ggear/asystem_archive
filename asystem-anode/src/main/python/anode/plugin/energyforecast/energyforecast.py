@@ -160,7 +160,7 @@ class Energyforecast(Plugin):
                                 energy_production_forecast_actual = 100 if energy_production_today is not None else 0
                                 if energy_production_today is not None and energy_production_today != 0:
                                     energy_production_forecast_actual = int(((energy_production_forecast_scaled -
-                                                                              energy_production_today) * norm.cdf(sun_percentage, 35, 5) +
+                                                                              energy_production_today) * norm.cdf(sun_percentage, 35, 15) +
                                                                              energy_production_today) / energy_production_today * 100)
                                 self.datum_push(
                                     "energy__production_Dforecast_Dactual" + model_classifier + "__inverter",

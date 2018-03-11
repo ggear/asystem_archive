@@ -80,13 +80,14 @@
                                         datumsPlotUri += "&period=7200&method=min&fill=linear"
                                     }
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
-                                        "<div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
-                                        datumsPlotUri + "&format=svg' class='datum-plot'/></a></div><hr/>"
+                                        "<hr/><div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
+                                        datumsPlotUri + "&format=svg' class='datum-plot'/></a></div>"
                                 }
                             }
                             datumDiv = document.createElement("div");
                             datumDiv.id = datum.ui_id;
                             datumDiv.className = "datum";
+                            datumDiv.appendChild(document.createElement("hr"));
                             var datumGroupsFields = {
                                 "header": {
                                     "metric": (function (metric) {
@@ -131,7 +132,6 @@
                                 }
                                 datumDiv.appendChild(datumGroupDiv);
                             }
-                            datumDiv.appendChild(document.createElement("hr"));
                             var index;
                             for (index = 0; index < datumsLast.length; index++) {
                                 if (datumsLast[index].order_index > datum.order_index) {
@@ -231,108 +231,114 @@
     </script>
 </head>
 <body>
-<div>
-    <div class="datums">
-        <div class="datum">
-            <hr/>
-            <div class="datum"><span id="datums_header" class="datum-detail"><a
-                    href="javascript:window.location.href=window.location.href">anode.<span
-                    id="datums_header_connection">connecting</span><span
-                    id="datums_header_status">...</span></a></span>
+<div class="datum-row">
+
+    <div class="datum-column">
+        <div class="datums">
+            <div class="datum">
+                <hr/>
+                <div class="datum"><span id="datums_header" class="datum-detail"><a
+                        href="javascript:window.location.href=window.location.href">anode.<span
+                        id="datums_header_connection">connecting</span><span
+                        id="datums_header_status">...</span></a></span>
+                </div>
+                <div id="datums_header_links" style="display:none;">
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=anode&metrics=_system">anode</a>.<a
+                            href="/">all</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=power">power</a>.<a
+                            href="/?metrics=power.export&metrics=power.consumption&metrics=power.utilisation">now</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=energy">energy</a>.<a
+                            href="/?metrics=energy.export&metrics=energy.consumption.savings&metrics=energy.consumption.inverter&metrics=energy.consumption.cost&metrics=energy.consumption-peak.&metrics=energy.consumption-off-peak.&bins=1day">now</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=energy">energy</a>.<a
+                            href="/?metrics=energy.production&bins=1day">today</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=energy">energy</a>.<a
+                            href="/?metrics=energy.production&bins=2day">tomorrow</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=energy">energy</a>.<a
+                            href="/?metrics=energy.production&bins=3day">overmorrow</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=internet">internet</a>.<a
+                            href="/?metrics=perth">perth</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                            href="/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                            href="/?metrics=carbon-dioxide">carbon-dioxide</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                            href="/?metrics=humidity&bins=2second&bins=50second&bins=30minute&bins=1day">humidity</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
+                            href="/?metrics=noise">noise</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=1day&bins=1day&bins=1day-time&bins=1night-time">today</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=2day&bins=2day&bins=2day-time&bins=2night-time">tomorrow</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=3day&bins=3day&bins=3day-time&bins=3night-time">overmorrow</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=wind&bins=2second&bins=1day">wind</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
+                            href="/?metrics=pressure">pressure</a>
+                </span></div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="/?metrics=sun">almanac</a>.<a
+                            href="/?metrics=sun">sun</a>
+                </span></div>
+                </div>
             </div>
-            <div id="datums_header_links" style="display:none;">
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=anode&metrics=_system">anode</a>.<a
-                        href="/">all</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=power">power</a>.<a
-                        href="/?metrics=power.export&metrics=power.consumption&metrics=power.utilisation">now</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=energy">energy</a>.<a
-                        href="/?metrics=energy.export&metrics=energy.consumption.savings&metrics=energy.consumption.inverter&metrics=energy.consumption.cost&metrics=energy.consumption-peak.&metrics=energy.consumption-off-peak.&bins=1day">now</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=energy">energy</a>.<a
-                        href="/?metrics=energy.production&bins=1day">today</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=energy">energy</a>.<a
-                        href="/?metrics=energy.production&bins=2day">tomorrow</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=energy">energy</a>.<a
-                        href="/?metrics=energy.production&bins=3day">overmorrow</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=internet">internet</a>.<a
-                        href="/?metrics=perth">perth</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=carbon-dioxide">carbon-dioxide</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=humidity&bins=2second&bins=50second&bins=30minute&bins=1day">humidity</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                        href="/?metrics=noise">noise</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=1day&bins=1day&bins=1day-time&bins=1night-time">today</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=2day&bins=2day&bins=2day-time&bins=2night-time">tomorrow</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=3day&bins=3day&bins=3day-time&bins=3night-time">overmorrow</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=wind&bins=2second&bins=1day">wind</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                        href="/?metrics=pressure">pressure</a>
-                </span></div>
-                <div class="datum"><span class="datum-detail"><a
-                        href="/?metrics=sun">almanac</a>.<a
-                        href="/?metrics=sun">sun</a>
-                </span></div>
-            </div>
-            <hr/>
         </div>
+        <div id="datums" class="datums"></div>
     </div>
-    <div id="datums" class="datums"></div>
-    <div id="plots_header" class="datums" style="display:none;">
-        <div class="datum">
-            <div class="datum"><span id="datums_footer" class="datum-detail"><a
-                    href="#" onclick="addorReplaceLastUriParam('plot','');return false;">plot</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','hour');return false;">hour</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','today');return false;">today</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','3days');return false;">3days</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','week');return false;">week</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','fortnight');return false;">fortnight</a>.<a
-                    href="#" onclick="addorReplaceLastUriParam('plot','all');return false;">all</a></span>
-            </div>
+
+    <div class="datum-column">
+        <div id="plots_header" class="datums" style="display:none;">
             <hr/>
+            <div class="datum">
+                <div class="datum"><span id="datums_footer" class="datum-detail"><a
+                        href="#" onclick="addorReplaceLastUriParam('plot','');return false;">plot</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','hour');return false;">hour</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','today');return false;">today</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','3days');return false;">3days</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','week');return false;">week</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','fortnight');return false;">fortnight</a>.<a
+                        href="#" onclick="addorReplaceLastUriParam('plot','all');return false;">all</a></span>
+                </div>
+            </div>
         </div>
+        <div id="plots" class="datums"></div>
     </div>
-    <div id="plots" class="datums"></div>
+
 </div>
 </body>
 </html>

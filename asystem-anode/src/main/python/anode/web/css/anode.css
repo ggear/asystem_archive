@@ -34,28 +34,75 @@ span {
 .datum {
 }
 
-.datum-detail {
+.datum-row {
 }
 
-/*noinspection CssUnusedSymbol*/
-.datum-detail-metric .datum-detail-timeliness .datum-detail-value .datum-detail-unit .datum-detail-trend .datum-detail-low .datum-detail-high {
+.datum-column {
 }
 
-/*noinspection ALL,CssUnusedSymbol*/
-.datum-detail-value {
-    font-size: 150%;
+@media screen and (min-aspect-ratio: 673/378) {
+    .datum-row {
+        display: flex;
+    }
 }
 
-/*noinspection CssUnusedSymbol*/
-.datum-detail-up {
-    color: chartreuse;
+@media screen and (min-aspect-ratio: 673/378) {
+    .datum-column {
+        flex: 50%;
+        padding-right: 50px;
+    }
 }
 
-/*noinspection CssUnusedSymbol*/
-.datum-detail-down {
-    color: red;
+@media screen and (aspect-ratio: 672/378) {
+    .datum-row {
+        display: flex;
+    }
+}
+
+@media screen and (aspect-ratio: 672/378) {
+    .datum-column {
+        flex: 50%;
+        padding-right: 50px;
+    }
+}
+
+@media screen and (aspect-ratio: 720/450) {
+    .datum-row {
+        display: flex;
+    }
+}
+
+@media screen and (aspect-ratio: 720/450) {
+    .datum-column {
+        flex: 50%;
+        padding-right: 50px;
+    }
 }
 
 .datum-plot {
     width: 100%;
+}
+
+@media screen and (aspect-ratio: 720/450) {
+    .datum-plot {
+        max-width: 950px;
+    }
+}
+
+.datum-detail {
+}
+
+.datum-detail-metric .datum-detail-timeliness .datum-detail-value .datum-detail-unit .datum-detail-trend .datum-detail-low .datum-detail-high {
+}
+
+.datum-detail-value {
+    font-size: 150%;
+}
+
+.datum-detail-up {
+    color: chartreuse;
+}
+
+.datum-detail-down {
+    color: red;
 }

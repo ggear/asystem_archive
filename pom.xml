@@ -15,7 +15,7 @@
 
     <properties>
         <asystem-model.version>1000</asystem-model.version>
-        <asystem-model-energyforecast.version>1004</asystem-model-energyforecast.version>
+        <asystem-model-energyforecast.version>1003</asystem-model-energyforecast.version>
         <asystem-model-energyforecastintraday.version>1000</asystem-model-energyforecastintraday.version>
         <maven.install-flume.skip>true</maven.install-flume.skip>
         <maven.install-python.skip>true</maven.install-python.skip>
