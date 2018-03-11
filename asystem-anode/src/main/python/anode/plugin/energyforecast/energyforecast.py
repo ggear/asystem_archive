@@ -2,13 +2,14 @@ from __future__ import print_function
 
 import logging
 import os
+import re
 
 import datetime
 import pandas
 import time
+from scipy.stats import norm
 
 import anode
-from scipy.stats import norm
 from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import DATUM_QUEUE_MAX
 from anode.plugin.plugin import Plugin
@@ -23,9 +24,10 @@ class Energyforecast(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             bin_timestamp = self.get_time()
-            model_day_intra = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastintraday")
             model_day = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name)
+            model_day_intra = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastintraday")
             if self.name in model_day and "energyforecastintraday" in model_day_intra and \
+                    MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY in model_day_intra["energyforecastintraday"] and \
                     self.anode.get_plugin("davis") is not None and \
                     self.anode.get_plugin("wunderground") is not None:
                 energy_production_today = self.anode.get_plugin("fronius").datum_get(
@@ -96,43 +98,37 @@ class Energyforecast(Plugin):
                         if model_version >= MODEL_PRODUCTION_ENERGYFORECAST:
                             energy_production_forecast = 0
                             model_classifier = "" if model_version == MODEL_PRODUCTION_ENERGYFORECAST else ("_D" + model_version)
-                            if day > 1 or sun_percentage < 60:
-                                model = model_day[self.name][model_version][1]
-                                try:
-                                    energy_production_forecast = model['execute'](model=model, features=model['execute'](
-                                        features=model_features, engineering=True), prediction=True)[0]
-                                except Exception as exception:
-                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
-                                                                 .format(self.name, exception, model_version), exception)
-                                self.datum_push(
-                                    "energy__production_Dforecast" + model_classifier + "__inverter",
-                                    "forecast", "high" if day == 1 else "integral",
-                                    self.datum_value(energy_production_forecast, factor=10),
-                                    "Wh",
-                                    10,
-                                    bin_timestamp,
-                                    bin_timestamp,
-                                    day,
-                                    "day",
-                                    asystem_version=model_day[self.name][model_version][0],
-                                    data_version=model_version,
-                                    data_bound_lower=0)
+                            model = model_day[self.name][model_version][1]
+                            try:
+                                energy_production_forecast = model['execute'](model=model, features=model['execute'](
+                                    features=model_features, engineering=True), prediction=True)[0]
+                            except Exception as exception:
+                                anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
+                                                             .format(self.name, exception, model_version), exception)
+                            self.datum_push(
+                                "energy__production_Dforecast" + model_classifier + "__inverter",
+                                "forecast", "high" if day == 1 else "integral",
+                                self.datum_value(energy_production_forecast, factor=10),
+                                "Wh",
+                                10,
+                                bin_timestamp,
+                                bin_timestamp,
+                                day,
+                                "day",
+                                asystem_version=model_day[self.name][model_version][0],
+                                data_version=model_version,
+                                data_bound_lower=0)
                             if day == 1:
-                                energy_production_forecast = self.anode.get_plugin("energyforecast").datum_get(
-                                    DATUM_QUEUE_LAST,
-                                    "energy__production_Dforecast" + model_classifier + "__inverter", "high", "Wh", day, "day")
-                                energy_production_forecast = energy_production_forecast["data_value"] / \
-                                                             energy_production_forecast["data_scale"] \
-                                    if energy_production_forecast is not None else 0
+                                model = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
                                 energy_production_forecast_scaled = 0
-                                if "energyforecastintraday" in model_day_intra and \
-                                        MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY in model_day_intra["energyforecastintraday"] and \
-                                        energy_production_forecast is not None:
-                                    model_day_intra = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
-                                    energy_production_forecast_scaled = energy_production_forecast * model_day_intra['execute'](
-                                        model=model_day_intra, features=pandas.DataFrame([{
+                                try:
+                                    energy_production_forecast_scaled = energy_production_forecast * model['execute'](
+                                        model=model, features=pandas.DataFrame([{
                                             "energy__production_Dforecast_Ddaylight__inverter": int(sun_percentage * 10)
                                         }]).apply(pandas.to_numeric, errors='ignore'), prediction=True).iloc[0][0].item()
+                                except Exception as exception:
+                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
+                                                                 .format("energyforecastintraday", exception, model_version), exception)
                                 self.datum_push(
                                     "energy__production_Dforecast" + model_classifier + "__inverter",
                                     "forecast", "integral",
@@ -188,13 +184,12 @@ class Energyforecast(Plugin):
 
     def __init__(self, parent, name, config, reactor):
         super(Energyforecast, self).__init__(parent, name, config, reactor)
-        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name, warm=True)
-        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastintraday", warm=True)
-        for datum_metric, datum in self.datums.items():
-            if datum_metric.startswith("energy__production_Dforecast_Dactual") and \
-                    datum_metric <= ("energy__production_Dforecast_Dactual_D" + MODEL_PRODUCTION_ENERGYFORECAST + "__inverter"):
-                del self.datums[datum_metric]
-        for datum_metric, datum in self.datums.items():
-            if datum_metric.startswith("energy__production_Dforecast") and \
-                    datum_metric <= ("energy__production_Dforecast_D" + MODEL_PRODUCTION_ENERGYFORECAST + "__inverter"):
-                del self.datums[datum_metric]
+
+        def metric_drop(metric):
+            for datum_metric, datum in self.datums.items():
+                model_version = re.match(metric + "_D([1-9][0-9]{3})__inverter", datum_metric)
+                if model_version is not None:
+                    del self.datums[datum_metric]
+
+        metric_drop("energy__production_Dforecast")
+        metric_drop("energy__production_Dforecast_Dactual")

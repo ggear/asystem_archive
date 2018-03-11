@@ -14,6 +14,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 import java.text.SimpleDateFormat
 
+import com.jag.asystem.amodel.EnergyForecastDay.DaysVetted
+
 class EnergyForecastDay(configuration: Configuration) extends DriverSpark(configuration) {
 
   var outputPath: Path = _
@@ -63,12 +65,11 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
     if (inputPaths.nonEmpty) {
       val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
       import spark.implicits._
-      val dateFormat = "YYYY/MM/dd"
+      val dateFormat = "y/MM/dd"
       val timezoneWorking = "Australia/Perth"
       val timezoneDefault = TimeZone.getDefault.getID
       val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
       calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
-      val dateCurrent = new SimpleDateFormat(dateFormat).format(calendarCurrent.getTime)
       val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
       input.createTempView("datums")
       val outputAll = List(
@@ -91,7 +92,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
            | FROM datums
            | WHERE
            |   astore_metric='temperature' AND data_metric='temperature__forecast__glen_Dforrest' AND
-           |   data_type='high' AND bin_width=1 AND bin_unit='day'
+           |   data_type='point' AND bin_width=1 AND bin_unit='day'
            | GROUP BY datum__bin__date
         """.stripMargin,
         s"""
@@ -190,7 +191,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
         .where($"datum__bin__date" =!= "2017/11/27")
         .where($"datum__bin__date" =!= "2017/11/28")
         .where($"datum__bin__date" =!= "2018/12/31")
-        .where($"datum__bin__date" =!= s"$dateCurrent")
+        .where($"datum__bin__date" < DaysVetted)
         .repartition(1).orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))
@@ -238,6 +239,8 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
 }
 
 object EnergyForecastDay {
+
+  val DaysVetted = "2018/03/13"
 
   def main(arguments: Array[String]): Unit = {
     new EnergyForecastDay(null).runner(arguments: _*)

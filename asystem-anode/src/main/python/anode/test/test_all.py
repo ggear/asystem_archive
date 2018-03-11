@@ -968,7 +968,7 @@ class ANodeTest(TestCase):
         iterations_repeat = 2
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(40, anode, "/rest/?metrics=energy", True)[1]
+        metrics = self.assertRest(40, anode, "/rest/?metrics=energy", False)[1]
         self.assertTrue(metrics > 0)
         self.assertRest(metrics,
                         anode,

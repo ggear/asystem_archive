@@ -12,6 +12,7 @@ import logging
 import numbers
 import os.path
 import re
+import shutil
 import urllib
 from StringIO import StringIO
 from collections import deque
@@ -1253,12 +1254,15 @@ class Plugin(object):
                       context=self.pickled_put)
         return pickle_path
 
-    def pickled_get(self, store, path=None, name=None, model=None, warm=False, cache=True):
+    def pickled_get(self, store, path=None, name=None, model=None, warm=False, cache=True, flush=False):
         log_timer = anode.Log(logging.INFO).start()
+        if flush and os.path.isdir(store):
+            shutil.rmtree(store)
+            os.makedirs(store)
         if cache:
-            if store not in self.pickles:
-                self.pickles[store] = {}
-            pickle_cache = self.pickles[store]
+            if store not in PICKLES_CACHE:
+                PICKLES_CACHE[store] = {}
+            pickle_cache = PICKLES_CACHE[store]
         else:
             pickle_cache = {}
         if path is not None:
@@ -1379,7 +1383,6 @@ class Plugin(object):
         self.config = config
         self.reactor = reactor
         self.datums = {}
-        self.pickles = {}
         self.time_seen = None
         self.time_boot = calendar.timegm(time.gmtime())
         time_local = time.localtime()
@@ -1443,6 +1446,8 @@ DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON["fields"][i]["name"].encode("utf-8"): i 
 DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"][i].encode("utf-8")):
                             i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"]))}
 
+PICKLES_CACHE = {}
+
 
 class ModelPull(Plugin):
 
@@ -1503,4 +1508,4 @@ class ModelPull(Plugin):
 
     def __init__(self, parent, name, config, reactor):
         super(ModelPull, self).__init__(parent, name, config, reactor)
-        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), warm=True)
+        self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), flush=True)

@@ -203,7 +203,7 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         Log.error("Driver [" + this.getClass.getSimpleName + "] SNAPSHOT version attempted in production, bailing out without executing")
       return FAILURE_RUNTIME
     }
-    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process").getOrCreate()
+    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process-" + inputMode.toString.toLowerCase).getOrCreate()
     import spark.implicits._
     inputMode match {
       case CLEAN =>

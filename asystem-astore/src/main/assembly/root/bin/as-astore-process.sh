@@ -19,7 +19,7 @@ PROCESS_STAGES_ARRAY=(${PROCESS_STAGES//,/ })
 for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   $ROOT_DIR/bin/cldr-shell-spark2.sh \
     "$WAIT_TASK" \
-    "asystem-astore-process" \
+    "asystem-astore-process-""$PROCESS_STAGE" \
     "com.jag.asystem.astore.Process" \
     "$PROCESS_STAGE $S3_URL_ASTORE/" \
     "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \

@@ -47,7 +47,7 @@ from sklearn.externals import joblib
 from publish_util import publish
 from script_util import hdfs_make_qualified
 
-DAYS_VETTED = '2018/02/08'
+DAYS_VETTED = '2018/03/13'
 
 DAYS_BLACK_LIST = set([
     '2017/10/08',
@@ -60,6 +60,7 @@ DAYS_BLACK_LIST = set([
     '2017/10/28',
     '2017/10/29',
     '2017/10/30',
+    '2017/11/01',
     '2017/11/07',
     '2017/11/10',
     '2017/11/16',
@@ -67,6 +68,7 @@ DAYS_BLACK_LIST = set([
     '2017/11/24',
     '2017/11/28',
     '2017/11/29',
+    '2017/12/01',
     '2017/12/02',
     '2017/12/03',
     '2017/12/06',
@@ -86,6 +88,7 @@ DAYS_BLACK_LIST = set([
     '2018/02/21',
     '2018/02/22',
     '2018/02/23',
+    '2018/03/04'
 ])
 
 DAYS_PLOT = False
@@ -110,8 +113,6 @@ def pipeline():
     print("Pipeline started")
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-energyforecastintraday").getOrCreate()
-
-    # TODO: test to see if version/data means we should load or build
 
     datasets = []
     timezone = 'Australia/Perth'

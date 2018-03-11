@@ -33,7 +33,7 @@ public class DatasetTest implements TestConstants {
     .dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}}).dataSetDestinationDirs(DATASET_DIR_ASTORE);
 
   @TestWith({"testMetaDataPristine"})
-  public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
+  public void testDataset(TestMetaData testMetaData) throws Exception {
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "dataset.py"),
       Collections.singletonList(DATASET_DIR_ASTORE)));
   }
