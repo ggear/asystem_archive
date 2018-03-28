@@ -31,5 +31,6 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
 done
 
 $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE""$S3_URL_ATEMP" "$S3_URL_ASTORE" "$DO_RELEASE"
+$ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE""$S3_URL_ATEMP" "$S3_URL_ASTORE" "$DO_RELEASE" "false" "*/processed/*" "*"
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
