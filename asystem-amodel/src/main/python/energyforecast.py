@@ -94,21 +94,33 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
         return FEATURES, FEATURES_ORIGINAL, FEATURES_RENAME
     elif engineering:
         features_engineered = features.copy(deep=True)
-        features_engineered['sun_rise_at'] = pd.to_datetime(features_engineered['sun__outdoor__rise'], unit='s')
-        features_engineered['sun_set_at'] = pd.to_datetime(features_engineered['sun__outdoor__set'], unit='s')
-        features_engineered['day_length'] = features_engineered['sun_set_at'] - features_engineered['sun_rise_at']
-        features_engineered['day_length_sec'] = features_engineered['sun__outdoor__set'] - features_engineered['sun__outdoor__rise']
+        features_engineered['sun_rise_at'] = pd.to_datetime(
+            features_engineered['sun__outdoor__rise'], unit='s')
+        features_engineered['sun_set_at'] = pd.to_datetime(
+            features_engineered['sun__outdoor__set'], unit='s')
+        features_engineered['day_length'] = \
+            features_engineered['sun_set_at'] \
+            - features_engineered['sun_rise_at']
+        features_engineered['day_length_sec'] = \
+            features_engineered['sun__outdoor__set'] \
+            - features_engineered['sun__outdoor__rise']
         features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
-        features_engineered_renamed = features_engineered_renamed.rename(columns=FEATURES_RENAME)
+        features_engineered_renamed = features_engineered_renamed \
+            .rename(columns=FEATURES_RENAME)
         return features_engineered_renamed
     elif prediction:
-        return model['pipeline'].predict(model['vectorizer'].transform(features[FEATURES].to_dict(orient='record')))
+        return model['pipeline'] \
+            .predict(model['vectorizer']
+                     .transform(features[FEATURES].to_dict(orient='record')))
 
 
 def pipeline():
-    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-amodel/asystem/amodel/energyforecast"
-    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else "s3a://asystem-amodel/asystem/amodel/energyforecast"
-    local_model_path = sys.argv[3] if len(sys.argv) > 3 else tempfile.mkdtemp()
+    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
+        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
+        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+    local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
+        tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
 
@@ -117,12 +129,14 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
-                            "amodel_version=10.000.0020-SNAPSHOT/amodel_model=1003"),
+                            "amodel_version=10.000.0020-SNAPSHOT"
+                            "/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
-                            "amodel_version=10.000.0020-SNAPSHOT/amodel_model=1003"),
+                            "amodel_version=10.000.0020-SNAPSHOT"
+                            "/amodel_model=1003"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
 
@@ -284,7 +298,8 @@ def pipeline():
     for _regr in [LinearRegression(), ElasticNetCV(cv=4), RidgeCV(cv=4), LassoCV(cv=4)]:
         print(type(_regr).__name__)
         _model, _rmse, _test_rmse = train_and_predict(
-            _regr, energies_cat_train, energies_target, energies_cat_test, energies_test_target)
+            _regr, energies_cat_train, energies_target,
+            energies_cat_test, energies_test_target)
         if min_rmse > _rmse:
             best_model = _model
             min_rmse = _rmse
@@ -294,10 +309,12 @@ def pipeline():
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0020-SNAPSHOT/amodel_model=1003/model.pkl'
+                 'amodel_version=10.000.0020-SNAPSHOT' \
+                 '/amodel_model=1003/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
-    if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
+    if os.path.exists(os.path.dirname(local_model_file)):
+        shutil.rmtree(os.path.dirname(local_model_file))
     os.makedirs(os.path.dirname(local_model_file))
 
     import dill
@@ -308,7 +325,8 @@ def pipeline():
     dill.dump(execute, pickled_execute)
     pickled_execute.flush()
 
-    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model, 'execute': pickled_execute}, local_model_file, compress=True)
+    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model,
+                 'execute': pickled_execute}, local_model_file, compress=True)
 
     # Example of serialized model usage
     model = joblib.load(local_model_file)
@@ -316,11 +334,14 @@ def pipeline():
     print(dfv)
     print(dfv.dtypes)
     energy_production_actual = dfv['energy__production__inverter'].iloc[0]
-    energy_production_prediction = round(
-        model['execute'](model=model, features=model['execute'](features=dfv, engineering=True), prediction=True)[0], 1)
-    energy_production_accuracy = int(round(energy_production_prediction / energy_production_actual * 100))
+    energy_production_prediction = round(model['execute'](
+        model=model, features=model['execute'](features=dfv, engineering=True),
+        prediction=True)[0], 1)
+    energy_production_accuracy = int(
+        round(energy_production_prediction / energy_production_actual * 100))
     print("Model prediction [{}] versus actual [{}] at accuracy [{}%]"
-          .format(energy_production_prediction, energy_production_actual, energy_production_accuracy))
+          .format(energy_production_prediction, energy_production_actual,
+                  energy_production_accuracy))
 
     print("Model copy: {} -> {}".format(local_model_file, remote_model_file))
     publish(local_model_file, remote_model_file)

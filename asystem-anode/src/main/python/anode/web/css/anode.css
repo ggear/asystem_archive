@@ -79,16 +79,6 @@ span {
     }
 }
 
-.datum-plot {
-    width: 100%;
-}
-
-@media screen and (aspect-ratio: 720/450) {
-    .datum-plot {
-        max-width: 950px;
-    }
-}
-
 .datum-detail {
 }
 
@@ -105,4 +95,8 @@ span {
 
 .datum-detail-down {
     color: red;
+}
+
+.datum-plot {
+    width: 100%;
 }

@@ -28,31 +28,35 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
     outputPath = new Path(arguments(1))
-    var dfs = outputPath.getFileSystem(getConf)
-    outputPath = dfs.makeQualified(outputPath)
-    for (path <- List(new Path(outputPath, "training" + outputPathSuffix), new Path(outputPath, "validation" + outputPathSuffix))) {
-      if (dfs.exists(path)) if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true) else {
-        if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastDay].getSimpleName +
-          "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "]")
-        return FAILURE_ARGUMENTS
-      }
-    }
     var inputPath = new Path(arguments(0))
-    dfs = inputPath.getFileSystem(getConf)
-    inputPath = dfs.makeQualified(inputPath)
-    val files = dfs.listFiles(inputPath, true)
-    while (files.hasNext) {
-      val fileUri = files.next().getPath.toString
-      val fileRewritePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
-      fileUri match {
-        case fileRewritePattern(fileRoot) => inputPaths += fileRoot
-        case _ =>
+    try {
+      var dfs = outputPath.getFileSystem(getConf)
+      outputPath = dfs.makeQualified(outputPath)
+      for (path <- List(new Path(outputPath, "training" + outputPathSuffix), new Path(outputPath, "validation" + outputPathSuffix))) {
+        if (dfs.exists(path)) if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true) else {
+          if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastDay].getSimpleName +
+            "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "]")
+          return FAILURE_ARGUMENTS
+        }
+      }
+      dfs = inputPath.getFileSystem(getConf)
+      inputPath = dfs.makeQualified(inputPath)
+      val files = dfs.listFiles(inputPath, true)
+      while (files.hasNext) {
+        val fileUri = files.next().getPath.toString
+        val fileRewritePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
+        fileUri match {
+          case fileRewritePattern(fileRoot) => inputPaths += fileRoot
+          case _ =>
+        }
       }
     }
-    if (Log.isInfoEnabled()) {
-      Log.info("Driver [" + classOf[EnergyForecastDay].getSimpleName +
-        "] prepared with input [" + inputPath.toString + "] and inputs:")
-      for (inputPath <- inputPaths) Log.info("  " + inputPath)
+    finally {
+      if (Log.isInfoEnabled()) {
+        Log.info("Driver [" + classOf[EnergyForecastDay].getSimpleName +
+          "] prepared with output [" + outputPath.toString + "], input [" + inputPath.toString + "] and inputs:")
+        for (inputPath <- inputPaths) Log.info("  " + inputPath)
+      }
     }
     SUCCESS
   }

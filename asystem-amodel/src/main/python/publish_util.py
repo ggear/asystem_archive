@@ -12,7 +12,8 @@ from boto.s3.key import Key
 
 
 def publish(local_file, publish_url):
-    is_snapshot = re.search('.*/[1-9][0-9]\.[0-9]{3}.[0-9]{4}-SNAPSHOT/.*', publish_url) is not None
+    is_snapshot = re.search('.*/[1-9][0-9]\.[0-9]{3}.[0-9]{4}-SNAPSHOT/.*',
+                            publish_url) is not None
     if publish_url.startswith('s3a://'):
         s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*', publish_url).group(1)
         s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)', publish_url).group(1)
@@ -24,6 +25,7 @@ def publish(local_file, publish_url):
     elif publish_url.startswith('file://'):
         publish_file = publish_url.replace('file://', '')
         if is_snapshot or not os.path.isfile(publish_file):
-            if os.path.exists(os.path.dirname(publish_file)): shutil.rmtree(os.path.dirname(publish_file))
+            if os.path.exists(os.path.dirname(publish_file)):
+                shutil.rmtree(os.path.dirname(publish_file))
             os.makedirs(os.path.dirname(publish_file))
             shutil.copyfile(local_file, publish_file)

@@ -99,16 +99,21 @@ DAYS_PLOT = False
 
 def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
     if prediction:
-        return model['pipeline'].loc[features['energy__production_Dforecast_Ddaylight__inverter']] \
+        return model['pipeline'].loc[features[
+            'energy__production_Dforecast_Ddaylight__inverter']] \
             .reset_index().drop('standardised', axis=1) \
-            .rename(columns={'normalised': 'energy__production_Dforecast_Dintraday_Dscale__inverter'})
+            .rename(columns={
+            'normalised': 'energy__production_Dforecast_Dintraday_Dscale__inverter'})
 
 
 # noinspection PyStatementEffect
 def pipeline():
-    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
-    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else "s3a://asystem-amodel/asystem/amodel/energyforecastintraday"
-    local_model_path = sys.argv[3] if len(sys.argv) > 3 else tempfile.mkdtemp()
+    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
+        "s3a://asystem-astore"
+    remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
+        "s3a://asystem-amodel-temp/asystem/amodel/energyforecastintraday"
+    local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
+        tempfile.mkdtemp()
 
     print("Pipeline started")
     time_start = int(round(time.time()))
@@ -116,7 +121,9 @@ def pipeline():
 
     datasets = []
     timezone = 'Australia/Perth'
-    for path in [os.path.join(remote_data_path, str(i), "asystem/astore/processed/canonical/parquet/dict/snappy") for i in range(10)]:
+    for path in [os.path.join(remote_data_path, str(i),
+                              "asystem/astore/processed/canonical/parquet/dict/snappy"
+                              ) for i in range(10)]:
         try:
             path_uri = hdfs_make_qualified(path)
             datasets.append(spark.read.parquet(path_uri))
@@ -165,41 +172,74 @@ def pipeline():
         ORDER BY bin_timestamp ASC
     """).toPandas()
 
-    df = dfEnergy.set_index(pd.to_datetime(dfEnergy['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone))
+    df = dfEnergy.set_index(pd.to_datetime(dfEnergy['bin_timestamp'], unit='s')
+                            .dt.tz_localize('UTC').dt.tz_convert(timezone))
     df['bin_date'] = df.index.date
     df.set_index('bin_date', inplace=True)
-    dfEnergyDay = df.groupby(df.index)['bin_energy'].max().to_frame().rename(columns={'bin_energy': 'bin_energy_day'})
+    dfEnergyDay = df.groupby(df.index)['bin_energy'].max().to_frame() \
+        .rename(columns={'bin_energy': 'bin_energy_day'})
     df = df.merge(dfEnergyDay, how='inner', left_index=True, right_index=True)
-    dfSunRise.set_index(pd.to_datetime(dfSunRise['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+    dfSunRise.set_index(
+        pd.to_datetime(dfSunRise['bin_timestamp'], unit='s')
+            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunRise['bin_date'] = dfSunRise.index.date
     dfSunRise.set_index('bin_date', inplace=True)
-    df = df.merge(dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max().to_frame(), how='inner', left_index=True, right_index=True)
-    dfSunSet.set_index(pd.to_datetime(dfSunSet['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+    df = df.merge(
+        dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max()
+            .to_frame(), how='inner', left_index=True, right_index=True)
+    dfSunSet.set_index(
+        pd.to_datetime(dfSunSet['bin_timestamp'], unit='s')
+            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunSet['bin_date'] = dfSunSet.index.date
     dfSunSet.set_index('bin_date', inplace=True)
-    df = df.merge(dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max().to_frame(), how='inner', left_index=True, right_index=True)
-    df.set_index(pd.to_datetime(df['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+    df = df.merge(
+        dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max()
+            .to_frame(), how='inner', left_index=True, right_index=True)
+    df.set_index(
+        pd.to_datetime(df['bin_timestamp'], unit='s')
+            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     df.sort_index(inplace=True)
-
-    # TODO: write out data as CSV, generalise from energyforecast
 
     dfvs = {'VETTED': {}, 'PURGED': {}, 'TOVETT': {}}
     for dfs in df.groupby(df.index.date):
         day = dfs[0].strftime('%Y/%m/%d')
-        dfvs[('PURGED' if day in DAYS_BLACK_LIST else ('TOVETT' if day >= DAYS_VETTED else 'VETTED'))][day] = dfs[1]
+        dfvs[('PURGED' if day in DAYS_BLACK_LIST else
+              ('TOVETT' if day >= DAYS_VETTED else 'VETTED'))][day] = dfs[1]
+
+    #TODO
+    # for vetting in dfvs:
+    #     i=j=k=0
+    #     for day, dfv in dfvs[vetting].iteritems():
+    #         dfv.set_index(pd.to_datetime(dfv['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+    #         print("{} {} {} {}".format(vetting, i, j, k))
+    #         i+=1
+    #
+    # fig, axes = plt.subplots(nrows=2, ncols=1)
+    # df1.plot(ax=axes[0, 0])
+    # df2.plot(ax=axes[1, 0])
+    #TODO
+
     for vetting in dfvs:
         for day, dfv in dfvs[vetting].iteritems():
-            dfv.set_index(pd.to_datetime(dfv['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-            if DAYS_PLOT: dfv.plot(title="Energy ({}) - {}".format(day, vetting), y=['bin_energy', 'bin_energy_day'])
+            dfv.set_index(
+                pd.to_datetime(dfv['bin_timestamp'], unit='s')
+                    .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+            if DAYS_PLOT: dfv.plot(title="Energy ({}) - {}"
+                                   .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
+
     for vetting in dfvs: print("{} [{}] days".format(vetting, len(dfvs[vetting])))
 
     dfnss = []
     bins = 1000
     for day, dfv in dfvs['VETTED'].iteritems():
         dfv['normalised'] = dfv['bin_energy'] / dfv['bin_energy_day']
-        dfv['standardised'] = bins * (dfv['bin_timestamp'] - dfv['bin_sunrise']) / (dfv['bin_sunset'] - dfv['bin_sunrise'])
+        dfv['standardised'] = bins * (
+                dfv['bin_timestamp'] - dfv['bin_sunrise']) / \
+                              (dfv['bin_sunset'] - dfv['bin_sunrise'])
         dfv['standardised'] = dfv['standardised'].clip(0, bins).astype(int)
-        dfns = dfv.drop(['bin_timestamp', 'bin_energy', 'bin_energy_day', 'bin_sunrise', 'bin_sunset'], axis=1).drop_duplicates()
+        dfns = dfv.drop(['bin_timestamp', 'bin_energy',
+                         'bin_energy_day', 'bin_sunrise', 'bin_sunset'],
+                        axis=1).drop_duplicates()
         dfns.set_index('standardised', inplace=True)
         dfns.sort_index(inplace=True)
         dfns = dfns[~dfns.index.duplicated(keep='first')]
@@ -210,22 +250,28 @@ def pipeline():
         if DAYS_PLOT: dfns.plot(title="Energy ({}) - VETTED".format(day))
 
     dfnsa = pd.concat(dfnss, axis=1, ignore_index=True)
-    if DAYS_PLOT: dfnsa.plot(title="Energy Normalised/Standardised (All) - VETTED", legend=False)
+    if DAYS_PLOT:
+        dfnsa.plot(title="Energy Normalised/Standardised (All) - VETTED", legend=False)
     dfnsa = pd.concat(dfnss)
     dfnsa = dfnsa.groupby(dfnsa.index).mean()
     print("Energy Mean Distribution:\n{}".format(dfnsa))
-    if DAYS_PLOT: dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
+    if DAYS_PLOT:
+        dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=${project.version}/amodel_model=${asystem-model-energyforecastintraday.version}/model.pkl'
+                 'amodel_version=${project.version}' \
+                 '/amodel_model=${asystem-model-energyforecastintraday.version}' \
+                 '/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
-    if os.path.exists(os.path.dirname(local_model_file)): shutil.rmtree(os.path.dirname(local_model_file))
+    if os.path.exists(os.path.dirname(local_model_file)):
+        shutil.rmtree(os.path.dirname(local_model_file))
     os.makedirs(os.path.dirname(local_model_file))
     pickled_execute = StringIO()
     dill.dump(execute, pickled_execute)
     pickled_execute.flush()
-    joblib.dump({'pipeline': dfnsa, 'execute': pickled_execute}, local_model_file, compress=True)
+    joblib.dump({'pipeline': dfnsa, 'execute': pickled_execute},
+                local_model_file, compress=True)
 
     model = joblib.load(local_model_file)
     dfi = pd.DataFrame([
@@ -235,7 +281,8 @@ def pipeline():
         {"energy__production_Dforecast_Ddaylight__inverter": 750},
         {"energy__production_Dforecast_Ddaylight__inverter": 1000}
     ]).apply(pd.to_numeric, errors='ignore')
-    dfo = dill.load(StringIO(model['execute'].getvalue()))(model=model, features=dfi, prediction=True)
+    dfo = dill.load(StringIO(model['execute'].getvalue())) \
+        (model=model, features=dfi, prediction=True)
     print("Energy Mean Input:\n{}\nEnergy Mean Output:\n{}".format(dfi, dfo))
     publish(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)

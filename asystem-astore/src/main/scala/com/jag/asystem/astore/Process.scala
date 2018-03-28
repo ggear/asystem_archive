@@ -52,142 +52,148 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
   //noinspection ScalaUnusedSymbol
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
-    if (!Mode.contains(arguments(0))) {
-      if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] prepared with invalid mode [" + arguments(0) +
-        "], should be one of [" + Mode.values.mkString(", ") + "]")
-      return FAILURE_ARGUMENTS
-    }
-    inputMode = Mode.get(arguments(0)).get
-    inputOutputPath = new Path(arguments(1))
-    dfs = inputOutputPath.getFileSystem(getConf)
-    inputOutputPath = dfs.makeQualified(inputOutputPath)
-    val files = dfs.listFiles(inputOutputPath, true)
-    while (files.hasNext) {
-      val fileUri = files.next().getPath.toString
-      val fileLabelPattern = ".*/([0-9])/asystem/astore/(.*)/canonical/(.*)/(.*)/(.*)/.*".r
-      fileUri match {
-        case fileLabelPattern(filePartition, fileLabel, fileFormat, fileEncoding, fileCodec) => fileLabel match {
-          case "staged" => val filePartitionsPattern =
-            "(.*)/arouter_version=(.*)/arouter_id=(.*)/arouter_ingest=(.*)/arouter_start=(.*)/arouter_finish=(.*)/arouter_model=(.*)/(.*)".r
-            fileUri match {
-              case filePartitionsPattern(fileRoot, arouterVersion, arouterId, arouterIngest, arouterStart, arouterFinish, arouterModel,
-              fileName) =>
-                try {
-                  val fileParent = fileUri.replace(fileName, "")
-                  val fileStartFinish = ("" + arouterStart.toLong, "" + arouterFinish.toLong)
-                  if (fileName == "_SUCCESS") {
-                    if (!filesStagedSkip.contains(fileStartFinish)) filesStagedSkip(fileStartFinish) = mutable.SortedSet()
-                    filesStagedSkip(fileStartFinish) += fileParent
-                    if (filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) -= fileParent
-                  } else if (fileName.endsWith(".avro") && !fileName.startsWith(".")) {
-                    if (!(filesStagedSkip.contains(fileStartFinish) && filesStagedSkip(fileStartFinish).contains(fileParent))) {
-                      if (!filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) = mutable.SortedSet()
-                      filesStagedTodo(fileStartFinish) += fileParent
-                    }
-                    countFile(filesStagePure, fileUri, filePartition)
-                  } else if (fileName.endsWith(".avro.tmp") && fileName.startsWith("."))
-                    countFile(filesStageTemp, fileUri, filePartition) else countFile(filesStageFail, fileUri, filePartition)
-                } catch {
-                  case _: NumberFormatException => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
-                }
-              case _ => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
-            }
-          case "processed" => val filePartitionsPattern =
-            "(.*)/astore_version=(.*)/astore_year=(.*)/astore_month=(.*)/astore_model=(.*)/astore_metric=(.*)/(.*)".r
-            fileUri match {
-              case filePartitionsPattern(fileRoot, astoreVersion, astoreYear, astoreMonth, astoreModel, astoreMetric, fileName) =>
-                try {
-                  val fileParent = fileUri.replace(fileName, "")
-                  val fileYearMonth = ("" + astoreYear.toLong, "" + astoreMonth.toLong)
-                  if (fileName == "_SUCCESS") {
-                    if (!filesProcessedSkip.contains(fileYearMonth)) filesProcessedSkip(fileYearMonth) = mutable.SortedSet()
-                    filesProcessedSkip(fileYearMonth) += fileParent
-                    if (filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) -= fileParent
-                  } else if (fileName.endsWith(".parquet") && !fileName.startsWith("_")) {
-                    if (!(filesProcessedSkip.contains(fileYearMonth) && filesProcessedSkip(fileYearMonth).contains(fileParent))) {
-                      if (!filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) = mutable.SortedSet()
-                      filesProcessedRedo(fileYearMonth) += fileParent
-                    }
-                    val fileYear = new Path(fileParent).getParent.getParent.getParent
-                    filesProcessedYear(fileYear.toString) += 1
-                    filesProcessedTops(fileYear.getParent.toString) += 1
-                    countFile(filesProcessedPure, fileUri, filePartition)
-                  } else countFile(filesProcessedFail, fileUri, filePartition)
-                } catch {
-                  case _: NumberFormatException => countFile(filesProcessedFail, fileUri, filePartition, fileIgnore = true)
-                }
-              case _ => countFile(filesProcessedFail, fileUri, filePartition, fileIgnore = true)
-            }
-          case _ => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
-        }
-        case _ => countFile(filesStageFail, fileUri, fileIgnore = true)
+    try {
+      if (!Mode.contains(arguments(0))) {
+        if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] prepared with invalid mode [" + arguments(0) +
+          "], should be one of [" + Mode.values.mkString(", ") + "]")
+        return FAILURE_ARGUMENTS
       }
-    }
-    filesStageFail.union(filesProcessedFail).union(filesStageTemp).foreach(fileUri => {
-      val fileParent = new Path(fileUri).getParent.toString + "/"
-      filesStagedSkip.foreach(_._2.remove(fileParent))
-      filesStagedTodo.foreach(_._2.remove(fileParent))
-      filesProcessedSkip.foreach(_._2.remove(fileParent))
-      filesProcessedRedo.foreach(_._2.remove(fileParent))
-    })
-    for ((filesStagedTodoStartFinish, filesStagedTodoParents) <- filesStagedTodo) {
-      if (filesStagedTodoParents.nonEmpty) {
-        val start = Calendar.getInstance
-        val finish = Calendar.getInstance
-        start.setTimeInMillis(filesStagedTodoStartFinish._1.toLong * 1000)
-        finish.setTimeInMillis(filesStagedTodoStartFinish._2.toLong * 1000)
-        while (start.equals(finish) || start.before(finish)) {
-          val fileYearMonth = (start.get(Calendar.YEAR).toString, (start.get(Calendar.MONTH) + 1).toString)
-          if (!filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) = mutable.SortedSet()
-          filesProcessedSets(fileYearMonth) ++= filesStagedTodoParents
-          start.add(Calendar.MONTH, 1)
-        }
-      }
-    }
-    for ((filesStagedSkipStartFinish, filesStagedSkipParents) <- filesStagedSkip) {
-      if (filesStagedSkipParents.nonEmpty) {
-        val start = Calendar.getInstance
-        val finish = Calendar.getInstance
-        start.setTimeInMillis(filesStagedSkipStartFinish._1.toLong * 1000)
-        finish.setTimeInMillis(filesStagedSkipStartFinish._2.toLong * 1000)
-        while (start.equals(finish) || start.before(finish)) {
-          val fileYearMonth = (start.get(Calendar.YEAR).toString, (start.get(Calendar.MONTH) + 1).toString)
-          if (filesProcessedSets.contains(fileYearMonth) || !filesProcessedSkip.contains(fileYearMonth)) {
-            if (!filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) = mutable.SortedSet()
-            filesProcessedSets(fileYearMonth) ++= filesStagedSkipParents
+      inputMode = Mode.get(arguments(0)).get
+      inputOutputPath = new Path(arguments(1))
+      dfs = inputOutputPath.getFileSystem(getConf)
+      inputOutputPath = dfs.makeQualified(inputOutputPath)
+      val files = dfs.listFiles(inputOutputPath, true)
+      while (files.hasNext) {
+        val fileUri = files.next().getPath.toString
+        val fileLabelPattern = ".*/([0-9])/asystem/astore/(.*)/canonical/(.*)/(.*)/(.*)/.*".r
+        fileUri match {
+          case fileLabelPattern(filePartition, fileLabel, fileFormat, fileEncoding, fileCodec) => fileLabel match {
+            case "staged" => val filePartitionsPattern =
+              ("(.*)/arouter_version=(.*)/arouter_id=(.*)/arouter_ingest=(.*)/arouter_start=(.*)/arouter_finish=(.*)/arouter_model=(.*)/(" +
+                ".*)").r
+
+              fileUri match {
+                case filePartitionsPattern(fileRoot, arouterVersion, arouterId, arouterIngest, arouterStart, arouterFinish, arouterModel,
+                fileName) =>
+                  try {
+                    val fileParent = fileUri.replace(fileName, "")
+                    val fileStartFinish = ("" + arouterStart.toLong, "" + arouterFinish.toLong)
+                    if (fileName == "_SUCCESS") {
+                      if (!filesStagedSkip.contains(fileStartFinish)) filesStagedSkip(fileStartFinish) = mutable.SortedSet()
+                      filesStagedSkip(fileStartFinish) += fileParent
+                      if (filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) -= fileParent
+                    } else if (fileName.endsWith(".avro") && !fileName.startsWith(".")) {
+                      if (!(filesStagedSkip.contains(fileStartFinish) && filesStagedSkip(fileStartFinish).contains(fileParent))) {
+                        if (!filesStagedTodo.contains(fileStartFinish)) filesStagedTodo(fileStartFinish) = mutable.SortedSet()
+                        filesStagedTodo(fileStartFinish) += fileParent
+                      }
+                      countFile(filesStagePure, fileUri, filePartition)
+                    } else if (fileName.endsWith(".avro.tmp") && fileName.startsWith("."))
+                      countFile(filesStageTemp, fileUri, filePartition) else countFile(filesStageFail, fileUri, filePartition)
+                  } catch {
+                    case _: NumberFormatException => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
+                  }
+                case _ => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
+              }
+            case "processed" => val filePartitionsPattern =
+              "(.*)/astore_version=(.*)/astore_year=(.*)/astore_month=(.*)/astore_model=(.*)/astore_metric=(.*)/(.*)".r
+              fileUri match {
+                case filePartitionsPattern(fileRoot, astoreVersion, astoreYear, astoreMonth, astoreModel, astoreMetric, fileName) =>
+                  try {
+                    val fileParent = fileUri.replace(fileName, "")
+                    val fileYearMonth = ("" + astoreYear.toLong, "" + astoreMonth.toLong)
+                    if (fileName == "_SUCCESS") {
+                      if (!filesProcessedSkip.contains(fileYearMonth)) filesProcessedSkip(fileYearMonth) = mutable.SortedSet()
+                      filesProcessedSkip(fileYearMonth) += fileParent
+                      if (filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) -= fileParent
+                    } else if (fileName.endsWith(".parquet") && !fileName.startsWith("_")) {
+                      if (!(filesProcessedSkip.contains(fileYearMonth) && filesProcessedSkip(fileYearMonth).contains(fileParent))) {
+                        if (!filesProcessedRedo.contains(fileYearMonth)) filesProcessedRedo(fileYearMonth) = mutable.SortedSet()
+                        filesProcessedRedo(fileYearMonth) += fileParent
+                      }
+                      val fileYear = new Path(fileParent).getParent.getParent.getParent
+                      filesProcessedYear(fileYear.toString) += 1
+                      filesProcessedTops(fileYear.getParent.toString) += 1
+                      countFile(filesProcessedPure, fileUri, filePartition)
+                    } else countFile(filesProcessedFail, fileUri, filePartition)
+                  } catch {
+                    case _: NumberFormatException => countFile(filesProcessedFail, fileUri, filePartition, fileIgnore = true)
+                  }
+                case _ => countFile(filesProcessedFail, fileUri, filePartition, fileIgnore = true)
+              }
+            case _ => countFile(filesStageFail, fileUri, filePartition, fileIgnore = true)
           }
-          start.add(Calendar.MONTH, 1)
+          case _ => countFile(filesStageFail, fileUri, fileIgnore = true)
         }
       }
-    }
-    for ((filesProcessedSetsMonthYear, filesProcessedSetsParents) <- filesProcessedSets) {
-      if (filesProcessedSetsParents.nonEmpty) {
-        if (filesProcessedSkip.contains(filesProcessedSetsMonthYear)) {
-          if (!filesProcessedRedo.contains(filesProcessedSetsMonthYear))
-            filesProcessedRedo(filesProcessedSetsMonthYear) = mutable.SortedSet()
-          filesProcessedRedo(filesProcessedSetsMonthYear) ++= filesProcessedSkip(filesProcessedSetsMonthYear)
-          filesProcessedSkip.remove(filesProcessedSetsMonthYear)
+      filesStageFail.union(filesProcessedFail).union(filesStageTemp).foreach(fileUri => {
+        val fileParent = new Path(fileUri).getParent.toString + "/"
+        filesStagedSkip.foreach(_._2.remove(fileParent))
+        filesStagedTodo.foreach(_._2.remove(fileParent))
+        filesProcessedSkip.foreach(_._2.remove(fileParent))
+        filesProcessedRedo.foreach(_._2.remove(fileParent))
+      })
+      for ((filesStagedTodoStartFinish, filesStagedTodoParents) <- filesStagedTodo) {
+        if (filesStagedTodoParents.nonEmpty) {
+          val start = Calendar.getInstance
+          val finish = Calendar.getInstance
+          start.setTimeInMillis(filesStagedTodoStartFinish._1.toLong * 1000)
+          finish.setTimeInMillis(filesStagedTodoStartFinish._2.toLong * 1000)
+          while (start.equals(finish) || start.before(finish)) {
+            val fileYearMonth = (start.get(Calendar.YEAR).toString, (start.get(Calendar.MONTH) + 1).toString)
+            if (!filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) = mutable.SortedSet()
+            filesProcessedSets(fileYearMonth) ++= filesStagedTodoParents
+            start.add(Calendar.MONTH, 1)
+          }
         }
       }
+      for ((filesStagedSkipStartFinish, filesStagedSkipParents) <- filesStagedSkip) {
+        if (filesStagedSkipParents.nonEmpty) {
+          val start = Calendar.getInstance
+          val finish = Calendar.getInstance
+          start.setTimeInMillis(filesStagedSkipStartFinish._1.toLong * 1000)
+          finish.setTimeInMillis(filesStagedSkipStartFinish._2.toLong * 1000)
+          while (start.equals(finish) || start.before(finish)) {
+            val fileYearMonth = (start.get(Calendar.YEAR).toString, (start.get(Calendar.MONTH) + 1).toString)
+            if (filesProcessedSets.contains(fileYearMonth) || !filesProcessedSkip.contains(fileYearMonth)) {
+              if (!filesProcessedSets.contains(fileYearMonth)) filesProcessedSets(fileYearMonth) = mutable.SortedSet()
+              filesProcessedSets(fileYearMonth) ++= filesStagedSkipParents
+            }
+            start.add(Calendar.MONTH, 1)
+          }
+        }
+      }
+      for ((filesProcessedSetsMonthYear, filesProcessedSetsParents) <- filesProcessedSets) {
+        if (filesProcessedSetsParents.nonEmpty) {
+          if (filesProcessedSkip.contains(filesProcessedSetsMonthYear)) {
+            if (!filesProcessedRedo.contains(filesProcessedSetsMonthYear))
+              filesProcessedRedo(filesProcessedSetsMonthYear) = mutable.SortedSet()
+            filesProcessedRedo(filesProcessedSetsMonthYear) ++= filesProcessedSkip(filesProcessedSetsMonthYear)
+            filesProcessedSkip.remove(filesProcessedSetsMonthYear)
+          }
+        }
+      }
+      filesProcessedTodo(("*", "*")) = mutable.SortedSet()
+      for ((filesProcessedSetsMonthYear, filesProcessedSetsParents) <- filesProcessedSets)
+        filesProcessedTodo(("*", "*")) ++= filesProcessedSetsParents
     }
-    filesProcessedTodo(("*", "*")) = mutable.SortedSet()
-    for ((filesProcessedSetsMonthYear, filesProcessedSetsParents) <- filesProcessedSets)
-      filesProcessedTodo(("*", "*")) ++= filesProcessedSetsParents
-    if (Log.isInfoEnabled()) {
-      Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with mode [" + inputMode.toString.toLowerCase() + "], store ["
-        + inputOutputPath.toString + "] and inputs:")
-      logFiles("STAGED_FILES_FAIL", mutable.Map(("*", "*") -> filesStageFail))
-      logFiles("STAGED_FILES_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
-      logFiles("STAGED_FILES_PURE", mutable.Map(("*", "*") -> filesStagePure))
-      logFiles("STAGED_PARTITIONS_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
-      logFiles("STAGED_PARTITIONS_TODO", filesStagedTodo)
-      logFiles("STAGED_PARTITIONS_SKIP", filesStagedSkip)
-      logFiles("PROCESSED_FILES_FAIL", mutable.Map(("*", "*") -> filesProcessedFail))
-      logFiles("PROCESSED_FILES_PURE", mutable.Map(("*", "*") -> filesProcessedPure))
-      logFiles("PROCESSED_PARTITIONS_SETS", filesProcessedSets)
-      logFiles("PROCESSED_PARTITIONS_EXEC", filesProcessedTodo)
-      logFiles("PROCESSED_PARTITIONS_REDO", filesProcessedRedo)
-      logFiles("PROCESSED_PARTITIONS_SKIP", filesProcessedSkip)
+    finally {
+      if (Log.isInfoEnabled()) {
+        Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with mode [" + inputMode.toString.toLowerCase() + "], input ["
+          + inputOutputPath.toString + "] and inputs:")
+        logFiles("STAGED_FILES_FAIL", mutable.Map(("*", "*") -> filesStageFail))
+        logFiles("STAGED_FILES_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
+        logFiles("STAGED_FILES_PURE", mutable.Map(("*", "*") -> filesStagePure))
+        logFiles("STAGED_PARTITIONS_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
+        logFiles("STAGED_PARTITIONS_TODO", filesStagedTodo)
+        logFiles("STAGED_PARTITIONS_SKIP", filesStagedSkip)
+        logFiles("PROCESSED_FILES_FAIL", mutable.Map(("*", "*") -> filesProcessedFail))
+        logFiles("PROCESSED_FILES_PURE", mutable.Map(("*", "*") -> filesProcessedPure))
+        logFiles("PROCESSED_PARTITIONS_SETS", filesProcessedSets)
+        logFiles("PROCESSED_PARTITIONS_EXEC", filesProcessedTodo)
+        logFiles("PROCESSED_PARTITIONS_REDO", filesProcessedRedo)
+        logFiles("PROCESSED_PARTITIONS_SKIP", filesProcessedSkip)
+      }
     }
     SUCCESS
   }
@@ -198,11 +204,6 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
-    if (inputMode != STATS && getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT") && !getConf.getBoolean(OptionSnapshots, false)) {
-      if (Log.isErrorEnabled())
-        Log.error("Driver [" + this.getClass.getSimpleName + "] SNAPSHOT version attempted in production, bailing out without executing")
-      return FAILURE_RUNTIME
-    }
     val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process-" + inputMode.toString.toLowerCase).getOrCreate()
     import spark.implicits._
     inputMode match {
