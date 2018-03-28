@@ -10,7 +10,8 @@ WAIT_TASK=${1:-"true"}
 DO_RELEASE=${2:-"true"}
 DO_PREPARATION=${3:-"true"}
 DO_TRAINING=${4:-"true"}
-DELETE_CLUSTER=${5:-"false"}
+DO_INTRADAY=${5:-"true"}
+DELETE_CLUSTER=${6:-"false"}
 
 [[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK="true"
 [[ "$APP_VERSION" = *-SNAPSHOT ]] && DO_RELEASE="false"
@@ -31,6 +32,14 @@ $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL" "$S3_URL_AMODEL""$S3_URL_ATEMP" "
   "$WAIT_TASK" \
   "asystem-energyforecast-training" \
   "energyforecast.py" \
+  "" \
+  "--num-executors 1 --executor-cores 1 --executor-memory 1g" \
+  "$S3_URL_ALIB/py/"
+
+[[ "$DO_INTRADAY" = "true" ]] && $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
+  "$WAIT_TASK" \
+  "asystem-energyforecastintraday" \
+  "energyforecast_intraday.py" \
   "" \
   "--num-executors 1 --executor-cores 1 --executor-memory 1g" \
   "$S3_URL_ALIB/py/"
