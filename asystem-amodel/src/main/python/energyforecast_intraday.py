@@ -109,7 +109,7 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 # noinspection PyStatementEffect
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-astore"
+        "s3a://asystem-astore-temp"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
         "s3a://asystem-amodel-temp/asystem/amodel/energyforecastintraday"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
@@ -205,19 +205,6 @@ def pipeline():
         day = dfs[0].strftime('%Y/%m/%d')
         dfvs[('PURGED' if day in DAYS_BLACK_LIST else
               ('TOVETT' if day >= DAYS_VETTED else 'VETTED'))][day] = dfs[1]
-
-    #TODO
-    # for vetting in dfvs:
-    #     i=j=k=0
-    #     for day, dfv in dfvs[vetting].iteritems():
-    #         dfv.set_index(pd.to_datetime(dfv['bin_timestamp'], unit='s').dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-    #         print("{} {} {} {}".format(vetting, i, j, k))
-    #         i+=1
-    #
-    # fig, axes = plt.subplots(nrows=2, ncols=1)
-    # df1.plot(ax=axes[0, 0])
-    # df2.plot(ax=axes[1, 0])
-    #TODO
 
     for vetting in dfvs:
         for day, dfv in dfvs[vetting].iteritems():
