@@ -249,7 +249,7 @@ def pipeline():
         dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0021' \
+                 'amodel_version=10.000.0022-SNAPSHOT' \
                  '/amodel_model=1000' \
                  '/model.pkl'
     local_model_file = local_model_path + model_file
