@@ -7,7 +7,7 @@ A pluggable set of IoT modules.
 To verify and bootstrap the build environment:
 
 ```bash
-. bootstrap.sh
+. ./bootstrap.sh
 ```
 
 # Install
@@ -37,5 +37,5 @@ mvn test
 To bootstrap and perform a release:
 
 ```bash
-bootstrap.sh release
+./bootstrap.sh release
 ```
