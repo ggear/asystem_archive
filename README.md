@@ -4,7 +4,7 @@ A pluggable set of IoT modules.
 
 # Bootstrap
 
-To verify and boostrap the build environment:
+To verify and bootstrap the build environment:
 
 ```bash
 . bootstrap.sh
@@ -12,7 +12,9 @@ To verify and boostrap the build environment:
 
 # Install
 
-This project can be compiled, packaged and installed to a local repository, skipping tests, as per:
+This project uses maven to mange its build.
+
+To compile, package and install the project to a local repository, skipping tests:
 
 ```bash
 mvn install -PPKG
@@ -32,7 +34,7 @@ mvn test
 
 # Release
 
-To perform a release:
+To bootstrap and perform a release:
 
 ```bash
 bootstrap.sh release
