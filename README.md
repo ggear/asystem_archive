@@ -1,41 +1,35 @@
 # ASystem
 
-A pluggable set of IoT modules.
+A pluggable set of home IoT modules.
 
 # Bootstrap
 
-To verify and bootstrap the build environment:
+To bootstrap and verify the build environment:
 
 ```bash
-. ./bootstrap.sh
+./bootstrap.sh environment
 ```
 
-# Install
+# Build
 
-This project uses maven to mange its build.
-
-To compile, package and install the project to a local repository, skipping tests:
+To compile, package, test and install the project to a local repository:
 
 ```bash
-mvn install -PPKG
-```
-
-To only compile the project:
-
-```bash
-mvn install -PCMP
-```
-
-To run the unit and system tests:
-
-```bash
-mvn test
+./bootstrap.sh build
 ```
 
 # Release
 
-To bootstrap and perform a release:
+To perform a release:
 
 ```bash
 ./bootstrap.sh release
+```
+
+# Deploy
+
+To deploy the latest release:
+
+```bash
+./bootstrap.sh deploy
 ```

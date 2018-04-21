@@ -455,10 +455,10 @@ class ANodeTest(TestCase):
                         (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
 
     def test_wide(self):
-        metrics_period10 = 407
+        metrics_period10 = 401
         metrics_period10_fill = 1066
         metrics_period5_fill = 2091
-        metrics_period20 = 227
+        metrics_period20 = 221
         metrics_period20_fill = 533
         for config in [
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
@@ -528,7 +528,7 @@ class ANodeTest(TestCase):
         partition_index = 48
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE, "-d" + DIR_ANODE_DB_TMP, "-q"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
-        metrics = self.assertRest(1550, anode, "/rest/?scope=history", True)[1]
+        metrics = self.assertRest(1526, anode, "/rest/?scope=history", True)[1]
         for config in [
             FILE_CONFIG_FRONIUS_UNBOUNDED_DAY,
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,

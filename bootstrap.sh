@@ -44,49 +44,16 @@ function git-template-diff {
   git status ${1}
   git diff $(git rev-parse HEAD)^ $(git rev-parse HEAD) ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 ${1}/src/main/template/python/${2}
   rm -rf ${1}/src/main/template/python/${2}\.*
-  mvn clean install -PCMP -pl ${1} > /dev/null
   git diff ${1}/src/main/script/python/${2}
   git status ${1}
 }
 
-if [ "${MODE}" = "source" ]; then
+if [ "${MODE}" = "environment" ]; then
 
   echo "" && echo "Source [asystem]"
-  CF_DIR=$(mktemp -d -t cloudera-framework.XXXXXX)
-  CF_VERSION_JAVA=1.8
-  if [ -z ${JAVA_OPTS+x} ]; then
-    export JAVA_OPTS="-Xmx2g -XX:ReservedCodeCacheSize=512m"
-  fi
-  if [ $(java -version 2>&1 | grep ${CF_VERSION_JAVA} | wc -l) -eq 0 ]; then
-    echo "Unable to install system dependent Java "${CF_VERSION_JAVA}", please do so manually"
-  fi
-  java -version || { echo "Java "${CF_VERSION_JAVA}" not found" ; return 10; }
-  CF_VERSION_MAVEN=3.5.2
-  CF_VERSION_MAVEN_MAJOR=3.
-  if [ -z ${MAVEN_OPTS+x} ]; then
-    export MAVEN_OPTS="-Xmx2g -Dmaven.artifact.threads=15 -XX:ReservedCodeCacheSize=512m -Duser.home=${CF_DIR}"
-  fi
-  if [ $(mvn -version 2>&1 | grep ${CF_VERSION_MAVEN_MAJOR} | wc -l) -eq 0 ]; then
-    wget http://apache.mirror.amaze.com.au/maven/maven-3/${CF_VERSION_MAVEN}/binaries/apache-maven-${CF_VERSION_MAVEN}-bin.tar.gz -P ${CF_DIR}
-    tar xvzf ${CF_DIR}/apache-maven-${CF_VERSION_MAVEN}-bin.tar.gz -C ${CF_DIR}
-    test -d ${HOME}/.m2 && cp -rvf ${HOME}/.m2 ${CF_DIR}
-    export PATH=${CF_DIR}/apache-maven-${CF_VERSION_MAVEN}/bin:${PATH}
-  fi
-  mvn -version || { echo "Maven "${CF_VERSION_MAVEN}" not found" ; return 20; }
-  CF_VERSION_SCALA=2.11.8
-  CF_VERSION_SCALA_MAJOR=2.11
-  if [ $(scala -version 2>&1 | grep ${CF_VERSION_SCALA_MAJOR} | wc -l) -eq 0 ]; then
-    wget https://downloads.lightbend.com/scala/${CF_VERSION_SCALA}/scala-${CF_VERSION_SCALA}.tgz -P ${CF_DIR}
-    tar xvzf ${CF_DIR}/scala-${CF_VERSION_SCALA}.tgz -C ${CF_DIR}
-    export PATH=${CF_DIR}/scala-${CF_VERSION_SCALA}/bin:${PATH}
-  fi
-  scala -version || { echo "Scala "${CF_VERSION_SCALA}" not found" ; return 30; }
-  CF_VERSION_PYTHON=2.7
-  if [ $(python --version 2>&1 | grep ${CF_VERSION_PYTHON} | wc -l) -eq 0 ]; then
-    echo "Unable to install system dependent CPython "${CF_VERSION_PYTHON}", please do so manually"
-  fi
-  pip install cm-api && python --version || { echo "Python "${CF_VERSION_PYTHON}" not found" ; return 40; }
-  export PATH=$(echo ${PWD}/target/assembly/*/bin):$PATH
+  curl -s https://raw.githubusercontent.com/ggear/cloudera-framework/master/bootstrap.sh > target/botostrap.sh
+  chmod 744 target/botostrap.sh
+  . target/botostrap.sh
 
 elif [ "${MODE}" = "prepare" ]; then
 
@@ -118,6 +85,11 @@ elif [ "${MODE}" = "download" ]; then
   aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
   echo "" && echo "Download [asystem-astore]"
   aws s3 sync s3://asystem-astore asystem-astore/src/repo
+  du -cksh asystem-astore/src/repo
+
+elif [ "${MODE}" = "build" ]; then
+
+  mvn clean install
 
 elif [ "${MODE}" = "release" ]; then
 
@@ -169,6 +141,9 @@ EOF
 
 elif [ "${MODE}" = "diff" ]; then
 
+  git checkout master
+  git pull --all
+  mvn clean install -PCMP -pl asystem-amodel
   echo "" && echo "Diff [asystem-amodel:dataset.py]"
   git-template-diff "asystem-amodel" "dataset.py"
   echo "" && echo "Diff [asystem-amodel:energyforecast.py]"
@@ -183,6 +158,6 @@ elif [ "${MODE}" = "run" ]; then
 
 else
 
-  echo "Usage: ${0} <source|prepare|teardown|download|release|deploy|diff|run>"
+  echo "Usage: ${0} <environment|prepare|teardown|download|build|release|deploy|diff|run>"
 
 fi

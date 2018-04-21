@@ -98,28 +98,35 @@ class Energyforecast(Plugin):
                         if model_version >= MODEL_PRODUCTION_ENERGYFORECAST:
                             energy_production_forecast = 0
                             model_classifier = "" if model_version == MODEL_PRODUCTION_ENERGYFORECAST else ("_D" + model_version)
-                            model = model_day[self.name][model_version][1]
-                            try:
-                                energy_production_forecast = model['execute'](model=model, features=model['execute'](
-                                    features=model_features, engineering=True), prediction=True)[0]
-                            except Exception as exception:
-                                anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
-                                                             .format(self.name, exception, model_version), exception)
-                            self.datum_push(
-                                "energy__production_Dforecast" + model_classifier + "__inverter",
-                                "forecast", "high" if day == 1 else "integral",
-                                self.datum_value(energy_production_forecast, factor=10),
-                                "Wh",
-                                10,
-                                bin_timestamp,
-                                bin_timestamp,
-                                day,
-                                "day",
-                                asystem_version=model_day[self.name][model_version][0],
-                                data_version=model_version,
-                                data_bound_lower=0)
+                            if day > 1 or sun_percentage < 60:
+                                model = model_day[self.name][model_version][1]
+                                try:
+                                    energy_production_forecast = model['execute'](model=model, features=model['execute'](
+                                        features=model_features, engineering=True), prediction=True)[0]
+                                except Exception as exception:
+                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
+                                                                 .format(self.name, exception, model_version), exception)
+                                self.datum_push(
+                                    "energy__production_Dforecast" + model_classifier + "__inverter",
+                                    "forecast", "high" if day == 1 else "integral",
+                                    self.datum_value(energy_production_forecast, factor=10),
+                                    "Wh",
+                                    10,
+                                    bin_timestamp,
+                                    bin_timestamp,
+                                    day,
+                                    "day",
+                                    asystem_version=model_day[self.name][model_version][0],
+                                    data_version=model_version,
+                                    data_bound_lower=0)
                             if day == 1:
                                 model = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
+                                energy_production_forecast = self.anode.get_plugin("energyforecast").datum_get(
+                                    DATUM_QUEUE_LAST,
+                                    "energy__production_Dforecast" + model_classifier + "__inverter", "high", "Wh", day, "day")
+                                energy_production_forecast = energy_production_forecast["data_value"] / \
+                                                             energy_production_forecast["data_scale"] \
+                                    if energy_production_forecast is not None else 0
                                 energy_production_forecast_scaled = 0
                                 try:
                                     energy_production_forecast_scaled = energy_production_forecast * model['execute'](

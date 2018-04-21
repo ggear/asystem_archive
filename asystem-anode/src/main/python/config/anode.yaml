@@ -21,7 +21,7 @@ plugin:
       poll_seconds: -1
       buffer_ticks: 30
       history_partitions: 10
-      history_ticks: 2500000
+      history_ticks: 1250000
       history_partition_seconds: 86400
       repeat_seconds: 103
       repeat_partition: True
@@ -41,7 +41,7 @@ plugin:
       poll_seconds: 300
       buffer_ticks: 5
       history_partitions: 10
-      history_ticks: 2000000
+      history_ticks: 1000000
       history_partition_seconds: 86400
       repeat_seconds: 111
       repeat_partition: True
