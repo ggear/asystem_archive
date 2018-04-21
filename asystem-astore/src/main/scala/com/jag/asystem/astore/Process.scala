@@ -2,24 +2,25 @@ package com.jag.asystem.astore
 
 import java.util.Calendar
 
-import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, FAILURE_RUNTIME, SUCCESS, getApplicationProperty}
+import com.cloudera.framework.common.Driver._
 import com.cloudera.framework.common.DriverSpark
 import com.databricks.spark.avro._
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
 import com.jag.asystem.astore.Counter._
-import com.jag.asystem.astore.Mode.{BATCH, CLEAN, Mode, REPAIR, STATS}
+import com.jag.asystem.astore.Mode.{BATCH, CLEAN, Mode, REPAIR}
 import com.jag.asystem.astore.Process.{OptionSnapshots, TempTimeoutMs}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.joda.time.Instant
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
 
-class Process(configuration: Configuration) extends DriverSpark(configuration) {
+class Process(config: Configuration, enableMetaData: Boolean) extends DriverSpark(config, enableMetaData) {
 
   private var inputMode: Mode = _
   private var inputOutputPath: Path = _
@@ -68,10 +69,8 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
         val fileLabelPattern = ".*/([0-9])/asystem/astore/(.*)/canonical/(.*)/(.*)/(.*)/.*".r
         fileUri match {
           case fileLabelPattern(filePartition, fileLabel, fileFormat, fileEncoding, fileCodec) => fileLabel match {
-            case "staged" => val filePartitionsPattern =
-              ("(.*)/arouter_version=(.*)/arouter_id=(.*)/arouter_ingest=(.*)/arouter_start=(.*)/arouter_finish=(.*)/arouter_model=(.*)/(" +
-                ".*)").r
-
+            case "staged" => val filePartitionsPattern = ("(.*)/arouter_version=(.*)/arouter_id=(.*)" +
+              "/arouter_ingest=(.*)/arouter_start=(.*)/arouter_finish=(.*)/arouter_model=(.*)/(.*)").r
               fileUri match {
                 case filePartitionsPattern(fileRoot, arouterVersion, arouterId, arouterIngest, arouterStart, arouterFinish, arouterModel,
                 fileName) =>
@@ -204,7 +203,8 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
-    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-astore-process-" + inputMode.toString.toLowerCase).getOrCreate()
+    val spark = SparkSession.builder.config(new SparkConf).appName(
+      getConf().get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
     import spark.implicits._
     inputMode match {
       case CLEAN =>
@@ -223,6 +223,10 @@ class Process(configuration: Configuration) extends DriverSpark(configuration) {
           if (fileTodo) dfs.rename(filePath, new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)))
           if (fileSuccess) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
         })
+
+      // TODO: Provide implementationcom.sun.xml.internal.ws.api.pipe
+      addMetaData(new Execution(getConf, new Template(getConf()), getApplicationProperty("APP_VERSION"), Instant.now(), Instant.now()))
+
       case BATCH =>
         val filesProcessedMonths = mutable.Set[Path]()
         for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
@@ -366,7 +370,7 @@ object Process {
   val TempTimeoutMs: Int = 60 * 60 * 1000
 
   def main(arguments: Array[String]): Unit = {
-    new Process(null).runner(arguments: _*)
+    new Process(null, true).runner(arguments: _*)
   }
 
 }

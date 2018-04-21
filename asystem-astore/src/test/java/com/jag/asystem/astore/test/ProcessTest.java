@@ -302,10 +302,11 @@ public class ProcessTest implements TestConstants {
         FLUME_AGENT, MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(),
         HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     }
-    Driver driverRead = new Process(dfsServer.getConf());
+    Driver driverRead = new Process(dfsServer.getConf(), false);
     driverRead.getConf().setBoolean(Process.OptionSnapshots(), true);
-    Driver driverWrite = new Process(dfsServer.getConf());
+    Driver driverWrite = new Process(dfsServer.getConf(), false);
     driverWrite.getConf().setBoolean(Process.OptionSnapshots(), true);
+    assertEquals(SUCCESS, driverRead.runner("prepare", dfsServer.getPath(HDFS_DIR).toString()));
     assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
     assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(test, driverWrite.getCounters());

@@ -51,9 +51,9 @@ function git-template-diff {
 if [ "${MODE}" = "environment" ]; then
 
   echo "" && echo "Source [asystem]"
-  curl -s https://raw.githubusercontent.com/ggear/cloudera-framework/master/bootstrap.sh > target/botostrap.sh
-  chmod 744 target/botostrap.sh
-  . target/botostrap.sh
+  curl -s https://raw.githubusercontent.com/ggear/cloudera-framework/master/bootstrap.sh > target/bootstrap.sh
+  chmod 744 target/bootstrap.sh
+  . ./target/bootstrap.sh
 
 elif [ "${MODE}" = "prepare" ]; then
 
@@ -151,13 +151,21 @@ elif [ "${MODE}" = "diff" ]; then
   echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
   git-template-diff "asystem-amodel" "energyforecast_intraday.py"
 
+elif [ "${MODE}" = "local" ]; then
+
+  echo "" && echo "Local [asystem-anode]"
+  mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
+
 elif [ "${MODE}" = "run" ]; then
 
   echo "" && echo "Run [asystem-anode]"
-  mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
+  mvn clean install -PCMP
+  ./asystem-amodel/target/assembly/asystem-amodel-10.000.0023-SNAPSHOT/bin/cldr-provision-altus.sh "true"
+  ./asystem-astore/target/assembly/asystem-astore-10.000.0023-SNAPSHOT/bin/as-astore-process.sh "true"
+  ./asystem-amodel/target/assembly/asystem-amodel-10.000.0023-SNAPSHOT/bin/as-amodel-energyforecast.sh "true"
 
 else
 
-  echo "Usage: ${0} <environment|prepare|teardown|download|build|release|deploy|diff|run>"
+  echo "Usage: ${0} <environment|prepare|teardown|download|build|release|deploy|diff|local|run>"
 
 fi
