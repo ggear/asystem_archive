@@ -121,9 +121,9 @@ class Energyforecast(Plugin):
                                     data_bound_lower=0)
                             if day == 1:
                                 model = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
-                                energy_production_forecast = self.anode.get_plugin("energyforecast").datum_get(
-                                    DATUM_QUEUE_LAST,
-                                    "energy__production_Dforecast" + model_classifier + "__inverter", "high", "Wh", day, "day")
+                                energy_production_forecast = self.datum_get(DATUM_QUEUE_LAST,
+                                                                            "energy__production_Dforecast" + model_classifier +
+                                                                            "__inverter", "high", "Wh", day, "day")
                                 energy_production_forecast = energy_production_forecast["data_value"] / \
                                                              energy_production_forecast["data_scale"] \
                                     if energy_production_forecast is not None else 0
