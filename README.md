@@ -33,3 +33,12 @@ To deploy the latest release to production:
 ```bash
 ./bootstrap.sh deploy
 ```
+
+# Pipeline
+
+To perform a full execution pipeline:
+
+```bash
+./bootstrap.sh prepare release deploy run teardown
+```
+

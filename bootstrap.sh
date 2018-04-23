@@ -42,6 +42,8 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
     ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro"
+    mvn clean install -PPKG
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "false" "true"
 
   elif [ "${MODE}" = "download" ]; then
 
@@ -55,7 +57,7 @@ EOF
   elif [ "${MODE}" = "build" ]; then
 
     echo "" && echo "" && echo "" && echo "Build [asystem]"
-    mvn clean
+    mvn clean install
 
   elif [ "${MODE}" = "release" ]; then
 
@@ -126,10 +128,10 @@ EOF
   elif [ "${MODE}" = "run" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem-anode]"
-    mvn clean install -PCMP
-    ./asystem-amodel/target/assembly/asystem-amodel-10.000.0023-SNAPSHOT/bin/cldr-provision-altus.sh "true"
-    ./asystem-astore/target/assembly/asystem-astore-10.000.0023-SNAPSHOT/bin/as-astore-process.sh "true"
-    ./asystem-amodel/target/assembly/asystem-amodel-10.000.0023-SNAPSHOT/bin/as-amodel-energyforecast.sh "true"
+    mvn clean install -PPKG
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true"
+    ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh "true"
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh "true"
 
   else
 
