@@ -67,7 +67,7 @@ EOF
     VERSION_RELEASE=$(grep APP_VERSION= target/classes/application.properties | sed 's/APP_VERSION=*//' | sed 's/-SNAPSHOT*//')
     VERSION_HEAD_NUMERIC=$(($(echo $VERSION_RELEASE | sed 's/\.//g')+1))
     VERSION_HEAD=${VERSION_HEAD_NUMERIC:0:2}.${VERSION_HEAD_NUMERIC:2:3}.${VERSION_HEAD_NUMERIC:5:4}
-    mvn clean install && mvn clean install && mvn test -pl cloudera-framework-testing -PSCALA_2.11
+    mvn clean install
     mvn release:prepare -B \
       -DreleaseVersion=${VERSION_RELEASE} \
       -DdevelopmentVersion=${VERSION_HEAD}-SNAPSHOT -PPKG
