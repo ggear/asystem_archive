@@ -181,7 +181,7 @@ class Netatmo(Plugin):
                 for device_sub in device["modules"]:
                     module_name = (("__indoor__" if device_sub["type"] == "NAModule4" else "__outdoor__") +
                                    device_sub["module_name"].lower()).encode("UTF-8")
-                    if module_name != "__outdoor__roof":
+                    if module_name != "__outdoor__deck":
                         data_timestamp = device_sub["dashboard_data"]["time_utc"]
                         self.datum_push(
                             "temperature" + module_name,

@@ -7,7 +7,7 @@ A pluggable set of home IoT modules.
 To bootstrap and verify the build environment:
 
 ```bash
-./bootstrap.sh environment
+./bootstrap.sh env
 ```
 
 # Build
@@ -20,7 +20,7 @@ To compile, package, test and install the project to a local repository:
 
 # Release
 
-To perform a release:
+To perform a release to the code and artifact repositories:
 
 ```bash
 ./bootstrap.sh release
@@ -28,7 +28,7 @@ To perform a release:
 
 # Deploy
 
-To deploy the latest release:
+To deploy the latest release to production:
 
 ```bash
 ./bootstrap.sh deploy

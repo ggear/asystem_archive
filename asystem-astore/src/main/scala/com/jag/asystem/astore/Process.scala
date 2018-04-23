@@ -204,7 +204,7 @@ class Process(config: Configuration, enableMetaData: Boolean) extends DriverSpar
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
     val spark = SparkSession.builder.config(new SparkConf).appName(
-      getConf().get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
+      getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
     import spark.implicits._
     inputMode match {
       case CLEAN =>
@@ -225,7 +225,7 @@ class Process(config: Configuration, enableMetaData: Boolean) extends DriverSpar
         })
 
       // TODO: Provide implementationcom.sun.xml.internal.ws.api.pipe
-      addMetaData(new Execution(getConf, new Template(getConf()), getApplicationProperty("APP_VERSION"), Instant.now(), Instant.now()))
+      addMetaData(new Execution(getConf, new Template(getConf), getApplicationProperty("APP_VERSION"), Instant.now(), Instant.now()))
 
       case BATCH =>
         val filesProcessedMonths = mutable.Set[Path]()
