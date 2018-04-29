@@ -1,6 +1,8 @@
 package com.jag.asystem.astore.test;
 
+import static com.cloudera.framework.common.Driver.CONF_CLDR_JOB_METADATA;
 import static com.cloudera.framework.common.Driver.SUCCESS;
+import static com.cloudera.framework.common.Driver.getApplicationProperty;
 import static com.cloudera.framework.testing.Assert.assertCounterEquals;
 import static com.jag.asystem.arouter.Constants.FLUME_AGENT;
 import static com.jag.asystem.arouter.Constants.FLUME_CONFIG;
@@ -302,12 +304,24 @@ public class ProcessTest implements TestConstants {
         FLUME_AGENT, MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(),
         HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     }
-    Driver driverRead = new Process(dfsServer.getConf(), false);
+    Driver driverRead = new Process(dfsServer.getConf());
     driverRead.getConf().setBoolean(Process.OptionSnapshots(), true);
-    Driver driverWrite = new Process(dfsServer.getConf(), false);
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
+    driverRead.getConf().set(CONF_CLDR_JOB_METADATA, "true");
+    driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
+    Driver driverWrite = new Process(dfsServer.getConf());
     driverWrite.getConf().setBoolean(Process.OptionSnapshots(), true);
-    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
+    driverWrite.getConf().set(CONF_CLDR_JOB_METADATA, "true");
+    driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
+    assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-batch", "batch",
+      dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(test, driverWrite.getCounters());
     Set<String> partitions = new HashSet<>();
     for (Path path : dfsServer.listFilesDfs(HDFS_DIR)) {
@@ -337,8 +351,12 @@ public class ProcessTest implements TestConstants {
     }
     assertEquals(test.<Long>getAssert(PROCESSED_ROWS_PURE),
       new Long(query.length() > 0 ? hiveServer.execute(query.toString()).iterator().next() : "0"));
-    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
+    assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-batch", "batch",
+      dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
       .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
       .put(STAGED_FILES_TEMP, test.<Long>getAssert(STAGED_FILES_TEMP))
@@ -354,9 +372,14 @@ public class ProcessTest implements TestConstants {
       .put(PROCESSED_PARTITIONS_REDO, 0L)
       .put(PROCESSED_PARTITIONS_DONE, 0L)
       .build()), driverWrite.getCounters());
-    assertEquals(SUCCESS, driverWrite.runner("clean", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
+    assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-clean", "clean",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-batch", "batch",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
+      dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
       .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
       .put(STAGED_FILES_TEMP, test.<Long>getAssert(STAGED_FILES_TEMP))
@@ -372,9 +395,14 @@ public class ProcessTest implements TestConstants {
       .put(PROCESSED_PARTITIONS_REDO, 0L)
       .put(PROCESSED_PARTITIONS_DONE, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_SKIP))
       .build()), driverWrite.getCounters());
-    assertEquals(SUCCESS, driverRead.runner("repair", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverRead.runner("stats", dfsServer.getPath(HDFS_DIR).toString()));
-    assertEquals(SUCCESS, driverWrite.runner("batch", dfsServer.getPath(HDFS_DIR).toString()));
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
+    assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-repair", "repair",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
+      dfsServer.getPath(HDFS_DIR).toString()));
+    assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-batch", "batch",
+      dfsServer.getPath(HDFS_DIR).toString()));
     assertCounterEquals(ImmutableMap.of(Process.class.getName(), ImmutableMap.builder()
       .put(STAGED_FILES_FAIL, test.<Long>getAssert(STAGED_FILES_FAIL))
       .put(STAGED_FILES_TEMP, 0L)
