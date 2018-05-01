@@ -1,5 +1,6 @@
 package com.jag.asystem.astore
 
+import java.util
 import java.util.Calendar
 
 import com.cloudera.framework.common.Driver._
@@ -8,7 +9,7 @@ import com.databricks.spark.avro._
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
 import com.jag.asystem.astore.Counter._
 import com.jag.asystem.astore.Mode.{BATCH, CLEAN, Mode, REPAIR}
-import com.jag.asystem.astore.Process.{MetaDataTagUnvetted, OptionSnapshots, TempTimeoutMs}
+import com.jag.asystem.astore.Process.{OptionSnapshots, TempTimeoutMs}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkConf
@@ -208,7 +209,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
       if (exit != SUCCESS) {
         val metaData = getMetaData(exit, timestampStart)
         pushMetaData(metaData)
-        if (Log.isDebugEnabled) Log.debug("Driver [" + this.getClass.getSimpleName +
+        if (Log.isInfoEnabled) Log.info("Driver [" + this.getClass.getSimpleName +
           "] metadata: " + pullMetaData(metaData).mkString(" "))
       }
     }
@@ -225,25 +226,19 @@ class Process(config: Configuration) extends DriverSpark(config) {
     try {
       val spark = SparkSession.builder.config(new SparkConf).appName(
         getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
-      import spark.implicits._
       inputMode match {
         case CLEAN =>
           filesProcessedTodo.flatMap(_._2).toSet.union(filesProcessedSkip.flatMap(_._2).toSet).foreach(fileProcessed =>
             dfs.delete(new Path(fileProcessed), true))
         case REPAIR =>
           filesStageTemp.foreach(fileStagedTemp => {
-            var fileTodo = false
             var fileSuccess = false
             val filePath = new Path(fileStagedTemp)
-            dfs.listStatus(filePath.getParent).foreach(fileStatus => {
-              if (filePath.getName == fileStatus.getPath.getName && (getConf.getBoolean(OptionSnapshots, false) ||
-                fileStatus.getModificationTime + TempTimeoutMs < System.currentTimeMillis())) fileTodo = true
-              if ("_SUCCESS" == fileStatus.getPath.getName) fileSuccess = true
-            })
-            if (fileTodo) dfs.rename(filePath, new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)))
-            if (fileSuccess) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
+            dfs.rename(filePath, new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)))
+            if (dfs.exists(new Path(filePath.getParent, "_SUCCESS"))) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
           })
         case BATCH =>
+          import spark.implicits._
           val filesProcessedMonths = mutable.Set[Path]()
           for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
             val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
@@ -306,7 +301,6 @@ class Process(config: Configuration) extends DriverSpark(config) {
         if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] failed during execution", exception)
     } finally {
       val metaData = getMetaData(exit, timestampStart)
-      metaData.addTags(MetaDataTagUnvetted)
       addMetaDataCounter(metaData, STAGED_FILES_FAIL,
         filesStageFail.size)
       addMetaDataCounter(metaData, STAGED_FILES_TEMP,
@@ -332,7 +326,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
       addMetaDataCounter(metaData, PROCESSED_PARTITIONS_DONE,
         filesProcessedDone.foldLeft(0)(_ + _._2.size))
       pushMetaData(metaData)
-      if (Log.isDebugEnabled) Log.debug("Driver [" + this.getClass.getSimpleName + "] execute metadata: " +
+      if (Log.isInfoEnabled()) Log.info("Driver [" + this.getClass.getSimpleName + "] execute metadata: " +
         pullMetaData(metaData).mkString(" "))
     }
     exit
@@ -364,7 +358,9 @@ class Process(config: Configuration) extends DriverSpark(config) {
 
 
   def getMetaData(exit: Integer, started: Instant = Instant.now, ended: Instant = Instant.now): Execution = {
-    new Execution(getConf, new Template(getConf), exit, started, ended)
+    var metaData = new Execution(getConf, new Template(getConf), exit, started, ended)
+    if (getConf.get(Process.OptionTags) != null) metaData.addTags(getConf.get(Process.OptionTags).split(",").map(_.trim).toList)
+    metaData
   }
 
   private def countFile(fileStore: mutable.SortedSet[String], fileUri: String,
@@ -409,12 +405,10 @@ object Mode extends Enumeration {
 
 object Process {
 
+  val OptionTags = "com.jag.metadata.tags"
   val OptionSnapshots = "com.jag.allow.snapshots"
 
   val TempTimeoutMs: Int = 60 * 60 * 1000
-
-  val MetaDataTagVetted = "VETTED"
-  val MetaDataTagUnvetted = "UNVETTED"
 
   def main(arguments: Array[String]): Unit = {
     new Process(null).runner(arguments: _*)

@@ -109,9 +109,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 # noinspection PyStatementEffect
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-astore-temp"
+        "s3a://asystem-astore-staging"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel-temp/asystem/amodel/energyforecastintraday"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecastintraday"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
@@ -247,7 +247,7 @@ def pipeline():
 
     model_file = '/model/pickle/joblib/none/' \
                  'amodel_version=10.000.0026-SNAPSHOT' \
-                 '/amodel_model=1000' \
+                 '/amodel_model=1001' \
                  '/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file

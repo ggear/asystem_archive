@@ -1,8 +1,8 @@
 ###############################################################################
 #
-# PRE-PROCESSED SCRIPT - EDITS WILL BE CLOBBERED BY MAVEN BUILD
+# PRE-PROCESSED LIBRARY - EDITS WILL BE CLOBBERED BY MAVEN BUILD
 #
-# This file is in the SCRIPT pre-processed state with template available by the
+# This file is in the LIBRARY pre-processed state with template available by the
 # same package and file name under the modules src/main/template directory.
 #
 # When editing the template directly (as indicated by the presence of the
@@ -30,13 +30,10 @@
 #
 ###############################################################################
 
-# Add plotting libraries
-import matplotlib.pyplot as plt
-# Add plotting libraries
-import seaborn as sns
+# Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
+# Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import seaborn as sns
 
-# Add working directory to the system path
-sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+# Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 import os
 import os.path
@@ -119,9 +116,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
@@ -132,24 +129,19 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
-                            "amodel_version=10.000.0026-SNAPSHOT"
-                            "/amodel_model=1003"),
+                            "amodel_version=10.000.0026-SNAPSHOT/amodel_model=1004"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
-                            "amodel_version=10.000.0026-SNAPSHOT"
-                            "/amodel_model=1003"),
+                            "amodel_version=10.000.0026-SNAPSHOT/amodel_model=1004"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
-    # Plot
-    sns.set(style="ticks")
-    # Plot
-    sns.pairplot(df2, hue="condition")
-    # Plot
-    plt.show(block=False)
+    # Plot# IGNORE SCRIPT BOILERPLATE #    sns.set(style="ticks")
+    # Plot# IGNORE SCRIPT BOILERPLATE #    sns.pairplot(df2, hue="condition")
+    # Plot# IGNORE SCRIPT BOILERPLATE #    plt.show(block=False)
 
     df2.describe()
 
@@ -270,8 +262,7 @@ def pipeline():
         ax.set_ylabel('Predicted')
         plt.show(block=False)
 
-    # Plot
-    plot_predict_actual(actual_powers, predicted_powers)
+    # Plot# IGNORE SCRIPT BOILERPLATE #    plot_predict_actual(actual_powers, predicted_powers)
 
     # Create model with dev data
 
@@ -315,9 +306,8 @@ def pipeline():
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
-    model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0026-SNAPSHOT' \
-                 '/amodel_model=1003/model.pkl'
+    model_file = '/model/pickle/joblib/none/amodel_version=10.000.0026-SNAPSHOT' \
+                 '/amodel_model=1004/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):
@@ -354,8 +344,9 @@ def pipeline():
     publish(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)
 
-# Run pipeline
-pipeline()
+# Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()
 
-# Main function# IGNORE LIBRARY BOILERPLATE #if __name__ == "__main__":
-# Run pipeline# IGNORE LIBRARY BOILERPLATE #    pipeline()
+# Main function
+if __name__ == "__main__":
+# Run pipeline
+    pipeline()

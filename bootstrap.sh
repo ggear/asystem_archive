@@ -115,8 +115,8 @@ EOF
     mvn clean install -PCMP -pl asystem-amodel
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:dataset.py]"
     git-template-diff "asystem-amodel" "dataset.py"
-    echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast.py]"
-    git-template-diff "asystem-amodel" "energyforecast.py"
+    echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_interday.py]"
+    git-template-diff "asystem-amodel" "energyforecast_interday.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
     git-template-diff "asystem-amodel" "energyforecast_intraday.py"
 
@@ -127,15 +127,15 @@ EOF
 
   elif [ "${MODE}" = "run" ]; then
 
-    echo "" && echo "" && echo "" && echo "Run [asystem-anode]"
+    echo "" && echo "" && echo "" && echo "Run [asystem]"
     mvn clean install -PPKG
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true"
-    ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh "true"
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh "true"
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
+    ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
 
   else
 
-    echo "Usage: ${0} <env|prepare|teardown|download|build|release|deploy|diff|local|run>"
+    echo "Usage: ${0} <env|prepare|download|build|release|deploy|diff|local|run|teardown>"
 
   fi
 

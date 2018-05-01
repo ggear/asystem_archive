@@ -10,12 +10,11 @@ import time
 from scipy.stats import norm
 
 import anode
+from anode.application import APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION
+from anode.application import APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION
 from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import DATUM_QUEUE_MAX
 from anode.plugin.plugin import Plugin
-
-MODEL_PRODUCTION_ENERGYFORECAST = "1003"
-MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY = "1000"
 
 
 class Energyforecast(Plugin):
@@ -27,7 +26,7 @@ class Energyforecast(Plugin):
             model_day = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name)
             model_day_intra = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastintraday")
             if self.name in model_day and "energyforecastintraday" in model_day_intra and \
-                    MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY in model_day_intra["energyforecastintraday"] and \
+                    APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION in model_day_intra["energyforecastintraday"] and \
                     self.anode.get_plugin("davis") is not None and \
                     self.anode.get_plugin("wunderground") is not None:
                 energy_production_today = self.anode.get_plugin("fronius").datum_get(
@@ -95,9 +94,9 @@ class Energyforecast(Plugin):
                     }
                     model_features = pandas.DataFrame([model_features_dict]).apply(pandas.to_numeric, errors='ignore')
                     for model_version in model_day[self.name]:
-                        if model_version >= MODEL_PRODUCTION_ENERGYFORECAST:
+                        if model_version >= APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION:
                             energy_production_forecast = 0
-                            model_classifier = "" if model_version == MODEL_PRODUCTION_ENERGYFORECAST else ("_D" + model_version)
+                            model_classifier = "" if model_version == APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION else ("_D" + model_version)
                             if day > 1 or sun_percentage < 60:
                                 model = model_day[self.name][model_version][1]
                                 try:
@@ -120,7 +119,7 @@ class Energyforecast(Plugin):
                                     data_version=model_version,
                                     data_bound_lower=0)
                             if day == 1:
-                                model = model_day_intra["energyforecastintraday"][MODEL_PRODUCTION_ENERGYFORECAST_INTRADAY][1]
+                                model = model_day_intra["energyforecastintraday"][APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION][1]
                                 energy_production_forecast = self.datum_get(DATUM_QUEUE_LAST,
                                                                             "energy__production_Dforecast" + model_classifier +
                                                                             "__inverter", "high", "Wh", day, "day")

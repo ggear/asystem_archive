@@ -306,12 +306,14 @@ public class ProcessTest implements TestConstants {
     }
     Driver driverRead = new Process(dfsServer.getConf());
     driverRead.getConf().setBoolean(Process.OptionSnapshots(), true);
+    driverRead.getConf().set(Process.OptionTags(), "UNIT_TEST");
     driverRead.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
     driverRead.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
     driverRead.getConf().set(CONF_CLDR_JOB_METADATA, "true");
     driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
     Driver driverWrite = new Process(dfsServer.getConf());
     driverWrite.getConf().setBoolean(Process.OptionSnapshots(), true);
+    driverWrite.getConf().set(Process.OptionTags(), "UNIT_TEST");
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
     driverWrite.getConf().set(CONF_CLDR_JOB_METADATA, "true");

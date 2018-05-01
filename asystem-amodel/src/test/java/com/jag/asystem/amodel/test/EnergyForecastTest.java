@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import com.googlecode.zohhak.api.Coercion;
 import com.googlecode.zohhak.api.TestWith;
 import com.jag.asystem.amodel.Counter;
-import com.jag.asystem.amodel.EnergyForecastDay;
+import com.jag.asystem.amodel.EnergyForecastInterday;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
@@ -36,7 +36,7 @@ public class EnergyForecastTest implements TestConstants {
 
   public final TestMetaData testMetaDataPristine = TestMetaData.getInstance().dataSetSourceDirs(REL_DIR_DATASET)
     .dataSetNames("astore").dataSetSubsets(new String[][]{{"datums"}}).dataSetLabels(new String[][][]{{{"pristine"}}})
-    .dataSetDestinationDirs(DATASET_DIR_ASTORE).asserts(ImmutableMap.of(EnergyForecastDay.class.getName(), ImmutableMap.of(
+    .dataSetDestinationDirs(DATASET_DIR_ASTORE).asserts(ImmutableMap.of(EnergyForecastInterday.class.getName(), ImmutableMap.of(
       Counter.RECORDS_TRAINING, 30L,
       Counter.RECORDS_VALIDATION, 11L
     )));
@@ -49,11 +49,11 @@ public class EnergyForecastTest implements TestConstants {
 
   @TestWith({"testMetaDataPristine"})
   public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
-    EnergyForecastDay driver = new EnergyForecastDay(dfsServer.getConf());
+    EnergyForecastInterday driver = new EnergyForecastInterday(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(
       dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST).toString()));
     assertCounterEquals(testMetaData, driver.getCounters());
-    assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast.py"),
+    assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast_interday.py"),
       Arrays.asList(DATASET_DIR_AMODEL_ENERGYFORECAST, DATASET_ABS_AMODEL_ENERGYFORECAST, DATASET_TMP_AMODEL_ENERGYFORECAST)));
   }
 

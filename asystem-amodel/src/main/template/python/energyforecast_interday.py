@@ -116,9 +116,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel-temp/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
@@ -129,14 +129,12 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
-                            "amodel_version=${project.version}"
-                            "/amodel_model=${asystem-model-energyforecast.version}"),
+                            "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
-                            "amodel_version=${project.version}"
-                            "/amodel_model=${asystem-model-energyforecast.version}"),
+                            "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
 
@@ -308,9 +306,8 @@ def pipeline():
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
-    model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=${project.version}' \
-                 '/amodel_model=${asystem-model-energyforecast.version}/model.pkl'
+    model_file = '/model/pickle/joblib/none/amodel_version=${project.version}' \
+                 '/amodel_model=${asystem-model-energyforecast-interday.build.version}/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):

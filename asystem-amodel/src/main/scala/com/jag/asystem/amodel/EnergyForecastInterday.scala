@@ -14,16 +14,16 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 import java.text.SimpleDateFormat
 
-import com.jag.asystem.amodel.EnergyForecastDay.DaysVetted
+import com.jag.asystem.amodel.EnergyForecastInterday.DaysVetted
 
-class EnergyForecastDay(configuration: Configuration) extends DriverSpark(configuration) {
+class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(configuration) {
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
   val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
-    "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_VERSION")
+    "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION")
 
-  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastDay])
+  val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastInterday])
 
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
@@ -34,7 +34,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
       outputPath = dfs.makeQualified(outputPath)
       for (path <- List(new Path(outputPath, "training" + outputPathSuffix), new Path(outputPath, "validation" + outputPathSuffix))) {
         if (dfs.exists(path)) if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true) else {
-          if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastDay].getSimpleName +
+          if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
             "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "]")
           return FAILURE_ARGUMENTS
         }
@@ -53,7 +53,7 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
     }
     finally {
       if (Log.isInfoEnabled()) {
-        Log.info("Driver [" + classOf[EnergyForecastDay].getSimpleName +
+        Log.info("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
           "] prepared with output [" + outputPath.toString + "], input [" + inputPath.toString + "] and inputs:")
         for (inputPath <- inputPaths) Log.info("  " + inputPath)
       }
@@ -242,12 +242,12 @@ class EnergyForecastDay(configuration: Configuration) extends DriverSpark(config
 
 }
 
-object EnergyForecastDay {
+object EnergyForecastInterday {
 
   val DaysVetted = "2018/03/13"
 
   def main(arguments: Array[String]): Unit = {
-    new EnergyForecastDay(null).runner(arguments: _*)
+    new EnergyForecastInterday(null).runner(arguments: _*)
   }
 
 }

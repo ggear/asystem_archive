@@ -1,6 +1,6 @@
 #!/usr/local/bin/python -u
 '''
-Provide a quality gatweay on the Process workload
+Provide a release gateway script
 '''
 
 import os
@@ -24,13 +24,19 @@ def do_call(connection_jar, transaction_id):
                       for metadata in getMetaData(connection_jar, transaction_id)])
     print("Found job metadata:")
     for name, metadata in metadatas.iteritems(): print("\t{}: {}".format(name, metadata['navigatorUrl']))
+    if len(metadatas) == 0:
+        print("Required job metadata not found")
+        return 100
+    if sum(int(metadata['customProperties'][METADATA_NAMESPACE]['Exit'])
+           if 'customProperties' in metadata and metadata['customProperties'] is not None and
+              METADATA_NAMESPACE in metadata['customProperties'] and metadata['customProperties'][METADATA_NAMESPACE] is not None and
+              'Exit' in metadata['customProperties'][METADATA_NAMESPACE] else 0 for name, metadata in metadatas.iteritems()) != 0:
+        print("Required job returned failure codes")
+        return 200
 
-    # TODO: Implement more sophisticated quality checks
+    # TODO: Implement more sophisticated quality checks, if only 1 script release, else require 3, assume order and interactions
 
-    return sum(int(metadata['customProperties'][METADATA_NAMESPACE]['Exit'])
-               if 'customProperties' in metadata and metadata['customProperties'] is not None and
-                  METADATA_NAMESPACE in metadata['customProperties'] and metadata['customProperties'][METADATA_NAMESPACE] is not None and
-                  'Exit' in metadata['customProperties'][METADATA_NAMESPACE] else 0 for name, metadata in metadatas.iteritems())
+    return 0
 
 
 def usage():
