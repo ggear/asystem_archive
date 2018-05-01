@@ -353,6 +353,3 @@ class Davis(Plugin):
 
     def __init__(self, parent, name, config, reactor):
         super(Davis, self).__init__(parent, name, config, reactor)
-        for datum_metric, datum in self.datums.items():
-            if datum_metric == "temperature__outdoor__deck" or datum_metric == "humidity__outdoor__deck":
-                del self.datums[datum_metric]

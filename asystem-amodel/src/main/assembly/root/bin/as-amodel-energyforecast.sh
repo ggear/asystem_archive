@@ -58,7 +58,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   fi
 done
 
-if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX && [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
+if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX && [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
   $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
 fi
 

@@ -248,3 +248,7 @@ class Netatmo(Plugin):
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error getting Netatmo connection key [{}] from environment, disabling plugin"
                                          .format(self.name, key_error))
+
+        for datum_metric, datum in self.datums.items():
+            if datum_metric == "temperature__outdoor__deck" or datum_metric == "humidity__outdoor__deck":
+                del self.datums[datum_metric]
