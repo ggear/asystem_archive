@@ -111,6 +111,7 @@ EOF
 
   elif [ "${MODE}" = "diff" ]; then
 
+    [[ -n "$(git status --porcelain asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python)" ]] && exit 1
     git checkout master
     git pull --all
     mvn clean install -PCMP -pl asystem-amodel
@@ -120,6 +121,9 @@ EOF
     git-template-diff "asystem-amodel" "energyforecast_interday.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
     git-template-diff "asystem-amodel" "energyforecast_intraday.py"
+    mvn clean install -PCMP -pl asystem-amodel
+    git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
+    git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
   elif [ "${MODE}" = "runlocal" ]; then
 
@@ -180,11 +184,8 @@ function ec2-instance-resize {
 }
 
 function git-template-diff {
-  git status ${1}
-  git diff $(git rev-parse HEAD)^ $(git rev-parse HEAD) ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 ${1}/src/main/template/python/${2}
-  rm -rf ${1}/src/main/template/python/${2}\.*
-  git diff ${1}/src/main/script/python/${2}
-  git status ${1}
+  git diff ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 -R ${1}/src/main/template/python/${2}
+  rm -rf ${1}/src/main/template/python/${2}.orig
 }
 
 for MODE in "$@"; do
