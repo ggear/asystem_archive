@@ -139,13 +139,12 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Run tag [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
-    git checkout master
-    git clean -d -x -f
     git checkout $(git describe \-\-tags | cut -c1-19)
     mvn clean install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
+    git checkout master
 
   else
 

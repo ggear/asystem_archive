@@ -250,7 +250,7 @@ def pipeline():
 
     model_file = '/model/pickle/joblib/none/' \
                  'amodel_version=10.000.0029-SNAPSHOT' \
-                 '/amodel_model=1001' \
+                 '/amodel_model=1002' \
                  '/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
