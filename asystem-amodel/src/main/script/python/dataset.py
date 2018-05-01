@@ -33,6 +33,8 @@ sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 import os.path
 import sys
 import time
+import pandas as pd
+import numpy as np
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 
@@ -64,12 +66,32 @@ def pipeline():
 
     # Filter/aggregate to a Spark dataframe
     dataframe = spark.sql("""
-        SELECT data_metric, count(data_metric) AS data_metric_count
+        SELECT
+          bin_timestamp AS timestamp,
+          data_metric AS metric,
+          data_temporal AS temporal,
+          data_value / data_scale AS temperature
         FROM dataset
-        GROUP BY data_metric
-        ORDER BY data_metric_count DESC
+        WHERE
+          astore_metric='temperature' AND
+          data_temporal='current' AND
+          data_type='point' AND
+          data_metric NOT LIKE '%forecast%'
+        ORDER BY timestamp
     """).toPandas()
     print("Datums summary:\n" + str(dataframe))
+
+    dataframe = dataframe.pivot_table(
+      values='temperature', index='timestamp', columns='metric')
+    dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
+                        .tz_localize('UTC').tz_convert('Australia/Perth'))
+    dataframe = dataframe.fillna(method='bfill')
+    dataframe = dataframe.fillna(method='ffill')
+    dataframe = dataframe.resample('300S').mean()
+    dataframe = dataframe.fillna(method='bfill')
+    dataframe = dataframe.fillna(method='ffill')
+
+    dataframe.to_csv('/tmp/temperature.csv')
 
     print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
