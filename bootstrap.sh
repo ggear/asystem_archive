@@ -51,7 +51,7 @@ EOF
     rm -rf asystem-amodel/src/repo/*
     aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
     echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
-    aws s3 sync s3://asystem-astore asystem-astore/src/repo
+    aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
     du -cksh asystem-astore/src/repo
 
   elif [ "${MODE}" = "build" ]; then
