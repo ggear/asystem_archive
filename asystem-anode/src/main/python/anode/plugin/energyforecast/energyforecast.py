@@ -96,8 +96,11 @@ class Energyforecast(Plugin):
                     for model_version in model_day[self.name]:
                         if model_version >= APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION:
                             energy_production_forecast = 0
-                            model_classifier = "" if model_version == APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION else ("_D" + model_version)
-                            if day > 1 or sun_percentage < 60:
+                            model_classifier = "" if model_version == APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION \
+                                else ("_D" + model_version)
+                            if day > 1 or sun_percentage <= 60 or \
+                                    self.datum_get(DATUM_QUEUE_LAST, "energy__production_Dforecast" + model_classifier + "__inverter",
+                                                   "high", "Wh", day, "day") is None:
                                 model = model_day[self.name][model_version][1]
                                 try:
                                     energy_production_forecast = model['execute'](model=model, features=model['execute'](
