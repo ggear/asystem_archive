@@ -63,6 +63,7 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Release [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
+    git checkout master
     mvn clean install -PCMP -pl .
     VERSION_RELEASE=$(grep APP_VERSION= target/classes/application.properties | sed 's/APP_VERSION=*//' | sed 's/-SNAPSHOT*//')
     VERSION_HEAD_NUMERIC=$(($(echo $VERSION_RELEASE | sed 's/\.//g')+1))
@@ -120,14 +121,27 @@ EOF
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
     git-template-diff "asystem-amodel" "energyforecast_intraday.py"
 
-  elif [ "${MODE}" = "local" ]; then
+  elif [ "${MODE}" = "runlocal" ]; then
 
-    echo "" && echo "" && echo "" && echo "Local [asystem-anode]"
+    echo "" && echo "" && echo "" && echo "Run local [asystem-anode]"
     mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
 
-  elif [ "${MODE}" = "run" ]; then
+  elif [ "${MODE}" = "runsnap" ]; then
 
-    echo "" && echo "" && echo "" && echo "Run [asystem]"
+    echo "" && echo "" && echo "" && echo "Run snapshot [asystem]"
+    git checkout master
+    mvn clean install -PPKG
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
+    ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
+
+  elif [ "${MODE}" = "runtag" ]; then
+
+    echo "" && echo "" && echo "" && echo "Run tag [asystem]"
+    [[ -n "$(git status --porcelain)" ]] && exit 1
+    git checkout master
+    git clean -d -x -f
+    git checkout $(git describe \-\-tags | cut -c1-19)
     mvn clean install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
@@ -135,7 +149,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <env|prepare|download|build|release|deploy|diff|local|run|teardown>"
+    echo "Usage: ${0} <env|prepare|download|build|release|deploy|diff|runlocal|runsnap|runtag|teardown>"
 
   fi
 
