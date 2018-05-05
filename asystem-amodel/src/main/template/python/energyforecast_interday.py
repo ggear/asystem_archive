@@ -133,11 +133,13 @@ def pipeline():
                             "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
+    print(df2.describe())
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
                             "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
+    print(dfv2.describe())
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    sns.set(style="ticks")
