@@ -27,6 +27,13 @@
 #
 ###############################################################################
 
+import dill
+import numpy as np
+import os.path
+import pandas as pd
+import shutil
+import tempfile
+import time
 import sys
 
 # Add working directory to the system path
@@ -35,13 +42,6 @@ sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 # Add plotting libraries
 import matplotlib.pyplot as plt
 
-import dill
-import numpy as np
-import os.path
-import pandas as pd
-import shutil
-import tempfile
-import time
 from StringIO import StringIO
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException

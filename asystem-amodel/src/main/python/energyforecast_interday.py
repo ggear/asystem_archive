@@ -30,6 +30,12 @@
 #
 ###############################################################################
 
+import os
+import os.path
+import shutil
+import tempfile
+import pandas as pd
+import numpy as np
 import sys
 
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
@@ -37,12 +43,6 @@ import sys
 
 # Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
-import os
-import os.path
-import shutil
-import tempfile
-import pandas as pd
-import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score
 from sklearn.model_selection import LeaveOneOut

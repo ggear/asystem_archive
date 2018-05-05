@@ -27,14 +27,14 @@
 #
 ###############################################################################
 
-import sys
-
-# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
-
 import os.path
 
 import pandas as pd
 import time
+import sys
+
+# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 

@@ -27,12 +27,6 @@
 #
 ###############################################################################
 
-import sys
-
-# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
-
-# Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import matplotlib.pyplot as plt
-
 import dill
 import numpy as np
 import os.path
@@ -40,6 +34,12 @@ import pandas as pd
 import shutil
 import tempfile
 import time
+import sys
+
+# Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
+# Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import matplotlib.pyplot as plt
+
 from StringIO import StringIO
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
