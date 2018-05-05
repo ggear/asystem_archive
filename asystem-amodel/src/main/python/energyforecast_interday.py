@@ -144,8 +144,6 @@ def pipeline():
     # Plot# IGNORE SCRIPT BOILERPLATE #    sns.pairplot(df2, hue="condition")
     # Plot# IGNORE SCRIPT BOILERPLATE #    plt.show(block=False)
 
-    df2.describe()
-
     def rmse(actual, predicted):
         from sklearn.metrics import mean_squared_error
         from math import sqrt
@@ -245,7 +243,7 @@ def pipeline():
 
         print("Train average RMSE: {}\tTest average RMSE:{}".
               format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
-        print("Train average R2: {}\tTest average R2:{}".
+        print("Train average R^2: {}\tTest average R^2:{}".
               format(np.average(train_r2_scores), np.average(test_r2_scores)))
 
         return actual_powers, predicted_powers
@@ -275,16 +273,10 @@ def pipeline():
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
-        print("Dev RMSE: {}\tDev R2 score: {}".
+        print("Dev RMSE: {}\tDev R^2 score: {}".
               format(dev_rmse, r2_score(target.values, pred_train)))
-        print("Test RMSE: {}\tTest R2 score: {}".
+        print("Test RMSE: {}\tTest R^2 score: {}".
               format(test_rmse, r2_score(test_target.values, pred)))
-        print('Coefficients: \n', regr.coef_)
-        # print(test.columns)
-        print('Intercepts: \n', regr.intercept_)
-
-        # plot_predict_actual(test_target, pred)
-
         return regr, dev_rmse, test_rmse
 
     energies_test, energies_test_target = prepare_data(model_test_data)
@@ -329,8 +321,6 @@ def pipeline():
     # Example of serialized model usage
     model = joblib.load(local_model_file)
     model['execute'] = dill.load(StringIO(model['execute'].getvalue()))
-    print(dfv)
-    print(dfv.dtypes)
     energy_production_actual = dfv['energy__production__inverter'].iloc[0]
     energy_production_prediction = round(model['execute'](
         model=model, features=model['execute'](features=dfv, engineering=True),

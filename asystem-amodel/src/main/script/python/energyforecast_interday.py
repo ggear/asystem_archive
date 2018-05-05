@@ -136,13 +136,11 @@ def pipeline():
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
-    print(df2.describe())
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
-    print(dfv2.describe())
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot
@@ -251,7 +249,7 @@ def pipeline():
 
         print("Train average RMSE: {}\tTest average RMSE:{}".
               format(np.average(train_rmse_scores), np.average(test_rmse_scores)))
-        print("Train average R2: {}\tTest average R2:{}".
+        print("Train average R^2: {}\tTest average R^2:{}".
               format(np.average(train_r2_scores), np.average(test_r2_scores)))
 
         return actual_powers, predicted_powers
@@ -282,13 +280,10 @@ def pipeline():
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
-        print("Dev RMSE: {}\tDev R2 score: {}".
+        print("Dev RMSE: {}\tDev R^2 score: {}".
               format(dev_rmse, r2_score(target.values, pred_train)))
-        print("Test RMSE: {}\tTest R2 score: {}".
+        print("Test RMSE: {}\tTest R^2 score: {}".
               format(test_rmse, r2_score(test_target.values, pred)))
-
-        # plot_predict_actual(test_target, pred)
-
         return regr, dev_rmse, test_rmse
 
     energies_test, energies_test_target = prepare_data(model_test_data)
