@@ -136,11 +136,13 @@ def pipeline():
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
+    print(df2.describe())
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
+    print(dfv2.describe())
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot
@@ -149,8 +151,6 @@ def pipeline():
     sns.pairplot(df2, hue="condition")
     # Plot
     plt.show(block=False)
-
-    df2.describe()
 
     def rmse(actual, predicted):
         from sklearn.metrics import mean_squared_error
@@ -286,9 +286,6 @@ def pipeline():
               format(dev_rmse, r2_score(target.values, pred_train)))
         print("Test RMSE: {}\tTest R2 score: {}".
               format(test_rmse, r2_score(test_target.values, pred)))
-        print('Coefficients: \n', regr.coef_)
-        # print(test.columns)
-        print('Intercepts: \n', regr.intercept_)
 
         # plot_predict_actual(test_target, pred)
 
@@ -336,8 +333,6 @@ def pipeline():
     # Example of serialized model usage
     model = joblib.load(local_model_file)
     model['execute'] = dill.load(StringIO(model['execute'].getvalue()))
-    print(dfv)
-    print(dfv.dtypes)
     energy_production_actual = dfv['energy__production__inverter'].iloc[0]
     energy_production_prediction = round(model['execute'](
         model=model, features=model['execute'](features=dfv, engineering=True),
