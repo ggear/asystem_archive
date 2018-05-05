@@ -37,6 +37,7 @@ import tempfile
 import pandas as pd
 import numpy as np
 import sys
+import mpmath as mp
 
 # Add plotting libraries
 import matplotlib.pyplot as plt
@@ -108,6 +109,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
             - features_engineered['sun__outdoor__rise']
+        features_engineered['rain__forecast__glen_Dforrest'] = \
+            features_engineered['rain__forecast__glen_Dforrest'] \
+                .apply(lambda (x): float(mp.power(x * 10, 2)))
         features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=FEATURES_RENAME)
