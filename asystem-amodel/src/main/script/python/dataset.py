@@ -27,14 +27,15 @@
 #
 ###############################################################################
 
+import sys
+
 # Add working directory to the system path
 sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 import os.path
-import sys
-import time
+
 import pandas as pd
-import numpy as np
+import time
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 
@@ -82,9 +83,9 @@ def pipeline():
     print("Datums summary:\n" + str(dataframe))
 
     dataframe = dataframe.pivot_table(
-      values='temperature', index='timestamp', columns='metric')
+        values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
-                        .tz_localize('UTC').tz_convert('Australia/Perth'))
+                                    .tz_localize('UTC').tz_convert('Australia/Perth'))
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
     dataframe = dataframe.resample('300S').mean()

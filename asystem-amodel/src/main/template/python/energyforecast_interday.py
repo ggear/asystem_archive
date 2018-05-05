@@ -30,6 +30,8 @@
 #
 ###############################################################################
 
+import sys
+
 # Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import matplotlib.pyplot as plt
 # Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import seaborn as sns
 
@@ -37,7 +39,6 @@
 
 import os
 import os.path
-import sys
 import shutil
 import tempfile
 import pandas as pd

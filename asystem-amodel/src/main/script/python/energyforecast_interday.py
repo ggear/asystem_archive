@@ -30,6 +30,8 @@
 #
 ###############################################################################
 
+import sys
+
 # Add plotting libraries
 import matplotlib.pyplot as plt
 # Add plotting libraries
@@ -40,7 +42,6 @@ sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 import os
 import os.path
-import sys
 import shutil
 import tempfile
 import pandas as pd

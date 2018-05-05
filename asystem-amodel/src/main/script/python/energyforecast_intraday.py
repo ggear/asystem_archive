@@ -27,6 +27,8 @@
 #
 ###############################################################################
 
+import sys
+
 # Add working directory to the system path
 sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
@@ -38,7 +40,6 @@ import numpy as np
 import os.path
 import pandas as pd
 import shutil
-import sys
 import tempfile
 import time
 from StringIO import StringIO

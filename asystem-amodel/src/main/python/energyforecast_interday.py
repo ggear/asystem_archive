@@ -30,6 +30,8 @@
 #
 ###############################################################################
 
+import sys
+
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import seaborn as sns
 
@@ -37,7 +39,6 @@
 
 import os
 import os.path
-import sys
 import shutil
 import tempfile
 import pandas as pd

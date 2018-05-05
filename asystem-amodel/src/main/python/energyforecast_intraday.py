@@ -27,6 +27,8 @@
 #
 ###############################################################################
 
+import sys
+
 # Add working directory to the system path# IGNORE SCRIPT BOILERPLATE #sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
@@ -36,7 +38,6 @@ import numpy as np
 import os.path
 import pandas as pd
 import shutil
-import sys
 import tempfile
 import time
 from StringIO import StringIO
