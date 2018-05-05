@@ -184,7 +184,7 @@ function ec2-instance-resize {
 }
 
 function git-template-diff {
-  git diff ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 -R ${1}/src/main/template/python/${2}
+  git diff  --minimal --inter-hunk-context=1 -U1 ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 -R ${1}/src/main/template/python/${2}
   rm -rf ${1}/src/main/template/python/*.py.*
 }
 

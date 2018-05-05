@@ -38,6 +38,9 @@ import pandas as pd
 import numpy as np
 import sys
 
+# TODO: Remove
+#import mpmath as mp
+
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import matplotlib.pyplot as plt
 # Add plotting libraries# IGNORE SCRIPT BOILERPLATE #import seaborn as sns
 
@@ -105,6 +108,12 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
             - features_engineered['sun__outdoor__rise']
+
+        # TODO: Remove
+        # features_engineered['rain__forecast__glen_Dforrest'] = \
+        #     features_engineered['rain__forecast__glen_Dforrest'] \
+        #         .apply(lambda (x): float(mp.power(x * 100, 1)))
+
         features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=FEATURES_RENAME)
