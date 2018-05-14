@@ -122,10 +122,14 @@ def execute(model=None, features=None, labels=False, vectorization=True, enginee
             .rename(columns=FEATURES_RENAME)
         return features_engineered_renamed
     elif prediction:
+      
+        print("\n\n\n")
+        print(type(features))
+        print("\n\n\n")
+      
         return model['pipeline'].predict(
             model['vectorizer'].transform(features[FEATURES].to_dict(orient='record'))
-            if vectorization else features)
-
+            if vectorization else features).clip(0, 40000)
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -181,11 +185,6 @@ def pipeline():
             target = raw_df.energy
 
         return predictors, target
-
-    def predict_power_generation(_regr, input_df, predictor_columns=execute(labels=True)[0]):
-        _predictors, _target = prepare_data(input_df, predictor_columns)
-        input_dict = _predictors.to_dict(orient='record')
-        return execute({'pipeline': _regr}, features=input_dict, vectorization=False, prediction=True)
 
     # # Build predictive models with linear regression
     #
