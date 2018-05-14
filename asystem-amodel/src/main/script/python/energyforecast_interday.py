@@ -271,6 +271,7 @@ def pipeline():
     actual_powers, predicted_powers = evaluate_by_loo(energies_cat_train, energies_target)
 
     def plot_predict_actual(actual, predicted):
+        import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         ax.scatter(actual, predicted, edgecolors=(0, 0, 0))
         ax.plot([actual.min(), actual.max()], [actual.min(), actual.max()], 'k--', lw=4)
