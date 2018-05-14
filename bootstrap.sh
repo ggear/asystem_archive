@@ -109,18 +109,18 @@ EOF
       exit
 EOF
 
-  elif [ "${MODE}" = "diff" ]; then
+  elif [ "${MODE}" = "merge" ]; then
 
     [[ -n "$(git status --porcelain asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python)" ]] && exit 1
     git checkout master
     git pull --all
     mvn clean install -PCMP -pl asystem-amodel
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:dataset.py]"
-    git-template-diff "asystem-amodel" "dataset.py"
+    git-template-merge "asystem-amodel" "dataset.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_interday.py]"
-    git-template-diff "asystem-amodel" "energyforecast_interday.py"
+    git-template-merge "asystem-amodel" "energyforecast_interday.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
-    git-template-diff "asystem-amodel" "energyforecast_intraday.py"
+    git-template-merge "asystem-amodel" "energyforecast_intraday.py"
     mvn clean install -PCMP -pl asystem-amodel
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
@@ -152,7 +152,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <env|prepare|download|build|release|deploy|diff|runlocal|runsnap|runtag|teardown>"
+    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|runlocal|runsnap|runtag|teardown>"
 
   fi
 
@@ -183,8 +183,8 @@ function ec2-instance-resize {
   done
 }
 
-function git-template-diff {
-  git diff  --minimal --inter-hunk-context=1 -U1 ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 -R ${1}/src/main/template/python/${2}
+function git-template-merge {
+  git merge  --minimal --inter-hunk-context=1 -U1 ${1}/src/main/script/python/${2} | tee /dev/tty | patch -p1 -R ${1}/src/main/template/python/${2}
   rm -rf ${1}/src/main/template/python/*.py.*
 }
 

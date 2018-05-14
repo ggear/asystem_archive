@@ -39,7 +39,7 @@ import numpy as np
 import sys
 
 # TODO: Remove
-#import mpmath as mp
+# import mpmath as mp
 
 # Add plotting libraries
 import matplotlib.pyplot as plt
@@ -62,7 +62,7 @@ from script_util import hdfs_make_qualified
 from publish_util import publish
 
 
-def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
+def execute(model=None, features=None, labels=False, vectorization=True, engineering=False, prediction=False):
     import pandas as pd
     from sklearn.pipeline import Pipeline
     from sklearn.linear_model import ElasticNetCV
@@ -122,9 +122,9 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
             .rename(columns=FEATURES_RENAME)
         return features_engineered_renamed
     elif prediction:
-        return model['pipeline'] \
-            .predict(model['vectorizer']
-                     .transform(features[FEATURES].to_dict(orient='record')))
+        return model['pipeline'].predict(
+            model['vectorizer'].transform(features[FEATURES].to_dict(orient='record'))
+            if vectorization else features)
 
 
 def pipeline():
@@ -185,7 +185,7 @@ def pipeline():
     def predict_power_generation(_regr, input_df, predictor_columns=execute(labels=True)[0]):
         _predictors, _target = prepare_data(input_df, predictor_columns)
         input_dict = _predictors.to_dict(orient='record')
-        return _regr.predict(input_dict)
+        return execute({'pipeline': _regr}, features=input_dict, vectorization=False, prediction=True)
 
     # # Build predictive models with linear regression
     #
@@ -233,8 +233,10 @@ def pipeline():
             y_train, y_test = energies_target.iloc[train_index], energies_target.iloc[test_index]
             regr.fit(X_train, y_train)
             # print(X_test, y_test)
-            y_train_pred = regr.predict(X_train)
-            y_test_pred = regr.predict(X_test)
+
+            y_train_pred = execute({'pipeline': regr}, features=X_train, vectorization=False, prediction=True)
+            y_test_pred = execute({'pipeline': regr}, features=X_test, vectorization=False, prediction=True)
+
             # print(y_test.values, y_test_pred)
 
             train_r2_score = regr.score(X_train, y_train)
@@ -287,8 +289,8 @@ def pipeline():
     def train_and_predict(regr, cat_train, target, cat_test, test_target):
         regr.fit(cat_train, target)
 
-        pred_train = regr.predict(cat_train)
-        pred = regr.predict(cat_test)
+        pred_train = execute({'pipeline': regr}, features=cat_train, vectorization=False, prediction=True)
+        pred = execute({'pipeline': regr}, features=cat_test, vectorization=False, prediction=True)
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
