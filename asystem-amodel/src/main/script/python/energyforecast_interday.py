@@ -62,7 +62,7 @@ from script_util import hdfs_make_qualified
 from publish_util import publish
 
 
-def execute(model=None, features=None, labels=False, vectorization=True, engineering=False, prediction=False):
+def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
     import pandas as pd
     from sklearn.pipeline import Pipeline
     from sklearn.linear_model import ElasticNetCV
@@ -122,14 +122,11 @@ def execute(model=None, features=None, labels=False, vectorization=True, enginee
             .rename(columns=FEATURES_RENAME)
         return features_engineered_renamed
     elif prediction:
-      
-        print("\n\n\n")
-        print(type(features))
-        print("\n\n\n")
-      
-        return model['pipeline'].predict(
-            model['vectorizer'].transform(features[FEATURES].to_dict(orient='record'))
-            if vectorization else features).clip(0, 40000)
+        if type(features) is not np.ndarray:
+            features = model['vectorizer'] \
+                .transform(features[FEATURES].to_dict(orient='record'))
+        return model['pipeline'].predict(features).clip(4000, 45000)
+
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -233,8 +230,8 @@ def pipeline():
             regr.fit(X_train, y_train)
             # print(X_test, y_test)
 
-            y_train_pred = execute({'pipeline': regr}, features=X_train, vectorization=False, prediction=True)
-            y_test_pred = execute({'pipeline': regr}, features=X_test, vectorization=False, prediction=True)
+            y_train_pred = execute({'pipeline': regr}, features=X_train, prediction=True)
+            y_test_pred = execute({'pipeline': regr}, features=X_test, prediction=True)
 
             # print(y_test.values, y_test_pred)
 
@@ -288,8 +285,8 @@ def pipeline():
     def train_and_predict(regr, cat_train, target, cat_test, test_target):
         regr.fit(cat_train, target)
 
-        pred_train = execute({'pipeline': regr}, features=cat_train, vectorization=False, prediction=True)
-        pred = execute({'pipeline': regr}, features=cat_test, vectorization=False, prediction=True)
+        pred_train = execute({'pipeline': regr}, features=cat_train, prediction=True)
+        pred = execute({'pipeline': regr}, features=cat_test, prediction=True)
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
