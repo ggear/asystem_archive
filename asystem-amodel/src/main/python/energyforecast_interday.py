@@ -59,7 +59,8 @@ from script_util import hdfs_make_qualified
 from publish_util import publish
 
 
-def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
+def execute(model=None, features=None,
+            labels=False, statistics=False, engineering=False, prediction=False):
     import pandas as pd
     from sklearn.pipeline import Pipeline
     from sklearn.linear_model import ElasticNetCV
@@ -96,6 +97,13 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
     }
     if labels:
         return FEATURES, FEATURES_ORIGINAL, FEATURES_RENAME
+    elif statistics:
+        energy_label = 'energy' if 'energy' in features \
+            else 'energy__production__inverter'
+        return {
+            'energy_max': features[energy_label].max(),
+            'energy_min': features[energy_label].min()
+        }
     elif engineering:
         features_engineered = features.copy(deep=True)
         features_engineered['sun_rise_at'] = pd.to_datetime(
@@ -108,21 +116,24 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
             - features_engineered['sun__outdoor__rise']
-
-        # TODO: Remove
-        # features_engineered['rain__forecast__glen_Dforrest'] = \
-        #     features_engineered['rain__forecast__glen_Dforrest'] \
-        #         .apply(lambda (x): float(mp.power(x * 100, 1)))
-
         features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=FEATURES_RENAME)
+
+        # TODO: Remove
+        # features_engineered_renamed['rain_mm_poly'] = \
+        #    features_engineered['rain__forecast__glen_Dforrest'] \
+        #        .apply(lambda (x): float(mp.power(x * 2, 6)))  
+
         return features_engineered_renamed
     elif prediction:
         if type(features) is not np.ndarray:
             features = model['vectorizer'] \
                 .transform(features[FEATURES].to_dict(orient='record'))
-        return model['pipeline'].predict(features).clip(4000, 45000)
+        predictions = model['pipeline'].predict(features)
+        if 'statistics' in model: predictions = predictions.clip(
+            model['statistics']['energy_min'] * 0.9, model['statistics']['energy_max'] * 1.1)
+        return predictions
 
 
 def pipeline():
@@ -143,13 +154,15 @@ def pipeline():
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
-    print(df2.describe())
+    print("Training data:\n{}\n\n".format(df2.describe()))
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
-    print(dfv2.describe())
+    print("Test data:\n{}\n".format(dfv2.describe()))
+
+    features_statistics = execute(features=dfv, statistics=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot# IGNORE SCRIPT BOILERPLATE #    sns.set(style="ticks")
@@ -215,7 +228,7 @@ def pipeline():
         # Train Linear Regression model
         # It is small data, so
         for train_index, test_index in loo.split(energies_train):
-            print("Test index:{}".format(test_index))
+            # print("Test index:{}".format(test_index))
             # print("TRAIN:", train_index, "TEST:", test_index)
             # regr = LinearRegression()
 
@@ -224,8 +237,10 @@ def pipeline():
             regr.fit(X_train, y_train)
             # print(X_test, y_test)
 
-            y_train_pred = execute({'pipeline': regr}, features=X_train, prediction=True)
-            y_test_pred = execute({'pipeline': regr}, features=X_test, prediction=True)
+            y_train_pred = execute({'pipeline': regr, 'statistics': features_statistics},
+                                   features=X_train, prediction=True)
+            y_test_pred = execute({'pipeline': regr, 'statistics': features_statistics},
+                                  features=X_test, prediction=True)
 
             # print(y_test.values, y_test_pred)
 
@@ -241,11 +256,12 @@ def pipeline():
 
             actual_powers = np.append(actual_powers, y_test.values[0])
             predicted_powers = np.append(predicted_powers, y_test_pred[0])
-            print("Actual energy generation: {}\tPredicted energy generation: {}".
-                  format(y_test.values[0], y_test_pred[0]))
-
-            print("Train R^2 score: {}\tTest R^2 score:{}".format(train_r2_score, test_r2_score))
-            print("Train RMSE: {}\tTest RMSE:{}\n".format(train_rmse_score, test_rmse_score))
+            # print("Actual energy generation: {}\tPredicted energy generation: {}"
+            #      .format(y_test.values[0], y_test_pred[0]))
+            # print("Train R^2 score: {}\tTest R^2 score:{}"
+            #      .format(train_r2_score, test_r2_score))
+            # print("Train RMSE: {}\tTest RMSE:{}\n"
+            #      .format(train_rmse_score, test_rmse_score))
 
         # Standard deviation of training data is base line of RMSE
         # print("Standard deviation: {}".format(pd.DataFrame.std(energies_target)))
@@ -278,8 +294,10 @@ def pipeline():
     def train_and_predict(regr, cat_train, target, cat_test, test_target):
         regr.fit(cat_train, target)
 
-        pred_train = execute({'pipeline': regr}, features=cat_train, prediction=True)
-        pred = execute({'pipeline': regr}, features=cat_test, prediction=True)
+        pred_train = execute({'pipeline': regr, 'statistics': features_statistics},
+                             features=cat_train, prediction=True)
+        pred = execute({'pipeline': regr, 'statistics': features_statistics},
+                       features=cat_test, prediction=True)
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
@@ -296,7 +314,12 @@ def pipeline():
     best_model_test_rmse = 10000000000
     best_model = None
 
-    for _regr in [LinearRegression(), ElasticNetCV(cv=4), RidgeCV(cv=4), LassoCV(cv=4)]:
+    for _regr in [
+        LinearRegression(),
+        ElasticNetCV(cv=4),
+        RidgeCV(cv=4),
+        LassoCV(cv=4)
+    ]:
         print(type(_regr).__name__)
         _model, _rmse, _test_rmse = train_and_predict(
             _regr, energies_cat_train, energies_target,
@@ -325,8 +348,12 @@ def pipeline():
     dill.dump(execute, pickled_execute)
     pickled_execute.flush()
 
-    joblib.dump({'vectorizer': vectorizer, 'pipeline': best_model,
-                 'execute': pickled_execute}, local_model_file, compress=True)
+    joblib.dump({
+        'vectorizer': vectorizer,
+        'pipeline': best_model,
+        'statistics': features_statistics,
+        'execute': pickled_execute
+    }, local_model_file, compress=True)
 
     # Example of serialized model usage
     model = joblib.load(local_model_file)

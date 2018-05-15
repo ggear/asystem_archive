@@ -39,7 +39,7 @@ import numpy as np
 import sys
 
 # TODO: Remove
-#import mpmath as mp
+# import mpmath as mp
 
 # Add plotting libraries
 import matplotlib.pyplot as plt
@@ -102,10 +102,10 @@ def execute(model=None, features=None,
         return FEATURES, FEATURES_ORIGINAL, FEATURES_RENAME
     elif statistics:
         energy_label = 'energy' if 'energy' in features \
-          else 'energy__production__inverter'
+            else 'energy__production__inverter'
         return {
-          'energy_max': features[energy_label].max(),
-          'energy_min': features[energy_label].min()          
+            'energy_max': features[energy_label].max(),
+            'energy_min': features[energy_label].min()
         }
     elif engineering:
         features_engineered = features.copy(deep=True)
@@ -118,16 +118,16 @@ def execute(model=None, features=None,
             - features_engineered['sun_rise_at']
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
-            - features_engineered['sun__outdoor__rise']            
+            - features_engineered['sun__outdoor__rise']
         features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=FEATURES_RENAME)
-          
+
         # TODO: Remove
         # features_engineered_renamed['rain_mm_poly'] = \
         #    features_engineered['rain__forecast__glen_Dforrest'] \
         #        .apply(lambda (x): float(mp.power(x * 2, 6)))  
-        
+
         return features_engineered_renamed
     elif prediction:
         if type(features) is not np.ndarray:
@@ -135,7 +135,7 @@ def execute(model=None, features=None,
                 .transform(features[FEATURES].to_dict(orient='record'))
         predictions = model['pipeline'].predict(features)
         if 'statistics' in model: predictions = predictions.clip(
-          model['statistics']['energy_min']*0.9, model['statistics']['energy_max']*1.1)
+            model['statistics']['energy_min'] * 0.9, model['statistics']['energy_max'] * 1.1)
         return predictions
 
 
@@ -164,7 +164,7 @@ def pipeline():
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("Test data:\n{}\n".format(dfv2.describe()))
-    
+
     features_statistics = execute(features=dfv, statistics=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
@@ -245,7 +245,7 @@ def pipeline():
 
             y_train_pred = execute({'pipeline': regr, 'statistics': features_statistics},
                                    features=X_train, prediction=True)
-            y_test_pred = execute({'pipeline': regr, 'statistics': features_statistics}, 
+            y_test_pred = execute({'pipeline': regr, 'statistics': features_statistics},
                                   features=X_test, prediction=True)
 
             # print(y_test.values, y_test_pred)
@@ -304,7 +304,7 @@ def pipeline():
         pred_train = execute({'pipeline': regr, 'statistics': features_statistics},
                              features=cat_train, prediction=True)
         pred = execute({'pipeline': regr, 'statistics': features_statistics},
-                              features=cat_test, prediction=True)
+                       features=cat_test, prediction=True)
 
         dev_rmse = rmse(target.values, pred_train)
         test_rmse = rmse(test_target.values, pred)
@@ -322,10 +322,10 @@ def pipeline():
     best_model = None
 
     for _regr in [
-      LinearRegression(), 
-      ElasticNetCV(cv=4), 
-      RidgeCV(cv=4,alphas=[0.1,0.5,1.0,5.0,10.0]), 
-      LassoCV(cv=4)
+        LinearRegression(),
+        ElasticNetCV(cv=4),
+        RidgeCV(cv=4),
+        LassoCV(cv=4)
     ]:
         print(type(_regr).__name__)
         _model, _rmse, _test_rmse = train_and_predict(
@@ -356,10 +356,10 @@ def pipeline():
     pickled_execute.flush()
 
     joblib.dump({
-      'vectorizer': vectorizer, 
-      'pipeline': best_model, 
-      'statistics': features_statistics,
-                 'execute': pickled_execute
+        'vectorizer': vectorizer,
+        'pipeline': best_model,
+        'statistics': features_statistics,
+        'execute': pickled_execute
     }, local_model_file, compress=True)
 
     # Example of serialized model usage

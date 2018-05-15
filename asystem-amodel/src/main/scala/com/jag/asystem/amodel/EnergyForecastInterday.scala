@@ -194,6 +194,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         .where($"datum__bin__date" =!= "2017/10/30")
         .where($"datum__bin__date" =!= "2017/11/27")
         .where($"datum__bin__date" =!= "2017/11/28")
+        .where($"datum__bin__date" =!= "2017/12/18")
         .where($"datum__bin__date" =!= "2018/12/31")
         .where($"datum__bin__date" < DaysVetted)
         .repartition(1).orderBy("datum__bin__date")
