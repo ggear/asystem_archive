@@ -116,7 +116,7 @@ def execute(model=None, features=None, labels=False, engineering=False, predicti
 # noinspection PyStatementEffect
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-astore"
+        "s3a://asystem-astore-staging"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
         "s3a://asystem-amodel-staging/asystem/amodel/energyforecastintraday"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \

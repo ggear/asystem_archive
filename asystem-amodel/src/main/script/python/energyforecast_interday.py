@@ -127,7 +127,7 @@ def execute(model=None, features=None,
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
         "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
