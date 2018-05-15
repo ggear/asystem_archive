@@ -123,7 +123,7 @@ def execute(model=None, features=None,
         # TODO: Remove
         # features_engineered_renamed['rain_mm_poly'] = \
         #    features_engineered['rain__forecast__glen_Dforrest'] \
-        #        .apply(lambda (x): float(mp.power(x * 2, 6)))  
+        #        .apply(lambda (x): float(mp.power(x * 2, 2)))
 
         return features_engineered_renamed
     elif prediction:
@@ -162,7 +162,7 @@ def pipeline():
     dfv2 = execute(features=dfv, engineering=True)
     print("Test data:\n{}\n".format(dfv2.describe()))
 
-    features_statistics = execute(features=dfv, statistics=True)
+    features_statistics = execute(features=pd.concat([df2, dfv2]), statistics=True)
 
     # Plot the pairplot to discover correlation between power generation and other variables.
     # Plot${TEMPLATE.PRE-PROCESSOR.OPEN}    sns.set(style="ticks")

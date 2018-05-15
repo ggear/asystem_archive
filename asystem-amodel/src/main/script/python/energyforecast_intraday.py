@@ -98,10 +98,12 @@ DAYS_BLACK_LIST = set([
     '2018/04/05',
     '2018/04/06',
     '2018/04/07',
+    '2018/04/10',
     '2018/04/22',
 ])
 
 DAYS_PLOT = False
+DAYS_PLOT_DEBUG = False
 
 
 # noinspection PyRedeclaration
@@ -222,8 +224,9 @@ def pipeline():
             dfv.set_index(
                 pd.to_datetime(dfv['bin_timestamp'], unit='s')
                     .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-            if DAYS_PLOT: dfv.plot(title="Energy ({}) - {}"
-                                   .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
+            if DAYS_PLOT and DAYS_PLOT_DEBUG:
+                dfv.plot(title="Energy ({}) - {}"
+                         .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
 
     for vetting in dfvs: print("{} [{}] days".format(vetting, len(dfvs[vetting])))
 
@@ -245,7 +248,7 @@ def pipeline():
         dfns.loc[0:10] = 0
         dfns.loc[990:1000] = 1
         dfnss.append(dfns)
-        if DAYS_PLOT: dfns.plot(title="Energy ({}) - VETTED".format(day))
+        if DAYS_PLOT and DAYS_PLOT_DEBUG: dfns.plot(title="Energy ({}) - VETTED".format(day))
 
     dfnsa = pd.concat(dfnss, axis=1, ignore_index=True)
     if DAYS_PLOT:
@@ -258,8 +261,7 @@ def pipeline():
 
     model_file = '/model/pickle/joblib/none/' \
                  'amodel_version=10.000.0029-SNAPSHOT' \
-                 '/amodel_model=1002' \
-                 '/model.pkl'
+                 '/amodel_model=1002/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):

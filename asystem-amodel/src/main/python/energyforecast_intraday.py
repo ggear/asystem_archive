@@ -221,8 +221,9 @@ def pipeline():
             dfv.set_index(
                 pd.to_datetime(dfv['bin_timestamp'], unit='s')
                     .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-            if DAYS_PLOT and DAYS_PLOT_DEBUG: dfv.plot(title="Energy ({}) - {}"
-                                   .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
+            if DAYS_PLOT and DAYS_PLOT_DEBUG:
+                dfv.plot(title="Energy ({}) - {}"
+                         .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
 
     for vetting in dfvs: print("{} [{}] days".format(vetting, len(dfvs[vetting])))
 
@@ -257,8 +258,7 @@ def pipeline():
 
     model_file = '/model/pickle/joblib/none/' \
                  'amodel_version=10.000.0029-SNAPSHOT' \
-                 '/amodel_model=1002' \
-                 '/model.pkl'
+                 '/amodel_model=1002/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):
