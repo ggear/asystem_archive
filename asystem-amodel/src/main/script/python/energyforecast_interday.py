@@ -80,7 +80,6 @@ def execute(model=None, features=None,
         'humidity__forecast__glen_Dforrest',
         'wind__forecast__glen_Dforrest',
         'conditions__forecast__glen_Dforrest',
-        'day_length',
         'day_length_sec'
     ]
     FEATURES_RENAME = {
@@ -103,13 +102,6 @@ def execute(model=None, features=None,
         }
     elif engineering:
         features_engineered = features.copy(deep=True)
-        features_engineered['sun_rise_at'] = pd.to_datetime(
-            features_engineered['sun__outdoor__rise'], unit='s')
-        features_engineered['sun_set_at'] = pd.to_datetime(
-            features_engineered['sun__outdoor__set'], unit='s')
-        features_engineered['day_length'] = \
-            features_engineered['sun_set_at'] \
-            - features_engineered['sun_rise_at']
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
             - features_engineered['sun__outdoor__rise']
