@@ -5,25 +5,19 @@
 # This file is in the ${TEMPLATE.PRE-PROCESSOR.STATE} pre-processed state with template available by the
 # same package and file name under the modules src/main/template directory.
 #
-# When editing the template directly (as indicated by the presence of the
+# If editing as a SCRIPT or LIBRARY, all changes must be merged to the TEMPLATE,
+# else they will be locally clobbered by the maven build. Am automated merge
+# process (revealing template diffs) is provided by the bootstrap script.
+#
+# When editing as a TEMPLATE directly (as indicated by the presence of the
 # TEMPLATE.PRE-PROCESSOR.RAW_TEMPLATE tag at the top of this file), care should
 # be taken to ensure the maven-resources-plugin generate-sources filtering of the
 # TEMPLATE.PRE-PROCESSOR tags, which comment and or uncomment blocks of the
 # template, leave the file in a consistent state, as a script or library,
 # post filtering.
 #
-# It is desirable that in template form, the file remains both compilable and
-# runnable as a script in your IDEs (eg Eclipse, IntelliJ, CDSW etc). To setup
-# your environment, it may be necessary to run the pre-processed script once
-# (eg to execute AddJar commands with dependency versions completely resolved) but
-# from then on the template can be used for direct editing and distribution via
-# the source code control system and maven repository for dependencies.
-#
-# The library can be tested during the standard maven compile and test phases.
-#
-# Note that pre-processed files will be overwritten as part of the Maven build
-# process. Care should be taken to either ignore and not edit these files (eg
-# libraries) or check them in and note changes post Maven build (eg scripts)
+# The SCRIPT can be tested from within CDSW, the LIBRARY as part of  the maven
+# test phase.
 #
 ###############################################################################
 
