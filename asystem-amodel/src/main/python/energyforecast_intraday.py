@@ -246,7 +246,6 @@ def pipeline():
         dfnsa.plot(title="Energy Normalised/Standardised (All) - VETTED", legend=False)
     dfnsa = pd.concat(dfnss)
     dfnsa = dfnsa.groupby(dfnsa.index).mean()
-    print("Energy Mean Distribution:\n{}".format(dfnsa))
     if DAYS_PLOT:
         dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
