@@ -130,7 +130,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Run local [asystem-anode]"
     mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
 
-  elif [ "${MODE}" = "runsnap" ]; then
+  elif [ "${MODE}" = "runsnapshot" ]; then
 
     echo "" && echo "" && echo "" && echo "Run snapshot [asystem]"
     git checkout master
@@ -152,7 +152,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|runlocal|runsnap|runtag|teardown>"
+    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|runlocal|runsnapshot|runtag|teardown>"
 
   fi
 

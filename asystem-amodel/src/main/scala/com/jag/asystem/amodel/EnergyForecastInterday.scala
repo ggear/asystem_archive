@@ -245,7 +245,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
 object EnergyForecastInterday {
 
-  val DaysVetted = "2018/03/13"
+  val DaysVetted = "2018/05/15"
 
   def main(arguments: Array[String]): Unit = {
     new EnergyForecastInterday(null).runner(arguments: _*)
