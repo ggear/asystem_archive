@@ -41,7 +41,6 @@ setup(
     packages=find_packages(),
     package_data={"": ["*.properties"]},
     install_requires=[
-        "automat==0.6.0",
         "twisted==17.5.0",
         "twisted_s3==0.2.2",
         "twisted-mqtt==0.3.6",
@@ -62,6 +61,7 @@ setup(
         "xmltodict==0.11.0",
         "pathlib2==2.3.2",
         "python-dateutil==2.6.1",
+        "attrs==18.1.0",
     ],
     tests_require=["mock"],
     test_suite="anode.test",

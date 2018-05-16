@@ -1396,7 +1396,7 @@ class Plugin(object):
 PICKLE_PATH_REGEX = ".*/[a-zA-z]*/([a-zA-z]*)/model/pickle/([a-zA-z]*)/none/" \
                     "amodel_version=([1-9][0-9]\.[0-9]{3}.[0-9]{4}.*)/amodel_model=([1-9][0-9]{3})/.*\.pkl"
 
-ID_BYTE = format(get_mac(), "x").decode("hex")
+ID_BYTE = '{s:0^12}'.format(s=format(get_mac(), "x")).decode("hex")
 ID_HEX = ID_BYTE.encode("hex").upper()
 ID_BASE64 = base64.b64encode(str(ID_BYTE))
 
