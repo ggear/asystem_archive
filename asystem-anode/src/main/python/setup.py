@@ -41,6 +41,7 @@ setup(
     packages=find_packages(),
     package_data={"": ["*.properties"]},
     install_requires=[
+        "automat==0.6.0",
         "twisted==17.5.0",
         "twisted_s3==0.2.2",
         "twisted-mqtt==0.3.6",
