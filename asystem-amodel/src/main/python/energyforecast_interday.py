@@ -125,9 +125,9 @@ def execute(model=None, features=None,
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
-        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecastinterday"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
-        "s3a://asystem-amodel-staging/asystem/amodel/energyforecast"
+        "s3a://asystem-amodel-staging/asystem/amodel/energyforecastinterday"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
@@ -137,13 +137,13 @@ def pipeline():
 
     # ## Load CSV
     df = spark.read.csv(
-        hdfs_make_qualified(remote_data_path + "/training/text/csv/none/" +
+        hdfs_make_qualified(remote_data_path + "/train/text/csv/none/" +
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("Training data:\n{}\n\n".format(df2.describe()))
     dfv = spark.read.csv(
-        hdfs_make_qualified(remote_data_path + "/validation/text/csv/none/" +
+        hdfs_make_qualified(remote_data_path + "/test/text/csv/none/" +
                             "amodel_version=10.000.0029-SNAPSHOT/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)

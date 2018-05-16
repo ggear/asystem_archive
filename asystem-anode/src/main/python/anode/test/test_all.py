@@ -1475,7 +1475,7 @@ FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL = DIR_TEST + "/config/anode_fronius_unbounde
 FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE = DIR_TEST + "/config/anode_fronius_unbounded_large.yaml"
 FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION = DIR_TEST + "/config/anode_fronius_unbounded_small_repeat_partition.yaml"
 
-FILE_MODEL_ENERGYFORECAST = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecast" + \
+FILE_MODEL_ENERGYFORECAST = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecastinterday" + \
                             "/model/pickle/joblib/none/amodel_version=" + APP_VERSION + "/amodel_model=" + \
                             APP_MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION + "/model.pkl"
 FILE_MODEL_ENERGYFORECAST_INTRADAY = DIR_ROOT + "/../asystem-amodel/target/asystem-amodel/asystem/amodel/energyforecastintraday" + \
@@ -1516,17 +1516,17 @@ HTTP_GETS = {
     APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST_INTRADAY),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=" +
+    "/asystem-amodel/asystem/amodel/energyforecastinterday/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=" +
     APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0001-SNAPSHOT/amodel_model=" +
+    "/asystem-amodel/asystem/amodel/energyforecastinterday/model/pickle/joblib/none/amodel_version=10.000.0001-SNAPSHOT/amodel_model=" +
     str(int(APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION) + 1) + "/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=1010/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecastinterday/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=1010/model.pkl":
         "A CORRUPT PICKLE",
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
-    "/asystem-amodel/asystem/amodel/energyforecast/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=9000/model.pkl":
+    "/asystem-amodel/asystem/amodel/energyforecastinterday/model/pickle/joblib/none/amodel_version=10.000.0000/amodel_model=9000/model.pkl":
         ilio.read(FILE_MODEL_ENERGYFORECAST)
 }

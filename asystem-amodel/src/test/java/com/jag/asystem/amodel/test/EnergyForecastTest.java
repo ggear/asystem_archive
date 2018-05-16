@@ -51,20 +51,27 @@ public class EnergyForecastTest implements TestConstants {
   public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
     EnergyForecastInterday driver = new EnergyForecastInterday(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(
-      dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST).toString()));
+      dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST_INTERDAY).toString()));
     assertCounterEquals(testMetaData, driver.getCounters());
     assertEquals(0, pythonServer.execute(ABS_DIR_PYTHON_BIN, new File(ABS_DIR_PYTHON_SRC, "energyforecast_interday.py"),
-      Arrays.asList(DATASET_DIR_AMODEL_ENERGYFORECAST, DATASET_ABS_AMODEL_ENERGYFORECAST, DATASET_TMP_AMODEL_ENERGYFORECAST)));
+      Arrays.asList(DATASET_DIR_AMODEL_ENERGYFORECAST_INTERDAY, DATASET_ABS_AMODEL_ENERGYFORECAST_INTERDAY,
+        DATASET_TMP_AMODEL_ENERGYFORECAST_INTERDAY)));
   }
 
   private static final String DATASET_DIR_ASTORE = "/data/asystem-astore";
-  private static final String DATASET_REL_AMODEL_ENERGYFORECAST = "/asystem-amodel/asystem/amodel/energyforecast";
-  private static final String DATASET_DIR_AMODEL_ENERGYFORECAST = "/data" + DATASET_REL_AMODEL_ENERGYFORECAST;
-  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST = "file://" + ABS_DIR_TARGET + DATASET_REL_AMODEL_ENERGYFORECAST;
-  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST = ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/amodel/energyforecast";
+  private static final String DATASET_REL_AMODEL_ENERGYFORECAST_INTERDAY =
+    "/asystem-amodel/asystem/amodel/energyforecastinterday";
+  private static final String DATASET_DIR_AMODEL_ENERGYFORECAST_INTERDAY =
+    "/data" + DATASET_REL_AMODEL_ENERGYFORECAST_INTERDAY;
+  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST_INTERDAY =
+    "file://" + ABS_DIR_TARGET + DATASET_REL_AMODEL_ENERGYFORECAST_INTERDAY;
+  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST_INTERDAY =
+    ABS_DIR_TARGET + "/asystem-amodel-tmp/asystem/amodel/energyforecastinterday";
 
-  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST_INTRADAY = DATASET_ABS_AMODEL_ENERGYFORECAST + "intraday";
-  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST_INTRADAY = DATASET_TMP_AMODEL_ENERGYFORECAST + "intraday";
+  private static final String DATASET_ABS_AMODEL_ENERGYFORECAST_INTRADAY =
+    DATASET_ABS_AMODEL_ENERGYFORECAST_INTERDAY.replace("interday", "intraday");
+  private static final String DATASET_TMP_AMODEL_ENERGYFORECAST_INTRADAY =
+    DATASET_TMP_AMODEL_ENERGYFORECAST_INTERDAY.replace("interday", "intraday");
 
   @Coercion
   public TestMetaData toCdhMetaData(String field) {

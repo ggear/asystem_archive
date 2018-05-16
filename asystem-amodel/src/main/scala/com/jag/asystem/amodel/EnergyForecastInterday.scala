@@ -219,7 +219,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       val outputTraining = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "leftanti").
         sort(asc("datum__bin__date")).coalesce(1)
       outputTraining.write.format("com.databricks.spark.csv").option("header", "true").
-        save(outputPath.toString + "/training" + outputPathSuffix)
+        save(outputPath.toString + "/train" + outputPathSuffix)
       addResult("Training data:")
       addResult("  " + outputTraining.columns.mkString(","))
       outputTraining.collect.foreach(row => addResult("  " + row.mkString(",")))
@@ -227,7 +227,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       val outputValidation = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "inner").
         sort(asc("datum__bin__date")).coalesce(1)
       outputValidation.write.format("com.databricks.spark.csv").option("header", "true").
-        save(outputPath.toString + "/validation" + outputPathSuffix)
+        save(outputPath.toString + "/test" + outputPathSuffix)
       addResult("Validation data:")
       addResult("  " + outputValidation.columns.mkString(","))
       outputValidation.collect.foreach(row => addResult("  " + row.mkString(",")))

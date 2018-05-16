@@ -23,9 +23,9 @@ class Energyforecast(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             bin_timestamp = self.get_time()
-            model_day = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name=self.name)
+            model_day_inter = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastinterday")
             model_day_intra = self.pickled_get(os.path.join(self.config["db_dir"], "amodel"), name="energyforecastintraday")
-            if self.name in model_day and "energyforecastintraday" in model_day_intra and \
+            if "energyforecastinterday" in model_day_inter and "energyforecastintraday" in model_day_intra and \
                     APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION in model_day_intra["energyforecastintraday"] and \
                     self.anode.get_plugin("davis") is not None and \
                     self.anode.get_plugin("wunderground") is not None:
@@ -93,7 +93,7 @@ class Energyforecast(Plugin):
                         "conditions__forecast__glen_Dforrest": conditions_forecast
                     }
                     model_features = pandas.DataFrame([model_features_dict]).apply(pandas.to_numeric, errors='ignore')
-                    for model_version in model_day[self.name]:
+                    for model_version in model_day_inter["energyforecastinterday"]:
                         if model_version >= APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION:
                             energy_production_forecast = 0
                             model_classifier = "" if model_version == APP_MODEL_ENERGYFORECAST_INTERDAY_PROD_VERSION \
@@ -101,7 +101,7 @@ class Energyforecast(Plugin):
                             if day > 1 or sun_percentage <= 60 or \
                                     self.datum_get(DATUM_QUEUE_LAST, "energy__production_Dforecast" + model_classifier + "__inverter",
                                                    "high", "Wh", day, "day") is None:
-                                model = model_day[self.name][model_version][1]
+                                model = model_day_inter["energyforecastinterday"][model_version][1]
                                 try:
                                     energy_production_forecast = model['execute'](model=model, features=model['execute'](
                                         features=model_features, engineering=True), prediction=True)[0]
@@ -118,7 +118,7 @@ class Energyforecast(Plugin):
                                     bin_timestamp,
                                     day,
                                     "day",
-                                    asystem_version=model_day[self.name][model_version][0],
+                                    asystem_version=model_day_inter["energyforecastinterday"][model_version][0],
                                     data_version=model_version,
                                     data_bound_lower=0)
                             if day == 1:
@@ -148,7 +148,7 @@ class Energyforecast(Plugin):
                                     bin_timestamp,
                                     day,
                                     "day",
-                                    asystem_version=model_day[self.name][model_version][0],
+                                    asystem_version=model_day_inter["energyforecastinterday"][model_version][0],
                                     data_version=model_version,
                                     data_bound_lower=0)
                                 if model_classifier == "":
@@ -162,7 +162,7 @@ class Energyforecast(Plugin):
                                         bin_timestamp,
                                         day,
                                         "day",
-                                        asystem_version=model_day[self.name][model_version][0],
+                                        asystem_version=model_day_inter["energyforecastinterday"][model_version][0],
                                         data_version=model_version,
                                         data_bound_lower=0,
                                         data_bound_upper=100)
@@ -181,7 +181,7 @@ class Energyforecast(Plugin):
                                     bin_timestamp,
                                     day,
                                     "day",
-                                    asystem_version=model_day[self.name][model_version][0],
+                                    asystem_version=model_day_inter["energyforecastinterday"][model_version][0],
                                     data_version=model_version,
                                     data_bound_lower=0,
                                     data_derived_max=True)

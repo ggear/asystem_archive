@@ -21,6 +21,7 @@
 .impalahistory
 .python-eggs
 .pydevproject
+.eggs
 *.pyc
 *egg-info
 *.pipeout
