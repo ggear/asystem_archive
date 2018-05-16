@@ -41,7 +41,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 from sklearn.externals import joblib
 
-from publish_util import publish
+from repo_util import publish
 from script_util import hdfs_make_qualified
 
 DAYS_VETTED = '2018/05/15'

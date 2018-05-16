@@ -50,7 +50,7 @@ from sklearn.linear_model import LassoCV
 from sklearn.feature_extraction import DictVectorizer
 from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
-from publish_util import publish
+from repo_util import publish
 
 
 def execute(model=None, features=None,
