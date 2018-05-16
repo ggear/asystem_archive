@@ -22,7 +22,7 @@
 ###############################################################################
 
 import os.path
-
+import tempfile
 import pandas as pd
 import time
 import sys
@@ -58,7 +58,7 @@ def pipeline():
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView('dataset')
 
-    # Filter/aggregate to a Spark dataframe
+    # Filter/aggregate to a Spark dataframe, converting to pandas
     dataframe = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
@@ -73,8 +73,8 @@ def pipeline():
           data_metric NOT LIKE '%forecast%'
         ORDER BY timestamp
     """).toPandas()
-    print("Datums summary:\n" + str(dataframe))
 
+    # Transform the dataframe using pandas
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
@@ -85,7 +85,11 @@ def pipeline():
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
 
-    dataframe.to_csv('/tmp/temperature.csv')
+    # Write the data out to CSV
+    output = tempfile.NamedTemporaryFile(
+        prefix='asystem-temperature', suffix='.csv', delete=False).name
+    print("Writing output to [{}]".format(output))
+    dataframe.to_csv(output)
 
     print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
