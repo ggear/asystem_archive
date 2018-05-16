@@ -24,7 +24,7 @@ function mode_execute {
   elif [ "${MODE}" = "prepare" ]; then
 
     echo "" && echo "" && echo "" && echo "Prepare [asystem]"
-    ec2-instance-resize ${CLOUD_HOST_ID} "m4.xlarge"
+    ec2-instance-resize ${CLOUD_HOST_ID} "c4.4xlarge"
     ssh -tt ${CLOUD_HOST_IP} << EOF
       sudo service cloudera-scm-server-db start
       sudo service cloudera-scm-agent start

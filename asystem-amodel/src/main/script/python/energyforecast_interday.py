@@ -59,6 +59,7 @@ from repo_util import publish
 def execute(model=None, features=None,
             labels=False, statistics=False, engineering=False, prediction=False):
     import pandas as pd
+    import numpy as np
     from sklearn.pipeline import Pipeline
     from sklearn.linear_model import ElasticNetCV
     from sklearn.linear_model import RidgeCV
