@@ -296,7 +296,11 @@ public class ProcessTest implements TestConstants {
   }
 
   @SuppressWarnings("Duplicates")
-  @TestWith({"testGenerated", "testCorrupt", "testEmpty", "testTemp", "testFresh", "testClean", "testDirty", "testDone", "testAll"})
+
+  // TODO: Revert
+  @TestWith({"testAll"})
+//  @TestWith({"testGenerated", "testCorrupt", "testEmpty", "testTemp", "testFresh", "testClean", "testDirty", "testDone", "testAll"})
+
   public void testProcess(TestMetaData test) throws Exception {
     if (test.<Boolean>getParameter(DATA_GENERATE)) {
       assertTrue(flumeServer.crankPipeline(
