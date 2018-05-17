@@ -29,19 +29,12 @@ from twisted.web import client
 from twisted.web.client import HTTPConnectionPool
 from twisted.web.server import Site
 from twisted.web.static import File
-import logging
-import os
-
-import datetime
-import treq
-import xmltodict
-from twisted_s3 import auth
 
 from application import *
 from plugin import DATUM_QUEUE_LAST
 from plugin import ID_HEX
-from plugin import Plugin
 from plugin import ModelPull
+from plugin import Plugin
 
 LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
