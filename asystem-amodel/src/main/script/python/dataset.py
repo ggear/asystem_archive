@@ -88,7 +88,7 @@ def pipeline():
 
     # Write the data out to CSV
     output = tempfile.NamedTemporaryFile(
-        prefix='asystem-temperature', suffix='.csv', delete=False).name
+        prefix='asystem-temperature-', suffix='.csv', delete=False).name
     print("Writing output to [{}]".format(output))
     dataframe.to_csv(output)
 
