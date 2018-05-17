@@ -385,7 +385,7 @@
                                     <arg value="anode" />
                                 </exec>
                                 <exec executable="/usr/bin/sudo" dir="${dir.output.python}" failonerror="true">
-                                    <arg value="${python.runtime}" />
+                                    <arg value="python" />
                                     <arg value="setup.py" />
                                     <arg value="clean" />
                                 </exec>

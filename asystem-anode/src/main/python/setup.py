@@ -41,10 +41,10 @@ setup(
     packages=find_packages(),
     package_data={"": ["*.properties"]},
     install_requires=[
-        "twisted==17.5.0",
+        "twisted==16.5.0",
         "twisted_s3==0.2.2",
         "twisted-mqtt==0.3.6",
-        "autobahn==17.5.1",
+        "autobahn[twisted]==0.16.1",
         "klein==15.3.1",
         "treq==17.8.0",
         "avro==1.7.6",

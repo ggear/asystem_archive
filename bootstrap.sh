@@ -84,7 +84,7 @@ EOF
     mvn release:clean
     mvn clean install -PPKG &&
     git add -A
-    git commit -m "Update generated files for asystem-${VERSION_HEAD}"
+    git commit -m "Update generated files for asystem-${VERSION_HEAD}-SNAPSHOT"
     git push --all
     git tag
 
