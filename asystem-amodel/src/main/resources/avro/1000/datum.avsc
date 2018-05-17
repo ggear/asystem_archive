@@ -1,5 +1,6 @@
 {
   "namespace": "com.jag.asystem.amodel.avro",
+  "asystem": "${project.version}",
   "name": "Datum",
   "version": 1000,
   "type": "record",

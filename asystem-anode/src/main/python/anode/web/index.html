@@ -37,10 +37,13 @@
             var datumsTimer = {};
             var datumsPlot = new Set();
             var anode = new ANode(document.location.href,
-                function () {
+                function (metadata) {
                     document.getElementById("datums_header").innerHTML =
                         "<a href='javascript: toggleLinks(); void(0)'>anode.<span id='datums_header_connection'>connected</span><span id='datums_header_status'>»</span></a>";
                     styleTick(document.getElementById("datums_header_connection"), 1);
+                    document.getElementById("datums_header_version").innerHTML = metadata["asystem"]
+                    if (metadata["asystem"].endsWith("SNAPSHOT")) styleTick(document.getElementById("datums_header_version"), -1)
+                    else styleTick(document.getElementById("datums_header_version"), 1)
                 },
                 function () {
                     document.getElementById("datums_header").innerHTML = "<a href='" + document.location.href +
@@ -245,76 +248,77 @@
                 <div id="datums_header_links" style="display:none;">
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=anode&metrics=_system">anode</a>.<a
-                            href="/">all</a>
-                </span></div>
+                            href="/">all</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=power">power</a>.<a
-                            href="/?metrics=power.export&metrics=power.consumption&metrics=power.utilisation">now</a>
-                </span></div>
+                            href="/?metrics=power.export&metrics=power.consumption&metrics=power.utilisation">now</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=energy">energy</a>.<a
-                            href="/?metrics=energy.export&metrics=energy.consumption.savings&metrics=energy.consumption.inverter&metrics=energy.consumption.cost&metrics=energy.consumption-shoulder.&metrics=energy.consumption-peak.&metrics=energy.consumption-off-peak.&bins=1day">now</a>
-                </span></div>
+                            href="/?metrics=energy.export&metrics=energy.consumption.savings&metrics=energy.consumption.inverter&metrics=energy.consumption.cost&metrics=energy.consumption-shoulder.&metrics=energy.consumption-peak.&metrics=energy.consumption-off-peak.&bins=1day">now</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=energy">energy</a>.<a
-                            href="/?metrics=energy.production&bins=1day">today</a>
-                </span></div>
+                            href="/?metrics=energy.production&bins=1day">today</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=energy">energy</a>.<a
-                            href="/?metrics=energy.production&bins=2day">tomorrow</a>
-                </span></div>
+                            href="/?metrics=energy.production&bins=2day">tomorrow</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=energy">energy</a>.<a
-                            href="/?metrics=energy.production&bins=3day">overmorrow</a>
-                </span></div>
+                            href="/?metrics=energy.production&bins=3day">overmorrow</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=internet">internet</a>.<a
-                            href="/?metrics=perth">perth</a>
-                </span></div>
+                            href="/?metrics=perth">perth</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                            href="/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a>
-                </span></div>
+                            href="/?metrics=temperature&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a></span></div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                            href="/?metrics=carbon-dioxide">carbon-dioxide</a>
-                </span></div>
+                            href="/?metrics=carbon-dioxide">carbon-dioxide</a></span></div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                            href="/?metrics=humidity&bins=2second&bins=50second&bins=30minute&bins=1day">humidity</a>
-                </span></div>
+                            href="/?metrics=humidity&bins=2second&bins=50second&bins=30minute&bins=1day">humidity</a></span></div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                            href="/?metrics=noise">noise</a>
-                </span></div>
+                            href="/?metrics=noise">noise</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=1day&bins=1day&bins=1day-time&bins=1night-time">today</a>
-                </span></div>
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=1day&bins=1day&bins=1day-time&bins=1night-time">today</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=2day&bins=2day&bins=2day-time&bins=2night-time">tomorrow</a>
-                </span></div>
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=2day&bins=2day&bins=2day-time&bins=2night-time">tomorrow</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=3day&bins=3day&bins=3day-time&bins=3night-time">overmorrow</a>
-                </span></div>
+                            href="/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&bins=3day&bins=3day&bins=3day-time&bins=3night-time">overmorrow</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a>
-                </span></div>
+                            href="/?metrics=rain&bins=30minute&bins=1day&bins=1month&bins=1year&bins=1day-time&bins=1night-time">rain</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=wind&bins=2second&bins=1day">wind</a>
-                </span></div>
+                            href="/?metrics=wind&bins=2second&bins=1day">wind</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature.forecast&metrics=conditions&metrics=temperature.outdoor.roof&metrics=temperature.outdoor.deck&metrics=rain&metrics=wind&metrics=pressure&metrics=.forecast.">weather</a>.<a
-                            href="/?metrics=pressure">pressure</a>
-                </span></div>
+                            href="/?metrics=pressure">pressure</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=sun">almanac</a>.<a
-                            href="/?metrics=sun">sun</a>
-                </span></div>
+                            href="/?metrics=sun">sun</a></span>
+                    </div>
+                    <div class="datum"><span class="datum-detail"><a
+                            href="javascript: toggleLinks(); void(0)">version</a>.<a
+                            href="javascript: toggleLinks(); void(0)" id="datums_header_version">UNKNOWN</a></span>
+                    </div>
                 </div>
             </div>
         </div>

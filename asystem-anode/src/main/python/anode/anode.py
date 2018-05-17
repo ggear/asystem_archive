@@ -204,7 +204,7 @@ class MqttPublishService(ClientService):
             Log(logging.DEBUG).log("Interface", "state", lambda: "[mqtt] connection opened")
 
     def onDisconnection(self, reason):
-        Log(logging.ERROR).log("Interface", "state", lambda: "[mqtt] connection lost [{}]".format(reason))
+        Log(logging.WARN).log("Interface", "state", lambda: "[mqtt] connection lost [{}]".format(reason))
         self.whenConnected().addCallback(self.makeConnection)
 
     def isConnected(self):

@@ -40,7 +40,7 @@ function ANode(uri, onopen, onclose, onmessage) {
     var uriParameters = uriBase.substring(uriBase.indexOf("/") + 1, uriBase.length);
 
     this.restfulUri = "http://" + uriHostPort + "/rest/";
-    this.metadataUri = "http://" + uriHostPort + "/js/avro/datum.avsc";
+    this.metadataUri = "http://" + uriHostPort + "/js/metadata/datum.avsc";
     this.webSocketUri = "ws://" + uriHostPort + "/ws/" + uriParameters;
 
     this.metadata = this.metadataRequest();
@@ -68,7 +68,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         outer.connected = true;
         if (typeof onopen !== "undefined") {
             try {
-                onopen();
+                onopen(outer.metadata);
             }
             catch (error) {
                 console.log(error)

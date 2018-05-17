@@ -89,18 +89,15 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${dir.source.python}/anode/web/js/avro</outputDirectory>
+                            <outputDirectory>${dir.source.python}/anode/web/js/metadata</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro</directory>
+                                    <directory>../asystem-amodel/src/main/resources/avro/${asystem-model.version}</directory>
                                     <includes>
-                                        <include>model.properties</include>
+                                        <include>datum.avsc</include>
                                     </includes>
                                     <filtering>true</filtering>
-                                </resource>
-                                <resource>
-                                    <directory>../asystem-amodel/src/main/resources/avro/${asystem-model.version}</directory>
                                 </resource>
                             </resources>
                         </configuration>

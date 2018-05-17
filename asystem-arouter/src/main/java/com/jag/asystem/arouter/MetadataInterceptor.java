@@ -206,7 +206,7 @@ public class MetadataInterceptor implements Interceptor {
       batchWindowSeconds = context.getInteger(CONFIG_BATCH_WINDOW_SECONDS, 60 * 60);
       batchTimeoutSeconds = context.getInteger(CONFIG_BATCH_TIMEOUT_SECONDS, 5 * 60);
       avroSchemaUrl = context.getString(CONFIG_AVRO_SCHEMA_URL, "").trim();
-      dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, false);
+      dropSnapshots = context.getBoolean(CONFIG_DROP_SNAPSHOTS, true);
     }
 
   }
