@@ -39,7 +39,7 @@ To deploy the latest release to production:
 To perform a full release, deploy, run pipeline:
 
 ```bash
-./bootstrap.sh prepare release deploy runtag teardown
+./bootstrap.sh prepare release deploy run teardown
 ```
 
 

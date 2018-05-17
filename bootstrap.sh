@@ -65,6 +65,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Release [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
     git checkout master
+    git remote set-url origin git@github.com:ggear/asystem.git
     mvn clean install -PCMP -pl .
     VERSION_RELEASE=$(grep APP_VERSION= target/classes/application.properties | sed 's/APP_VERSION=*//' | sed 's/-SNAPSHOT*//')
     VERSION_HEAD_NUMERIC=$(($(echo $VERSION_RELEASE | sed 's/\.//g')+1))
@@ -126,12 +127,12 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
-  elif [ "${MODE}" = "runlocal" ]; then
+  elif [ "${MODE}" = "local" ]; then
 
     echo "" && echo "" && echo "" && echo "Run local [asystem-anode]"
     mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
 
-  elif [ "${MODE}" = "runsnapshot" ]; then
+  elif [ "${MODE}" = "snapshot" ]; then
 
     echo "" && echo "" && echo "" && echo "Run snapshot [asystem]"
     git checkout master
@@ -140,7 +141,7 @@ EOF
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
 
-  elif [ "${MODE}" = "runtag" ]; then
+  elif [ "${MODE}" = "run" ]; then
 
     echo "" && echo "" && echo "" && echo "Run tag [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
@@ -153,7 +154,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|runlocal|runsnapshot|runtag|teardown>"
+    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|local|snapshot|run|teardown>"
 
   fi
 
