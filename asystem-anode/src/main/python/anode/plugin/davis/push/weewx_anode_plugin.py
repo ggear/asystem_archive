@@ -7,7 +7,7 @@ import weewx
 from weewx.almanac import Almanac
 from weewx.engine import StdService
 
-URL_DEV = "http://10.0.1.205:8091/rest/?sources=davis"
+URL_DEV = "http://192.168.2.45:8091/rest/?sources=davis"
 URL_PROD = "http://127.0.0.1:8091/rest/?sources=davis"
 
 
