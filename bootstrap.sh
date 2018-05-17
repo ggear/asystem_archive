@@ -95,19 +95,21 @@ EOF
       cd dev/asystem
       git checkout master
       git clean -d -x -f
+      git checkout -- .
       git pull -a
       git checkout $(git describe \-\-tags | cut -c1-19)
-      mvn clean deploy -pl asystem-arouter -PPKG -am -Dmaven.install-flume.skip=false
+      mvn clean deploy -pl asystem-arouter -PPKG -am -Dmaven.install-flume.skip=false -U
       exit
 EOF
     echo "" && echo "" && echo "" && echo "Deploy [asystem-anode]"
     ssh -tt ${ANODE_HOST_IP} << EOF
       cd dev/asystem
       git checkout master
-      git clean -d -x -f
+      sudo git clean -d -x -f
+      git checkout -- .
       git pull -a
       git checkout $(git describe \-\-tags | cut -c1-19)
-      mvn clean deploy -pl asystem-anode -PPKG -Dmaven.install-python.skip=false
+      mvn clean deploy -pl asystem-anode -PPKG -Dmaven.install-python.skip=false -U
       exit
 EOF
 
