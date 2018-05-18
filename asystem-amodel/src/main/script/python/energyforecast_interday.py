@@ -141,13 +141,13 @@ def pipeline():
     # ## Load CSV
     df = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/train/text/csv/none/" +
-                            "amodel_version=10.000.0038-SNAPSHOT/amodel_model=1005"),
+                            "amodel_version=10.000.0038/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("Training data:\n{}\n\n".format(df2.describe()))
     dfv = spark.read.csv(
         hdfs_make_qualified(remote_data_path + "/test/text/csv/none/" +
-                            "amodel_version=10.000.0038-SNAPSHOT/amodel_model=1005"),
+                            "amodel_version=10.000.0038/amodel_model=1005"),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("Test data:\n{}\n".format(dfv2.describe()))
@@ -326,7 +326,7 @@ def pipeline():
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
-    model_file = '/model/pickle/joblib/none/amodel_version=10.000.0038-SNAPSHOT' \
+    model_file = '/model/pickle/joblib/none/amodel_version=10.000.0038' \
                  '/amodel_model=1005/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
