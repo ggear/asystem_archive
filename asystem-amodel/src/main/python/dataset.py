@@ -40,7 +40,7 @@ def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
     # Start the pipeline session
-    print("Pipeline started")
+    print("Loading data:")
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
 
@@ -73,6 +73,7 @@ def pipeline():
           data_metric NOT LIKE '%forecast%'
         ORDER BY timestamp
     """).toPandas()
+    print("Data loaded and filtered\n")
 
     # Transform the dataframe using pandas
     dataframe = dataframe.pivot_table(
@@ -84,6 +85,8 @@ def pipeline():
     dataframe = dataframe.resample('300S').mean()
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
+
+    print("Training data:\n{}\n\n".format(dataframe.describe()))
 
     # Write the data out to CSV
     output = tempfile.NamedTemporaryFile(
