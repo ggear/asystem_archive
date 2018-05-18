@@ -99,7 +99,6 @@ DAYS_BLACK_LIST = set([
 DAYS_PLOT = False
 DAYS_PLOT_DEBUG = False
 
-
 # noinspection PyRedeclaration
 # Enable plotting
 DAYS_PLOT = True
@@ -108,6 +107,7 @@ pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
+
 
 def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
     if prediction:
@@ -192,24 +192,24 @@ def pipeline():
         .rename(columns={'bin_energy': 'bin_energy_day'})
     df = df.merge(dfEnergyDay, how='inner', left_index=True, right_index=True)
     dfSunRise.set_index(pd.to_datetime(dfSunRise['bin_timestamp'], unit='s')
-            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+                        .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunRise['bin_date'] = dfSunRise.index.date
     dfSunRise.set_index('bin_date', inplace=True)
     df = df.merge(dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max()
-            .to_frame(), how='inner', left_index=True, right_index=True)
+                  .to_frame(), how='inner', left_index=True, right_index=True)
     dfSunSet.set_index(
         pd.to_datetime(dfSunSet['bin_timestamp'], unit='s')
             .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunSet['bin_date'] = dfSunSet.index.date
     dfSunSet.set_index('bin_date', inplace=True)
     df = df.merge(dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max()
-            .to_frame(), how='inner', left_index=True, right_index=True)
+                  .to_frame(), how='inner', left_index=True, right_index=True)
     df.set_index(pd.to_datetime(df['bin_timestamp'], unit='s')
-            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+                 .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     df.sort_index(inplace=True)
 
     print("Training data:\n{}\n\n".format(df.describe()))
-    
+
     dfvs = {'VETTED': {}, 'PURGED': {}, 'TOVETT': {}}
     for dfs in df.groupby(df.index.date):
         day = dfs[0].strftime('%Y/%m/%d')
