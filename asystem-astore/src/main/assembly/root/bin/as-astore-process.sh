@@ -27,7 +27,7 @@ PROCESS_JAR="$ROOT_DIR/lib/jar/$(basename $(dirname $(dirname $ROOT_DIR))).jar"
 
 $ROOT_DIR/bin/cldr-provision.sh "$WAIT_TASK"
 
-$ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
+[[ "$DO_RELEASE" != "true" || "$DO_PRODUCTION" != "true" ]] && $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
 
 for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   sleep 5
@@ -43,6 +43,8 @@ done
 if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX && [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
   $ROOT_DIR/bin/as-astore-process.sh "$WAIT_TASK" "true" "$PROCESS_STAGES" "false" "true"
 fi
+
+[[ "$DO_RELEASE" = "true" && "$DO_PRODUCTION" = "true" ]] && $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
 
