@@ -124,12 +124,12 @@ def pipeline():
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
 
-    print("Pipeline started")
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-energyforecastintraday").getOrCreate()
 
     datasets = []
     timezone = 'Australia/Perth'
+    print("Loading data:")
     for path in [os.path.join(remote_data_path, str(i),
                               "asystem/astore/processed/canonical/parquet/dict/snappy"
                               ) for i in range(10)]:
@@ -180,6 +180,7 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
+    print("Data loaded and filtered\n")
 
     df = dfEnergy.set_index(pd.to_datetime(dfEnergy['bin_timestamp'], unit='s')
                             .dt.tz_localize('UTC').dt.tz_convert(timezone))
@@ -253,8 +254,7 @@ def pipeline():
         dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=${project.version}' \
-                 '/amodel_model=${asystem-model-energyforecast-intraday.build.version}/model.pkl'
+                 'amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-intraday.build.version}/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):
