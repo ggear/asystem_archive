@@ -14,14 +14,14 @@ DO_PRODUCTION=${7:-"true"}
 
 PROCESS_TX=$(uuidgen)
 PROCESS_S3="$S3_URL_ASTAGING"
-PROCESS_TAGS="STAGING"
+PROCESS_TAGS="staging"
 PROCESS_GROUP="asystem-amodel-energyforecast"
 PROCESS_STAGES_ARRAY=(${PROCESS_STAGES//,/ })
 PROCESS_JAR="$ROOT_DIR/lib/jar/$(basename $(dirname $(dirname $ROOT_DIR))).jar"
 
 [[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK="true"
 [[ "$APP_VERSION" = *-SNAPSHOT ]] && DO_RELEASE="false" && DO_PRODUCTION="false"
-[[ "$DO_PRODUCTION" = "true" ]] && PROCESS_TAGS="PRODUCTION"
+[[ "$DO_PRODUCTION" = "true" ]] && PROCESS_TAGS="production"
 [[ "$DO_RELEASE" = "true" && "$DO_PRODUCTION" = "true" ]] && PROCESS_S3=""
 [[ "$DO_RELEASE" = "true" && "$DO_PRODUCTION" = "true" ]] && WAIT_TASK="true"
 
