@@ -104,6 +104,11 @@ DAYS_PLOT_DEBUG = False
 # Enable plotting
 DAYS_PLOT = True
 
+pd.set_option('display.height', 1000)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
     if prediction:
         return model['pipeline'].loc[features[
@@ -253,7 +258,7 @@ def pipeline():
         dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0039-SNAPSHOT' \
+                 'amodel_version=10.000.0040-SNAPSHOT' \
                  '/amodel_model=1002/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
