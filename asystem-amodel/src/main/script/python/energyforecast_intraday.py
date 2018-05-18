@@ -191,27 +191,25 @@ def pipeline():
     dfEnergyDay = df.groupby(df.index)['bin_energy'].max().to_frame() \
         .rename(columns={'bin_energy': 'bin_energy_day'})
     df = df.merge(dfEnergyDay, how='inner', left_index=True, right_index=True)
-    dfSunRise.set_index(
-        pd.to_datetime(dfSunRise['bin_timestamp'], unit='s')
+    dfSunRise.set_index(pd.to_datetime(dfSunRise['bin_timestamp'], unit='s')
             .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunRise['bin_date'] = dfSunRise.index.date
     dfSunRise.set_index('bin_date', inplace=True)
-    df = df.merge(
-        dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max()
+    df = df.merge(dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max()
             .to_frame(), how='inner', left_index=True, right_index=True)
     dfSunSet.set_index(
         pd.to_datetime(dfSunSet['bin_timestamp'], unit='s')
             .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     dfSunSet['bin_date'] = dfSunSet.index.date
     dfSunSet.set_index('bin_date', inplace=True)
-    df = df.merge(
-        dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max()
+    df = df.merge(dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max()
             .to_frame(), how='inner', left_index=True, right_index=True)
-    df.set_index(
-        pd.to_datetime(df['bin_timestamp'], unit='s')
+    df.set_index(pd.to_datetime(df['bin_timestamp'], unit='s')
             .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
     df.sort_index(inplace=True)
 
+    print("Training data:\n{}\n\n".format(df.describe()))
+    
     dfvs = {'VETTED': {}, 'PURGED': {}, 'TOVETT': {}}
     for dfs in df.groupby(df.index.date):
         day = dfs[0].strftime('%Y/%m/%d')
