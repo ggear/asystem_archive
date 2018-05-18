@@ -129,12 +129,12 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
-  elif [ "${MODE}" = "local" ]; then
+  elif [ "${MODE}" = "run_local" ]; then
 
     echo "" && echo "" && echo "" && echo "Run local [asystem-anode]"
     mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
 
-  elif [ "${MODE}" = "snapshot" ]; then
+  elif [ "${MODE}" = "run_snapshot" ]; then
 
     echo "" && echo "" && echo "" && echo "Run snapshot [asystem]"
     git checkout master
@@ -143,9 +143,9 @@ EOF
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
 
-  elif [ "${MODE}" = "run" ]; then
+  elif [ "${MODE}" = "run_release" ]; then
 
-    echo "" && echo "" && echo "" && echo "Run tag [asystem]"
+    echo "" && echo "" && echo "" && echo "Run release [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
     git checkout $(git describe \-\-tags | cut -c1-19)
     mvn clean install -PPKG
