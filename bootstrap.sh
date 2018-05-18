@@ -14,7 +14,7 @@ ANODE_HOST_IP="192.168.1.10"
 
 function mode_execute {
 
-  if [ "${MODE}" = "env" ]; then
+  if [ "${MODE}" = "environment" ]; then
 
     echo "" && echo "" && echo "" && echo "Source [asystem]"
     curl -s https://raw.githubusercontent.com/ggear/cloudera-framework/master/bootstrap.sh > target/bootstrap.sh
@@ -156,7 +156,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <env|prepare|download|build|release|deploy|merge|local|snapshot|run|teardown>"
+    echo "Usage: ${0} <environment|prepare|download|build|release|deploy|merge|run_local|run_snapshot|run_release|teardown>"
 
   fi
 
