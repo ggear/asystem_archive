@@ -101,6 +101,11 @@ DAYS_PLOT_DEBUG = False
 # noinspection PyRedeclaration
 # Enable plotting${TEMPLATE.PRE-PROCESSOR.OPEN}DAYS_PLOT = True
 
+pd.set_option('display.height', 1000)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
     if prediction:
         return model['pipeline'].loc[features[

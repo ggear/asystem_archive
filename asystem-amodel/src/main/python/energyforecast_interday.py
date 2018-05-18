@@ -52,6 +52,10 @@ from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
 from repo_util import publish
 
+pd.set_option('display.height', 1000)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 def execute(model=None, features=None,
             labels=False, statistics=False, engineering=False, prediction=False):
