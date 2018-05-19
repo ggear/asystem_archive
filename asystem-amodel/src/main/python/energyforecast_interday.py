@@ -138,15 +138,18 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
+    print("Spark session created\n")
 
-    df = spark.read.csv(nearest(hdfs_make_qualified(remote_data_path + "/train/text/csv/none/" +
-                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
+    df = spark.read.csv(nearest(hdfs_make_qualified(
+        remote_data_path + "/train/text/csv/none/" +
+        "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("Training data:\n{}\n\n".format(df2.describe()))
 
-    dfv = spark.read.csv(nearest(hdfs_make_qualified(remote_data_path + "/test/text/csv/none/" +
-                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
+    dfv = spark.read.csv(nearest(hdfs_make_qualified(
+        remote_data_path + "/test/text/csv/none/" +
+        "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("Test data:\n{}\n".format(dfv2.describe()))
