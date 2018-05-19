@@ -138,13 +138,13 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
-    print("Data [{}]\nModel [{}]\nLocal [{}]\n"
+    print("Session started:\n  Data: [{}]\n  Model [{}]\n  Local [{}]\n"
           .format(remote_data_path, remote_model_path, local_model_path))
 
     training_uri = nearest(hdfs_make_qualified(
         remote_data_path + "/train/text/csv/none/" +
         "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005"))
-    print("Training [{}]:\n".format(training_uri))
+    print("Train [{}]:\n".format(training_uri))
     df = spark.read.csv(training_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("{}\n\n".format(df2.describe()))
