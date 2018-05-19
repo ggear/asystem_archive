@@ -32,15 +32,15 @@ def publish(local_file, publish_url):
 
 
 def nearest(publish_url):
-
-    print(publish_url)
-
     if publish_url.startswith('s3a://'):
         s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*', publish_url).group(1)
         s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)', publish_url).group(1)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
         s3_list = list(s3_bucket.list(prefix=s3_key_name))
+
+        print("{} {}".format(publish_url, s3_list))
+
         if len(s3_list) > 0 and s3_list[0].key == s3_key_name:
             return publish_url
     else:
