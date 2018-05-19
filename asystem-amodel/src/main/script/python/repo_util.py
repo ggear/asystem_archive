@@ -37,7 +37,7 @@ def nearest(publish_url):
         s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)', publish_url).group(1)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
-        s3_list = list(s3_bucket.objects.filter(Prefix=s3_key_name))
+        s3_list = list(s3_bucket.list(prefix=s3_key_name))
         if len(s3_list) > 0 and s3_list[0].key == s3_key_name:
             return publish_url
     else:
