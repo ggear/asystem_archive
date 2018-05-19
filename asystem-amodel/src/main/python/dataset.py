@@ -31,9 +31,12 @@ import sys
 
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
-
 from script_util import hdfs_make_qualified
 
+pd.set_option('display.height', 1000)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 def pipeline():
     # Set remote path based on passed parameters or default
