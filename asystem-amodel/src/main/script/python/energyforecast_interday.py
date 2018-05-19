@@ -54,6 +54,7 @@ from sklearn.feature_extraction import DictVectorizer
 from pyspark.sql import SparkSession
 from script_util import hdfs_make_qualified
 from repo_util import publish
+from repo_util import nearest
 
 pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
@@ -141,18 +142,14 @@ def pipeline():
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
 
-    # # Exploratory analysis before building predictive models
-
-    # ## Load CSV
-    df = spark.read.csv(
-        hdfs_make_qualified(remote_data_path + "/train/text/csv/none/" +
-                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005"),
+    df = spark.read.csv(nearest(hdfs_make_qualified(remote_data_path + "/train/text/csv/none/" +
+                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("Training data:\n{}\n\n".format(df2.describe()))
-    dfv = spark.read.csv(
-        hdfs_make_qualified(remote_data_path + "/test/text/csv/none/" +
-                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005"),
+
+    dfv = spark.read.csv(nearest(hdfs_make_qualified(remote_data_path + "/test/text/csv/none/" +
+                            "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005")),
         header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("Test data:\n{}\n".format(dfv2.describe()))
