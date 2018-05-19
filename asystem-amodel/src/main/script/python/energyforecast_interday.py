@@ -141,14 +141,14 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
-    print("Session started:\n  Model version [1005]\n  "
-          "ASystem version [10.000.0040-SNAPSHOT]\n  Local path [{}]\n  Data URI: [{}]\n  Model URI [{}]\n"
+    print("Session started:\n  Model version: [1005]\n  "
+          "ASystem version: [10.000.0040-SNAPSHOT]\n  Local path: [{}]\n  Data URI: [{}]\n  Model URI: [{}]\n"
           .format(local_model_path, remote_data_path, remote_model_path))
 
     training_uri = nearest(hdfs_make_qualified(
         remote_data_path + "/train/text/csv/none/" +
         "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005"))
-    print("Train [{}]:\n".format(training_uri))
+    print("Training:\n  Data URI: [{}]:\n  Dataframe:\n".format(training_uri))
     df = spark.read.csv(training_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("{}\n\n".format(df2.describe()))
@@ -156,7 +156,7 @@ def pipeline():
     test_uri = nearest(hdfs_make_qualified(
         remote_data_path + "/test/text/csv/none/" +
         "amodel_version=10.000.0040-SNAPSHOT/amodel_model=1005"))
-    print("Test [{}]:\n".format(test_uri))
+    print("Testing:\n  Data URI: [{}]:\n  Dataframe:\n".format(test_uri))
     dfv = spark.read.csv(test_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("{}\n".format(dfv2.describe()))
