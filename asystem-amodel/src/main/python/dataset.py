@@ -19,6 +19,10 @@
 # The SCRIPT can be tested from within CDSW, the LIBRARY as part of  the maven
 # test phase.
 #
+# This is an example pipeline that shows the scafolding necessary to query the
+# core dataset, filtering, resampling and writing out a subset of the data,
+# specifcally temperature
+#
 ###############################################################################
 
 import os.path
@@ -64,7 +68,7 @@ def pipeline():
     dataset.createOrReplaceTempView('dataset')
 
     # Filter/aggregate to a Spark dataframe, converting to pandas
-    dataframe = spark.sql("""
+    dataset = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
           data_metric AS metric,
@@ -77,10 +81,11 @@ def pipeline():
           data_type='point' AND
           data_metric NOT LIKE '%forecast%'
         ORDER BY timestamp
-    """).toPandas()
+    """)
     print("Data loaded and filtered\n")
 
     # Transform the dataframe using pandas
+    dataframe = dataset.toPandas()
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
@@ -94,7 +99,6 @@ def pipeline():
     dataframe = dataframe.loc[(dataframe < 50).all(axis=1), :]
     dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
     dataframe.columns = dataframe.columns.map(lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
-
     print("Training data:\n{}\n\n".format(dataframe.describe()))
 
     # Write the data out to CSV

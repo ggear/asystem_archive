@@ -43,6 +43,11 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
     ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro"
+    ./bootstrap.sh teardown_cluster
+
+  elif [ "${MODE}" = "teardown_cluster" ]; then
+
+    echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
     mvn clean install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "false" "true"
 
@@ -156,7 +161,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|build|release|deploy|merge|run_local|run_snapshot|run_release|teardown>"
+    echo "Usage: ${0} <environment|prepare|download|build|release|deploy|merge|run_local|run_snapshot|run_release|teardown|teardown_cluster>"
 
   fi
 
