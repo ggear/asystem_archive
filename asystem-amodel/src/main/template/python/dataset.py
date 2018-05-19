@@ -26,6 +26,7 @@ import tempfile
 import pandas as pd
 import time
 import sys
+import re
 
 # Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
@@ -37,6 +38,7 @@ pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
+
 
 def pipeline():
     # Set remote path based on passed parameters or default
@@ -88,6 +90,10 @@ def pipeline():
     dataframe = dataframe.resample('300S').mean()
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
+    dataframe = dataframe.round(1)
+    dataframe = dataframe.loc[(dataframe < 50).all(axis=1), :]
+    dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
+    dataframe.columns = dataframe.columns.map(lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
 
     print("Training data:\n{}\n\n".format(dataframe.describe()))
 
