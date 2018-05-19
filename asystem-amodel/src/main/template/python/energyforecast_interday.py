@@ -138,23 +138,24 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
-    print("Spark session created\n")
+    print("Data [{}]\nModel [{}]\nLocal [{}]\n"
+          .format(remote_data_path, remote_model_path, local_model_path))
 
     training_uri = nearest(hdfs_make_qualified(
         remote_data_path + "/train/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
-    print("Training data URI [{}]".format(training_uri))
+    print("Training [{}]:\n".format(training_uri))
     df = spark.read.csv(training_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
-    print("Training data:\n{}\n\n".format(df2.describe()))
+    print("{}\n\n".format(df2.describe()))
 
     test_uri = nearest(hdfs_make_qualified(
         remote_data_path + "/test/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
-    print("Test data URI [{}]".format(test_uri))
+    print("Test [{}]:\n".format(test_uri))
     dfv = spark.read.csv(test_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
-    print("Test data:\n{}\n".format(dfv2.describe()))
+    print("{}\n".format(dfv2.describe()))
 
     features_statistics = execute(features=pd.concat([df2, dfv2]), statistics=True)
 
