@@ -26,6 +26,7 @@ import tempfile
 import pandas as pd
 import time
 import sys
+import re
 
 # Add working directory to the system path${TEMPLATE.PRE-PROCESSOR.OPEN}sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
@@ -88,6 +89,10 @@ def pipeline():
     dataframe = dataframe.resample('300S').mean()
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
+    dataframe = dataframe.round(1)
+    dataframe = dataframe.loc[(dataframe < 50).all(axis=1), :]
+    dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
+    dataframe.columns = dataframe.columns.map(lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
 
     print("Training data:\n{}\n\n".format(dataframe.describe()))
 
