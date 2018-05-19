@@ -138,7 +138,9 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
-    print("Session started:\n  Data: [{}]\n  Model [{}]\n  Local [{}]\n"
+    print("Session started:\n  ASystem version [${project.version}]\n "
+          "Model version [${asystem-model-energyforecast-interday.build.version}]\n "
+          "Data URI: [{}]\n  Model URI [{}]\n  Local path [{}]\n"
           .format(remote_data_path, remote_model_path, local_model_path))
 
     training_uri = nearest(hdfs_make_qualified(
