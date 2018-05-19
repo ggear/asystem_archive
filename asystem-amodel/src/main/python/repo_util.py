@@ -32,6 +32,9 @@ def publish(local_file, publish_url):
 
 
 def nearest(publish_url):
+
+    print(publish_url)
+
     if publish_url.startswith('s3a://'):
         s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*', publish_url).group(1)
         s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)', publish_url).group(1)
