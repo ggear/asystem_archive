@@ -39,6 +39,7 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
+
 def pipeline():
     # Set remote path based on passed parameters or default
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
