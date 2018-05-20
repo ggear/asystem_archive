@@ -49,7 +49,7 @@ def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
     # Start the pipeline session
-    print("Loading data:")
+    print("Pipeline starting [{}]".format(remote_data_path))
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
 
@@ -61,13 +61,13 @@ def pipeline():
         try:
             path_uri = hdfs_make_qualified(path)
             datasets.append(spark.read.parquet(path_uri))
-            print("Loaded path [{}]".format(path_uri))
+            print("Cached partitions [{}]".format(path_uri))
         except AnalysisException:
             continue
     dataset = reduce(lambda x, y: x.union(y), datasets)
     dataset.createOrReplaceTempView('dataset')
 
-    # Filter/aggregate to a Spark dataframe, converting to pandas
+    # Filter/aggregate to a Spark dataset
     dataset = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
