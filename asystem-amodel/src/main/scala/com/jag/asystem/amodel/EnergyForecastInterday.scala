@@ -52,13 +52,6 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     try {
       var dfs = outputPath.getFileSystem(getConf)
       outputPath = dfs.makeQualified(outputPath)
-      for (path <- List(new Path(outputPath, "training" + outputPathSuffix), new Path(outputPath, "validation" + outputPathSuffix))) {
-        if (dfs.exists(path)) if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true) else {
-          if (Log.isErrorEnabled()) Log.error("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
-            "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "]")
-          return FAILURE_ARGUMENTS
-        }
-      }
       dfs = inputPath.getFileSystem(getConf)
       inputPath = dfs.makeQualified(inputPath)
       val files = dfs.listFiles(inputPath, true)
@@ -68,6 +61,16 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         fileUri match {
           case fileRewritePattern(fileRoot) => inputPaths += fileRoot
           case _ =>
+        }
+      }
+      for (path <- List(new Path(outputPath, "train" + outputPathSuffix), new Path(outputPath, "test" + outputPathSuffix))) {
+        if (dfs.exists(path)) {
+          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true)
+          else {
+            if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
+              "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "], clearing inputs")
+            inputPaths = Set.empty
+          }
         }
       }
     }

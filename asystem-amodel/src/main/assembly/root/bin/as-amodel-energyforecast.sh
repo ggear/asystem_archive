@@ -8,7 +8,7 @@ set -x -e
 
 WAIT_TASK=${1:-"true"}
 DO_RELEASE=${2:-"true"}
-PROCESS_STAGES=${3:-"preparation,training,intraday"}
+PROCESS_STAGES=${3:-"interday-preparation,interday-training,intraday-all"}
 DELETE_CLUSTER=${6:-"false"}
 DO_PRODUCTION=${7:-"true"}
 
@@ -31,7 +31,7 @@ $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL" "$S3_URL_AMODEL""$S3_URL_ASTAGING
 
 for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   sleep 5
-  if [ "$PROCESS_STAGE" = "preparation" ]; then
+  if [ "$PROCESS_STAGE" = "interday-preparation" ]; then
   $ROOT_DIR/bin/cldr-shell-spark2.sh \
     "false" \
     "$PROCESS_GROUP-interday-preparation" \
@@ -39,7 +39,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
     "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/jar/"
-  elif [ "$PROCESS_STAGE" = "training" ]; then
+  elif [ "$PROCESS_STAGE" = "interday-training" ]; then
   $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
     "false" \
     "$PROCESS_GROUP-interday-training" \
@@ -47,7 +47,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "" \
     "--num-executors 1 --executor-cores 1 --executor-memory 1g" \
     "$S3_URL_ALIB/py/"
-  elif [ "$PROCESS_STAGE" = "intraday" ]; then
+  elif [ "$PROCESS_STAGE" = "intraday-all" ]; then
   $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
     "$WAIT_TASK" \
     "$PROCESS_GROUP-intraday-training" \
