@@ -6,15 +6,36 @@ import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, SUCCESS, getAppl
 import com.cloudera.framework.common.DriverSpark
 import com.jag.asystem.amodel.Counter.{RECORDS_TRAINING, RECORDS_VALIDATION}
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
+import com.jag.asystem.amodel.EnergyForecastInterday.{DaysBlacklist, DaysVetted}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
-import java.text.SimpleDateFormat
 
-import com.jag.asystem.amodel.EnergyForecastInterday.DaysVetted
+object EnergyForecastInterday {
+
+  val DaysVetted = "2018/05/25"
+
+  val DaysBlacklist = List(
+    "2017/10/12",
+    "2017/10/13",
+    "2017/10/29",
+    "2017/10/30",
+    "2017/11/27",
+    "2017/11/28",
+    "2017/12/18",
+    "2018/05/21",
+    "2018/05/25",
+    "2018/12/31"
+  )
+
+  def main(arguments: Array[String]): Unit = {
+    new EnergyForecastInterday(null).runner(arguments: _*)
+  }
+
+}
 
 class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(configuration) {
 
@@ -76,7 +97,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
       val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
       input.createTempView("datums")
-      val outputAll = List(
+      var outputAll = List(
         s"""
            | SELECT
            |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
@@ -188,16 +209,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
            | GROUP BY datum__bin__date
         """.stripMargin)
         .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
-        .where($"datum__bin__date" =!= "2017/10/12")
-        .where($"datum__bin__date" =!= "2017/10/13")
-        .where($"datum__bin__date" =!= "2017/10/29")
-        .where($"datum__bin__date" =!= "2017/10/30")
-        .where($"datum__bin__date" =!= "2017/11/27")
-        .where($"datum__bin__date" =!= "2017/11/28")
-        .where($"datum__bin__date" =!= "2017/12/18")
-        .where($"datum__bin__date" =!= "2018/12/31")
         .where($"datum__bin__date" < DaysVetted)
-        .repartition(1).orderBy("datum__bin__date")
+      DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
+      outputAll = outputAll.repartition(1).orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))
       outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
@@ -243,12 +257,3 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
 }
 
-object EnergyForecastInterday {
-
-  val DaysVetted = "2018/05/15"
-
-  def main(arguments: Array[String]): Unit = {
-    new EnergyForecastInterday(null).runner(arguments: _*)
-  }
-
-}

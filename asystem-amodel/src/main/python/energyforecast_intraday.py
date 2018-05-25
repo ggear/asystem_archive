@@ -42,7 +42,7 @@ from sklearn.externals import joblib
 from repo_util import publish
 from script_util import hdfs_make_qualified
 
-DAYS_VETTED = '2018/05/15'
+DAYS_VETTED = '2018/05/25'
 
 DAYS_BLACK_LIST = set([
     '2017/10/08',
@@ -92,6 +92,8 @@ DAYS_BLACK_LIST = set([
     '2018/04/07',
     '2018/04/10',
     '2018/04/22',
+    '2018/05/21',
+    '2018/05/25',
 ])
 
 DAYS_PLOT = False
