@@ -27,8 +27,7 @@ object EnergyForecastInterday {
     "2017/11/28",
     "2017/12/18",
     "2018/05/21",
-    "2018/05/25",
-    "2018/12/31"
+    "2018/05/25"
   )
 
   def main(arguments: Array[String]): Unit = {

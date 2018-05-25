@@ -60,6 +60,17 @@ EOF
     aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
     du -cksh asystem-astore/src/repo
 
+  elif [ "${MODE}" = "checkout_snapshot" ]; then
+
+    echo "" && echo "" && echo "" && echo "Checkout snapshot [asystem]"
+    git checkout master
+
+  elif [ "${MODE}" = "checkout_release" ]; then
+
+    echo "" && echo "" && echo "" && echo "Checkout release [asystem]"
+    [[ -n "$(git status --porcelain)" ]] && exit 1
+    git checkout $(git describe \-\-tags | cut -c1-19)
+
   elif [ "${MODE}" = "build" ]; then
 
     echo "" && echo "" && echo "" && echo "Build [asystem]"
@@ -134,34 +145,28 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
-  elif [ "${MODE}" = "run_local" ]; then
+  elif [ "${MODE}" = "run_anode" ]; then
 
-    echo "" && echo "" && echo "" && echo "Run local [asystem-anode]"
+    echo "" && echo "" && echo "" && echo "Run [asystem-anode]"
     mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
 
-  elif [ "${MODE}" = "run_snapshot" ]; then
+  elif [ "${MODE}" = "run_amodel" ]; then
 
-    echo "" && echo "" && echo "" && echo "Run snapshot [asystem]"
-    git checkout master
+    echo "" && echo "" && echo "" && echo "Run [asystem-amodel]"
+    mvn clean install -PPKG
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
+
+  elif [ "${MODE}" = "run_astore" ]; then
+
+    echo "" && echo "" && echo "" && echo "Run [asystem-astore]"
     mvn clean install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
-
-  elif [ "${MODE}" = "run_release" ]; then
-
-    echo "" && echo "" && echo "" && echo "Run release [asystem]"
-    [[ -n "$(git status --porcelain)" ]] && exit 1
-    git checkout $(git describe \-\-tags | cut -c1-19)
-    mvn clean install -PPKG
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
-    ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
-    git checkout master
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|build|release|deploy|merge|run_local|run_snapshot|run_release|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|checkout_snapshot|checkout_release|build|release|deploy|merge|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
