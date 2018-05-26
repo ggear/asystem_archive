@@ -64,6 +64,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         }
       }
       for (path <- List(new Path(outputPath, "train" + outputPathSuffix), new Path(outputPath, "test" + outputPathSuffix))) {
+
+        Log.info("\n\n" + path + " " + dfs.exists(path) + " " + getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT"))
+
         if (dfs.exists(path)) {
           if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true)
           else {
