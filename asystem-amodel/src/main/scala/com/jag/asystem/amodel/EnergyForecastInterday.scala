@@ -65,7 +65,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       }
 
       // TODO
-      outputPathSuffix = "/text/csv/none/amodel_version%253D10.000.0047/amodel_model%253D1005"
+      outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
 
       for (path <- List(
         new Path(outputPath, "train" + outputPathSuffix + "/_SUCCESS"),
