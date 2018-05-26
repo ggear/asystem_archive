@@ -73,14 +73,14 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         // TODO
         Log.info("\n\n" + path + " " + dfs.exists(path) + " " + dfs.listFiles(path, true).hasNext)
 
-        if (dfs.exists(path)) {
-          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true)
-          else {
-            if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
-              "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
-            inputPaths = Set.empty
-          }
-        }
+//        if (dfs.exists(path)) {
+//          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true)
+//          else {
+//            if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
+//              "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
+//            inputPaths = Set.empty
+//          }
+//        }
       }
     }
     finally {
