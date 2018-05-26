@@ -67,16 +67,18 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       // TODO
       outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
 
-      for (path <- List(new Path(outputPath, "train" + outputPathSuffix), new Path(outputPath, "test" + outputPathSuffix))) {
+      for (path <- List(
+        new Path(outputPath, "train" + outputPathSuffix + "/_SUCCESS"),
+        new Path(outputPath, "test" + outputPathSuffix+ "/_SUCCESS"))) {
 
         // TODO
         Log.info("\n\n" + path + " " + dfs.exists(path) + " " + getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT"))
 
         if (dfs.exists(path)) {
-          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path, true)
+          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true)
           else {
             if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
-              "] cannot write to pre-existing non-SNAPSHOT directory [" + path + "], clearing inputs")
+              "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
             inputPaths = Set.empty
           }
         }
