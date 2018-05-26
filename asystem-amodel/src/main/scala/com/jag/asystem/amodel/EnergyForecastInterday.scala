@@ -65,7 +65,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       dfs = outputPath.getFileSystem(getConf)
       outputPath = dfs.makeQualified(outputPath)
 
-      outputPathSuffix = "text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
+      outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
 
       for (path <- List(
         new Path(outputPath, "train" + outputPathSuffix),
@@ -86,6 +86,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
 
     }
+
+      // TODO: Add catch, in execute too
+
     finally {
       if (Log.isInfoEnabled()) {
         Log.info("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
