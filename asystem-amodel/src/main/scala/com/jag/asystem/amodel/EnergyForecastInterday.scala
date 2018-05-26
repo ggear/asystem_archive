@@ -84,7 +84,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         for (inputPath <- inputPaths) Log.info("  " + inputPath)
       }
     }
-    SUCCESS
+    FAILURE_ARGUMENTS
   }
 
   override def parameters(): Array[String] = {
