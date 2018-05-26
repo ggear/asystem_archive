@@ -5,12 +5,12 @@
     <groupId>com.jag.asystem</groupId>
     <artifactId>asystem-astream</artifactId>
     <packaging>jar</packaging>
-    <version>10.000.0048-SNAPSHOT</version>
+    <version>10.000.0047</version>
 
     <parent>
         <groupId>com.jag</groupId>
         <artifactId>asystem</artifactId>
-        <version>10.000.0048-SNAPSHOT</version>
+        <version>10.000.0047</version>
     </parent>
 
 </project>
