@@ -50,9 +50,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     outputPath = new Path(arguments(1))
     var inputPath = new Path(arguments(0))
     try {
-      var dfs = outputPath.getFileSystem(getConf)
-      outputPath = dfs.makeQualified(outputPath)
-      dfs = inputPath.getFileSystem(getConf)
+      val dfs = inputPath.getFileSystem(getConf)
       inputPath = dfs.makeQualified(inputPath)
       val files = dfs.listFiles(inputPath, true)
       while (files.hasNext) {
@@ -63,16 +61,17 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
           case _ =>
         }
       }
+      outputPath = dfs.makeQualified(outputPath)
 
       // TODO
       outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
 
       for (path <- List(
-        new Path(outputPath, "train" + outputPathSuffix + "/_SUCCESS"),
-        new Path(outputPath, "test" + outputPathSuffix+ "/_SUCCESS"))) {
+        new Path(outputPath, "train" + outputPathSuffix ),
+        new Path(outputPath, "test" + outputPathSuffix))) {
 
         // TODO
-        Log.info("\n\n" + path + " " + dfs.exists(path) + " " + getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT"))
+        Log.info("\n\n" + path + " " + dfs.exists(path) + " " + dfs.listFiles(path, true).hasNext)
 
         if (dfs.exists(path)) {
           if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true)
