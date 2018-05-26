@@ -47,9 +47,8 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
-    outputPath = new Path(arguments(1))
-    var inputPath = new Path(arguments(0))
     try {
+      var inputPath = new Path(arguments(0))
       val dfs = inputPath.getFileSystem(getConf)
       inputPath = dfs.makeQualified(inputPath)
       val files = dfs.listFiles(inputPath, true)
@@ -61,6 +60,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
           case _ =>
         }
       }
+      outputPath = new Path(arguments(1))
       outputPath = dfs.makeQualified(outputPath)
 
       // TODO
