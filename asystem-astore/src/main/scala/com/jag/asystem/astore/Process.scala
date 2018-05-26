@@ -184,6 +184,9 @@ class Process(config: Configuration) extends DriverSpark(config) {
             filesProcessedTodo(("*", "*")) ++= filesProcessedSetsParents
         }
       }
+
+      // TODO: Is Exception handling required - handled by Driver?
+
     } catch {
       case exception: Exception =>
         exit = FAILURE_RUNTIME
@@ -295,6 +298,9 @@ class Process(config: Configuration) extends DriverSpark(config) {
         case _ =>
       }
       spark.close()
+
+      // TODO: Is Exception handling required - handled by Driver?
+
     } catch {
       case exception: Exception =>
         exit = FAILURE_RUNTIME

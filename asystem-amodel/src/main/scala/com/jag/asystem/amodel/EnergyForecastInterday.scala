@@ -48,53 +48,35 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
     var inputPath = new Path(arguments(0))
+    var dfs = inputPath.getFileSystem(getConf)
+    inputPath = dfs.makeQualified(inputPath)
+    val files = dfs.listFiles(inputPath, true)
+    while (files.hasNext) {
+      val fileUri = files.next().getPath.toString
+      val fileRewritePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
+      fileUri match {
+        case fileRewritePattern(fileRoot) => inputPaths += fileRoot
+        case _ =>
+      }
+    }
     outputPath = new Path(arguments(1))
-    try {
-      var dfs = inputPath.getFileSystem(getConf)
-      inputPath = dfs.makeQualified(inputPath)
-      val files = dfs.listFiles(inputPath, true)
-      while (files.hasNext) {
-        val fileUri = files.next().getPath.toString
-        val fileRewritePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
-        fileUri match {
-          case fileRewritePattern(fileRoot) => inputPaths += fileRoot
-          case _ =>
+    dfs = outputPath.getFileSystem(getConf)
+    outputPath = dfs.makeQualified(outputPath)
+    for (path <- List(
+      new Path(outputPath, "train" + outputPathSuffix),
+      new Path(outputPath, "test" + outputPathSuffix))) {
+      if (dfs.exists(path)) {
+        if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true) else {
+          if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
+            "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
+          inputPaths = Set.empty
         }
       }
-
-      dfs = outputPath.getFileSystem(getConf)
-      outputPath = dfs.makeQualified(outputPath)
-
-      outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
-
-      for (path <- List(
-        new Path(outputPath, "train" + outputPathSuffix),
-        new Path(outputPath, "test" + outputPathSuffix))) {
-
-        // TODO
-        Log.info("\n\n" + path + " " + dfs.exists(path))
-
-        //        if (dfs.exists(path)) {
-        //          if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true)
-        //          else {
-        //            if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
-        //              "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
-        //            inputPaths = Set.empty
-        //          }
-        //        }
-      }
-
-
     }
-
-      // TODO: Add catch, in execute too
-
-    finally {
-      if (Log.isInfoEnabled()) {
-        Log.info("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
-          "] prepared with output [" + outputPath.toString + "], input [" + inputPath.toString + "] and inputs:")
-        for (inputPath <- inputPaths) Log.info("  " + inputPath)
-      }
+    if (Log.isInfoEnabled()) {
+      Log.info("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
+        "] prepared with output [" + outputPath.toString + "], input [" + inputPath.toString + "] and inputs:")
+      for (inputPath <- inputPaths) Log.info("  " + inputPath)
     }
     SUCCESS
   }
@@ -107,6 +89,8 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     if (inputPaths.nonEmpty) {
       val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
       import spark.implicits._
+
+      // TODO
       //      val dateFormat = "y/MM/dd"
       //      val timezoneWorking = "Australia/Perth"
       //      val timezoneDefault = TimeZone.getDefault.getID
