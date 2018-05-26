@@ -40,19 +40,17 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
-  val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
+  var outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION")
 
   val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastInterday])
 
   override def prepare(arguments: String*): Int = {
     if (arguments == null || arguments.length != parameters().length) return FAILURE_ARGUMENTS
-    outputPath = new Path(arguments(1))
     var inputPath = new Path(arguments(0))
+    outputPath = new Path(arguments(1))
     try {
-      var dfs = outputPath.getFileSystem(getConf)
-      outputPath = dfs.makeQualified(outputPath)
-      dfs = inputPath.getFileSystem(getConf)
+      var dfs = inputPath.getFileSystem(getConf)
       inputPath = dfs.makeQualified(inputPath)
       val files = dfs.listFiles(inputPath, true)
       while (files.hasNext) {
@@ -63,7 +61,12 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
           case _ =>
         }
       }
-      
+
+      dfs = outputPath.getFileSystem(getConf)
+      outputPath = dfs.makeQualified(outputPath)
+
+      outputPathSuffix = "text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
+
       for (path <- List(
         new Path(outputPath, "train" + outputPathSuffix),
         new Path(outputPath, "test" + outputPathSuffix))) {
