@@ -40,7 +40,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
-  val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
+  var outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION")
 
   val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastInterday])
@@ -63,8 +63,13 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
           case _ =>
         }
       }
+
+      // TODO
+      outputPathSuffix = "/text/csv/none/amodel_version=10.000.0047/amodel_model=1005"
+
       for (path <- List(new Path(outputPath, "train" + outputPathSuffix), new Path(outputPath, "test" + outputPathSuffix))) {
 
+        // TODO
         Log.info("\n\n" + path + " " + dfs.exists(path) + " " + getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT"))
 
         if (dfs.exists(path)) {
@@ -95,7 +100,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     if (inputPaths.nonEmpty) {
       val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
       import spark.implicits._
-//      val dateFormat = "y/MM/dd"
+
+      // TODO
+      //      val dateFormat = "y/MM/dd"
 //      val timezoneWorking = "Australia/Perth"
 //      val timezoneDefault = TimeZone.getDefault.getID
 //      val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
