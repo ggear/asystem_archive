@@ -89,164 +89,162 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     if (inputPaths.nonEmpty) {
       val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
       import spark.implicits._
-
-      // TODO
-      //      val dateFormat = "y/MM/dd"
-      //      val timezoneWorking = "Australia/Perth"
-      //      val timezoneDefault = TimeZone.getDefault.getID
-      //      val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
-      //      calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
-      //      val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
-      //      input.createTempView("datums")
-      //      var outputAll = List(
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS energy__production__inverter
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='energy' AND data_metric='energy__production__inverter' AND
-      //           |   data_type='integral' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='temperature' AND data_metric='temperature__forecast__glen_Dforrest' AND
-      //           |   data_type='point' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='rain' AND data_metric='rain__forecast__glen_Dforrest' AND
-      //           |   data_type='integral' AND bin_width=1 AND bin_unit='day_Dtime'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='humidity' AND data_metric='humidity__forecast__glen_Dforrest' AND
-      //           |   data_type='mean' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='wind' AND data_metric='wind__forecast__glen_Dforrest' AND
-      //           |   data_type='mean' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) AS sun__outdoor__rise
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='sun' AND data_metric='sun__outdoor__rise' AND
-      //           |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) AS sun__outdoor__set
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='sun' AND data_metric='sun__outdoor__set' AND
-      //           |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS sun__outdoor__azimuth
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='sun' AND data_metric='sun__outdoor__azimuth' AND
-      //           |   data_type='point' AND bin_width=2 AND bin_unit='second'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   max(data_value) / first(data_scale) AS sun__outdoor__altitude
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='sun' AND data_metric='sun__outdoor__altitude'
-      //           |   AND data_type='point' AND bin_width=2 AND bin_unit='second'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin,
-      //        s"""
-      //           | SELECT
-      //           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
-      //           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-      //           |   last(data_string) AS conditions__forecast__glen_Dforrest
-      //           | FROM datums
-      //           | WHERE
-      //           |   astore_metric='conditions' AND data_metric='conditions__forecast__glen_Dforrest'
-      //           |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
-      //           | GROUP BY datum__bin__date
-      //        """.stripMargin)
-      //        .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
-      //        .where($"datum__bin__date" < DaysVetted)
-      //      DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
-      //      outputAll = outputAll.repartition(1).orderBy("datum__bin__date")
-      //      addResult("All data:")
-      //      addResult("  " + outputAll.columns.mkString(","))
-      //      outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
-      //      val outputTrainingDays = outputAll
-      //        .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
-      //        .groupBy("conditions__forecast__glen_Dforrest")
-      //        .agg(first("datum__bin__date").as("datum__bin__date"))
-      //        .drop("temperature__forecast__glen_Dforrest")
-      //        .drop("conditions__forecast__glen_Dforrest")
-      //        .orderBy("datum__bin__date")
-      //        .union(outputAll
-      //          .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
-      //          .groupBy("conditions__forecast__glen_Dforrest")
-      //          .agg(last("datum__bin__date").as("datum__bin__date"))
-      //          .drop("temperature__forecast__glen_Dforrest")
-      //          .drop("conditions__forecast__glen_Dforrest")
-      //          .orderBy("datum__bin__date")
-      //        ).dropDuplicates()
-      //      val outputTraining = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "leftanti").
-      //        sort(asc("datum__bin__date")).coalesce(1)
-      //      outputTraining.write.format("com.databricks.spark.csv").option("header", "true").
-      //        save(outputPath.toString + "/train" + outputPathSuffix)
-      //      addResult("Training data:")
-      //      addResult("  " + outputTraining.columns.mkString(","))
-      //      outputTraining.collect.foreach(row => addResult("  " + row.mkString(",")))
-      //      incrementCounter(RECORDS_TRAINING, outputTraining.count())
-      //      val outputValidation = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "inner").
-      //        sort(asc("datum__bin__date")).coalesce(1)
-      //      outputValidation.write.format("com.databricks.spark.csv").option("header", "true").
-      //        save(outputPath.toString + "/test" + outputPathSuffix)
-      //      addResult("Validation data:")
-      //      addResult("  " + outputValidation.columns.mkString(","))
-      //      outputValidation.collect.foreach(row => addResult("  " + row.mkString(",")))
-      //      incrementCounter(RECORDS_VALIDATION, outputValidation.count())
+      val dateFormat = "y/MM/dd"
+      val timezoneWorking = "Australia/Perth"
+      val timezoneDefault = TimeZone.getDefault.getID
+      val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
+      calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
+      val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
+      input.createTempView("datums")
+      var outputAll = List(
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS energy__production__inverter
+           | FROM datums
+           | WHERE
+           |   astore_metric='energy' AND data_metric='energy__production__inverter' AND
+           |   data_type='integral' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
+           | FROM datums
+           | WHERE
+           |   astore_metric='temperature' AND data_metric='temperature__forecast__glen_Dforrest' AND
+           |   data_type='point' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
+           | FROM datums
+           | WHERE
+           |   astore_metric='rain' AND data_metric='rain__forecast__glen_Dforrest' AND
+           |   data_type='integral' AND bin_width=1 AND bin_unit='day_Dtime'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
+           | FROM datums
+           | WHERE
+           |   astore_metric='humidity' AND data_metric='humidity__forecast__glen_Dforrest' AND
+           |   data_type='mean' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
+           | FROM datums
+           | WHERE
+           |   astore_metric='wind' AND data_metric='wind__forecast__glen_Dforrest' AND
+           |   data_type='mean' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) AS sun__outdoor__rise
+           | FROM datums
+           | WHERE
+           |   astore_metric='sun' AND data_metric='sun__outdoor__rise' AND
+           |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) AS sun__outdoor__set
+           | FROM datums
+           | WHERE
+           |   astore_metric='sun' AND data_metric='sun__outdoor__set' AND
+           |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS sun__outdoor__azimuth
+           | FROM datums
+           | WHERE
+           |   astore_metric='sun' AND data_metric='sun__outdoor__azimuth' AND
+           |   data_type='point' AND bin_width=2 AND bin_unit='second'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   max(data_value) / first(data_scale) AS sun__outdoor__altitude
+           | FROM datums
+           | WHERE
+           |   astore_metric='sun' AND data_metric='sun__outdoor__altitude'
+           |   AND data_type='point' AND bin_width=2 AND bin_unit='second'
+           | GROUP BY datum__bin__date
+              """.stripMargin,
+        s"""
+           | SELECT
+           |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
+           |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
+           |   last(data_string) AS conditions__forecast__glen_Dforrest
+           | FROM datums
+           | WHERE
+           |   astore_metric='conditions' AND data_metric='conditions__forecast__glen_Dforrest'
+           |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
+           | GROUP BY datum__bin__date
+              """.stripMargin)
+        .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
+        .where($"datum__bin__date" < DaysVetted)
+      DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
+      outputAll = outputAll.repartition(1).orderBy("datum__bin__date")
+      addResult("All data:")
+      addResult("  " + outputAll.columns.mkString(","))
+      outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
+      val outputTrainingDays = outputAll
+        .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+        .groupBy("conditions__forecast__glen_Dforrest")
+        .agg(first("datum__bin__date").as("datum__bin__date"))
+        .drop("temperature__forecast__glen_Dforrest")
+        .drop("conditions__forecast__glen_Dforrest")
+        .orderBy("datum__bin__date")
+        .union(outputAll
+          .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+          .groupBy("conditions__forecast__glen_Dforrest")
+          .agg(last("datum__bin__date").as("datum__bin__date"))
+          .drop("temperature__forecast__glen_Dforrest")
+          .drop("conditions__forecast__glen_Dforrest")
+          .orderBy("datum__bin__date")
+        ).dropDuplicates()
+      val outputTraining = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "leftanti").
+        sort(asc("datum__bin__date")).coalesce(1)
+      outputTraining.write.format("com.databricks.spark.csv").option("header", "true").
+        save(outputPath.toString + "/train" + outputPathSuffix)
+      addResult("Training data:")
+      addResult("  " + outputTraining.columns.mkString(","))
+      outputTraining.collect.foreach(row => addResult("  " + row.mkString(",")))
+      incrementCounter(RECORDS_TRAINING, outputTraining.count())
+      val outputValidation = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "inner").
+        sort(asc("datum__bin__date")).coalesce(1)
+      outputValidation.write.format("com.databricks.spark.csv").option("header", "true").
+        save(outputPath.toString + "/test" + outputPathSuffix)
+      addResult("Validation data:")
+      addResult("  " + outputValidation.columns.mkString(","))
+      outputValidation.collect.foreach(row => addResult("  " + row.mkString(",")))
+      incrementCounter(RECORDS_VALIDATION, outputValidation.count())
       spark.close()
     }
     else {

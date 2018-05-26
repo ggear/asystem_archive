@@ -185,7 +185,8 @@ class Process(config: Configuration) extends DriverSpark(config) {
         }
       }
 
-      // TODO: Is Exception handling required - handled by Driver?
+      // TODO: Is Exception handling required - handled by Driver? What happens when spark session not created? Create on demand?
+      // Make consisten with EnergyForecastInterday
 
     } catch {
       case exception: Exception =>
@@ -299,7 +300,8 @@ class Process(config: Configuration) extends DriverSpark(config) {
       }
       spark.close()
 
-      // TODO: Is Exception handling required - handled by Driver?
+      // TODO: Is Exception handling required - handled by Driver? What happens when spark session not created? Create on demand?
+      // Make consisten with EnergyForecastInterday
 
     } catch {
       case exception: Exception =>
