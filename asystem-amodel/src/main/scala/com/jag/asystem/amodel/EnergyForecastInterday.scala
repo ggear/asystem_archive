@@ -86,9 +86,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
   }
 
   override def execute(): Int = {
+    val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
+    import spark.implicits._
     if (inputPaths.nonEmpty) {
-      val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
-      import spark.implicits._
       val dateFormat = "y/MM/dd"
       val timezoneWorking = "Australia/Perth"
       val timezoneDefault = TimeZone.getDefault.getID
@@ -245,12 +245,12 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       addResult("  " + outputValidation.columns.mkString(","))
       outputValidation.collect.foreach(row => addResult("  " + row.mkString(",")))
       incrementCounter(RECORDS_VALIDATION, outputValidation.count())
-      spark.close()
     }
     else {
       incrementCounter(RECORDS_TRAINING, 0)
       incrementCounter(RECORDS_VALIDATION, 0)
     }
+    spark.close()
     SUCCESS
   }
 
