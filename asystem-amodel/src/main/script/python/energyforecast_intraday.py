@@ -44,7 +44,7 @@ from sklearn.externals import joblib
 from repo_util import publish
 from script_util import hdfs_make_qualified
 
-DAYS_VETTED = '2018/05/25'
+DAYS_VETTED = '2018/05/28'
 
 DAYS_BLACK_LIST = set([
     '2017/10/08',
@@ -92,8 +92,11 @@ DAYS_BLACK_LIST = set([
     '2018/04/05',
     '2018/04/06',
     '2018/04/07',
+    '2018/04/08',
     '2018/04/10',
     '2018/04/22',
+    '2018/05/17',
+    '2018/05/18',
     '2018/05/21',
     '2018/05/25',
 ])
@@ -220,7 +223,7 @@ def pipeline():
               ('TOVETT' if day >= DAYS_VETTED else 'VETTED'))][day] = dfs[1]
 
     for vetting in dfvs:
-        for day, dfv in dfvs[vetting].iteritems():
+        for day, dfv in sorted(dfvs[vetting].iteritems()):
             dfv.set_index(
                 pd.to_datetime(dfv['bin_timestamp'], unit='s')
                     .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
@@ -232,7 +235,7 @@ def pipeline():
 
     dfnss = []
     bins = 1000
-    for day, dfv in dfvs['VETTED'].iteritems():
+    for day, dfv in sorted(dfvs['VETTED'].iteritems()):
         dfv['normalised'] = dfv['bin_energy'] / dfv['bin_energy_day']
         dfv['standardised'] = bins * (
                 dfv['bin_timestamp'] - dfv['bin_sunrise']) / \
