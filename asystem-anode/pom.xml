@@ -320,7 +320,7 @@
                         <id>python-run</id>
                         <configuration>
                             <target>
-                                <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />
@@ -332,6 +332,7 @@
                                 </copy>
                                 <delete dir="${dir.runtime-tmp.anode}" />
                                 <mkdir dir="${dir.runtime-tmp.anode}/config" />
+                                <echo>Starting anode ...</echo>
                                 <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
                                     <arg value="--quiet" />
                                     <arg value="-c${dir.source.python}/config/anode.yaml" />
