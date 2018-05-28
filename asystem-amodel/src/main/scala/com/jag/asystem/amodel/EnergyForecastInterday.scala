@@ -212,7 +212,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
         .where($"datum__bin__date" < DaysVetted)
       DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
-      outputAll = outputAll.repartition(1).orderBy("datum__bin__date")
+      outputAll = outputAll.coalesce(1).orderBy("datum__bin__date")
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))
       outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
@@ -220,25 +220,24 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
         .groupBy("conditions__forecast__glen_Dforrest")
         .agg(first("datum__bin__date").as("datum__bin__date"))
-        .drop("conditions__forecast__glen_Dforrest")
         .orderBy("datum__bin__date")
         .union(outputAll
           .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
           .groupBy("conditions__forecast__glen_Dforrest")
           .agg(last("datum__bin__date").as("datum__bin__date"))
-          .drop("conditions__forecast__glen_Dforrest")
           .orderBy("datum__bin__date")
-        ).orderBy("datum__bin__date").dropDuplicates()
-      outputTrain = Some(outputAll.as("all").join(outputTrainDays, Seq("datum__bin__date"), "leftanti").
+        ).drop("conditions__forecast__glen_Dforrest").orderBy("datum__bin__date")
+        .dropDuplicates().coalesce(1)
+      outputTrain = Some(outputAll.join(outputTrainDays, Seq("datum__bin__date"), "leftanti").
         sort(asc("datum__bin__date")).coalesce(1))
       outputTrain.get.write.option("header", "true").csv(outputPath.toString + "/train" + outputPathSuffix)
-      outputTest = Some(outputAll.as("all").join(outputTrainDays, Seq("datum__bin__date"), "inner").
+      outputTest = Some(outputAll.join(outputTrainDays, Seq("datum__bin__date"), "inner").
         sort(asc("datum__bin__date")).coalesce(1))
       outputTest.get.write.option("header", "true").csv(outputPath.toString + "/test" + outputPathSuffix)
     }
     else {
-      outputTrain = Some(spark.read.option("header","true").csv(outputPath + "/train" + outputPathSuffix))
-      outputTest = Some(spark.read.option("header","true").csv(outputPath + "/test" + outputPathSuffix))
+      outputTrain = Some(spark.read.option("header", "true").csv(outputPath + "/train" + outputPathSuffix))
+      outputTest = Some(spark.read.option("header", "true").csv(outputPath + "/test" + outputPathSuffix))
     }
     if (outputTrain.isDefined && outputTest.isDefined) {
       addResult("Train data:")
