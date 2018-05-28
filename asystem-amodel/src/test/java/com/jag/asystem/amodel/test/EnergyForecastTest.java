@@ -20,6 +20,7 @@ import com.googlecode.zohhak.api.TestWith;
 import com.jag.asystem.amodel.Counter;
 import com.jag.asystem.amodel.EnergyForecastInterday;
 import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(TestRunner.class)
@@ -48,7 +49,7 @@ public class EnergyForecastTest implements TestConstants {
   }
 
   @TestWith({"testMetaDataPristine"})
-  public void testEnergyForecast(TestMetaData testMetaData) throws Exception {
+  public void testEnergyForecastInterDay(TestMetaData testMetaData) throws Exception {
     EnergyForecastInterday driver = new EnergyForecastInterday(dfsServer.getConf());
     assertEquals(SUCCESS, driver.runner(
       dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST_INTERDAY).toString()));

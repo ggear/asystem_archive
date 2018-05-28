@@ -10,7 +10,7 @@ import com.jag.asystem.amodel.EnergyForecastInterday.{DaysBlacklist, DaysVetted}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -86,6 +86,8 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
   }
 
   override def execute(): Int = {
+    var outputTest = None: Option[DataFrame]
+    var outputTrain = None: Option[DataFrame]
     val spark = SparkSession.builder.config(new SparkConf).appName("asystem-energyforecast-preparation").getOrCreate()
     import spark.implicits._
     if (inputPaths.nonEmpty) {
@@ -214,41 +216,39 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       addResult("All data:")
       addResult("  " + outputAll.columns.mkString(","))
       outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
-      val outputTrainingDays = outputAll
-        .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+      val outputTrainDays = outputAll
+        .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
         .groupBy("conditions__forecast__glen_Dforrest")
         .agg(first("datum__bin__date").as("datum__bin__date"))
-        .drop("temperature__forecast__glen_Dforrest")
         .drop("conditions__forecast__glen_Dforrest")
         .orderBy("datum__bin__date")
         .union(outputAll
-          .select("datum__bin__date", "temperature__forecast__glen_Dforrest", "conditions__forecast__glen_Dforrest")
+          .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
           .groupBy("conditions__forecast__glen_Dforrest")
           .agg(last("datum__bin__date").as("datum__bin__date"))
-          .drop("temperature__forecast__glen_Dforrest")
           .drop("conditions__forecast__glen_Dforrest")
           .orderBy("datum__bin__date")
-        ).dropDuplicates()
-      val outputTraining = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "leftanti").
-        sort(asc("datum__bin__date")).coalesce(1)
-      outputTraining.write.format("com.databricks.spark.csv").option("header", "true").
-        save(outputPath.toString + "/train" + outputPathSuffix)
-      addResult("Training data:")
-      addResult("  " + outputTraining.columns.mkString(","))
-      outputTraining.collect.foreach(row => addResult("  " + row.mkString(",")))
-      incrementCounter(RECORDS_TRAINING, outputTraining.count())
-      val outputValidation = outputAll.as("all").join(outputTrainingDays.as("training_days"), Seq("datum__bin__date"), "inner").
-        sort(asc("datum__bin__date")).coalesce(1)
-      outputValidation.write.format("com.databricks.spark.csv").option("header", "true").
-        save(outputPath.toString + "/test" + outputPathSuffix)
-      addResult("Validation data:")
-      addResult("  " + outputValidation.columns.mkString(","))
-      outputValidation.collect.foreach(row => addResult("  " + row.mkString(",")))
-      incrementCounter(RECORDS_VALIDATION, outputValidation.count())
+        ).orderBy("datum__bin__date").dropDuplicates()
+      outputTrain = Some(outputAll.as("all").join(outputTrainDays, Seq("datum__bin__date"), "leftanti").
+        sort(asc("datum__bin__date")).coalesce(1))
+      outputTrain.get.write.option("header", "true").csv(outputPath.toString + "/train" + outputPathSuffix)
+      outputTest = Some(outputAll.as("all").join(outputTrainDays, Seq("datum__bin__date"), "inner").
+        sort(asc("datum__bin__date")).coalesce(1))
+      outputTest.get.write.option("header", "true").csv(outputPath.toString + "/test" + outputPathSuffix)
     }
     else {
-      incrementCounter(RECORDS_TRAINING, 0)
-      incrementCounter(RECORDS_VALIDATION, 0)
+      outputTrain = Some(spark.read.option("header","true").csv(outputPath + "/train" + outputPathSuffix))
+      outputTest = Some(spark.read.option("header","true").csv(outputPath + "/test" + outputPathSuffix))
+    }
+    if (outputTrain.isDefined && outputTest.isDefined) {
+      addResult("Train data:")
+      addResult("  " + outputTrain.get.columns.mkString(","))
+      outputTrain.get.collect.foreach(row => addResult("  " + row.mkString(",")))
+      incrementCounter(RECORDS_TRAINING, outputTrain.get.count())
+      addResult("Test data:")
+      addResult("  " + outputTest.get.columns.mkString(","))
+      outputTest.get.collect.foreach(row => addResult("  " + row.mkString(",")))
+      incrementCounter(RECORDS_VALIDATION, outputTest.get.count())
     }
     spark.close()
     SUCCESS
