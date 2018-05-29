@@ -40,6 +40,9 @@ LOG_FORMAT = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
 KEEPALIVE_DEFAULT_SECONDS = 3613
 
+S3_REGION = "ap-southeast-2"
+S3_BUCKET = "asystem-amodel"
+
 
 class ANode:
     def __init__(self, core_reactor, options, config):
@@ -80,7 +83,12 @@ class ANode:
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             looping_call(self.store_state, self.config["save_seconds"])
         if "model_pull_seconds" in self.config and self.config["model_pull_seconds"] > 0:
-            model_pull = ModelPull(self, "pullmodel", {"pool": self.web_pool, "db_dir": self.options.db_dir}, self.core_reactor)
+            model_pull = ModelPull(self, "pullmodel", {
+                "pool": self.web_pool, "db_dir": self.options.db_dir,
+                "model_pull_region": self.config["model_pull_region"] if "model_pull_region" in self.config else S3_REGION,
+                "model_pull_bucket": (self.config["model_pull_bucket"] if "model_pull_bucket" in self.config else S3_BUCKET) + (
+                    self.config["model_pull_bucket_snapshot"] if ("model_pull_bucket_snapshot" in self.config and
+                                                                  APP_VERSION.endswith("-SNAPSHOT")) else "")}, self.core_reactor)
             looping_call(model_pull.poll, self.config["model_pull_seconds"])
         for plugin_name in self.config["plugin"]:
             self.config["plugin"][plugin_name]["pool"] = self.web_pool

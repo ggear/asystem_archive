@@ -1420,9 +1420,6 @@ ESCAPE_SEQUENCES = {
 
 HTTP_TIMEOUT = 10
 
-S3_REGION = "ap-southeast-2"
-S3_BUCKET = "asystem-amodel"
-
 BUFFER_BATCH_DEFAULT = 60
 
 SERIALISATION_BATCH = 1000
@@ -1453,7 +1450,7 @@ PICKLES_CACHE = {}
 class ModelPull(Plugin):
 
     def poll(self):
-        self.http_get(S3_REGION, S3_BUCKET, "/", "list-type=2&max-keys=1000000&prefix=asystem", self.list_models)
+        self.http_get(self.config["model_pull_region"], self.config["model_pull_bucket"], "/", "list-type=2&max-keys=1000000&prefix=asystem", self.list_models)
 
     def http_get(self, region, bucket, path, params, callback):
         host = bucket + ".s3-" + region + ".amazonaws.com"
@@ -1481,11 +1478,11 @@ class ModelPull(Plugin):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             for key_remote in xmltodict.parse(content)["ListBucketResult"]["Contents"]:
-                path_remote = "s3://" + S3_BUCKET + "/" + key_remote["Key"].encode("utf-8")
+                path_remote = "s3://" + self.config["model_pull_bucket"] + "/" + key_remote["Key"].encode("utf-8")
                 path_status = self.pickled_status(os.path.join(self.config["db_dir"], "amodel"), path_remote)
                 if not path_status[0] and path_status[1]:
-                    self.http_get(S3_REGION, S3_BUCKET, "/" +
-                                  path_remote.replace("s3://" + S3_BUCKET + "/", ""), "", self.pull_model)
+                    self.http_get(self.config["model_pull_region"], self.config["model_pull_bucket"], "/" +
+                                  path_remote.replace("s3://" + self.config["model_pull_bucket"] + "/", ""), "", self.pull_model)
                 elif not path_status[0]:
                     self.verified_model(path_remote)
         except Exception as exception:

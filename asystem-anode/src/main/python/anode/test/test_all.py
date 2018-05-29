@@ -37,8 +37,8 @@ from anode.application import APP_MODEL_ENERGYFORECAST_INTRADAY_BUILD_VERSION
 from anode.application import APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION
 from anode.plugin import PICKLE_PATH_REGEX
 from anode.plugin import Plugin
-from anode.plugin import S3_BUCKET
-from anode.plugin import S3_REGION
+from anode.anode import S3_BUCKET
+from anode.anode import S3_REGION
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker

@@ -148,7 +148,7 @@ EOF
   elif [ "${MODE}" = "run_anode" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem-anode]"
-    mvn clean install antrun:run@python-run -PCMP -pl asystem-anode
+    mvn clean install antrun:run@python-run -Dconda.build.skip=false -PCMP -pl asystem-anode
 
   elif [ "${MODE}" = "run_amodel" ]; then
 

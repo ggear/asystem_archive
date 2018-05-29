@@ -16,7 +16,8 @@
     <properties>
         <tar.build.skip>true</tar.build.skip>
         <conda.build.skip>${maven.test.skip}</conda.build.skip>
-        <python.runtime>${project.build.directory}/test-python/python/bin/python</python.runtime>
+        <python.home>${project.build.directory}/test-python/python</python.home>
+        <python.runtime>${python.home}/bin/python</python.runtime>
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
@@ -320,10 +321,9 @@
                         <id>python-run</id>
                         <configuration>
                             <target>
-                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
-                                    <arg value="develop" />
-                                    <arg value="--user" />
+                                    <arg value="install" />
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
@@ -333,9 +333,8 @@
                                 <delete dir="${dir.runtime-tmp.anode}" />
                                 <mkdir dir="${dir.runtime-tmp.anode}/config" />
                                 <echo>Starting anode ...</echo>
-                                <exec executable="anode" dir="${dir.source.python}" failonerror="true" failifexecutionfails="true">
-                                    <arg value="--quiet" />
-                                    <arg value="-c${dir.source.python}/config/anode.yaml" />
+                                <exec executable="${python.home}/bin/anode" failonerror="true" failifexecutionfails="true">
+                                    <arg value="-c${dir.output.python}/config/anode.yaml" />
                                     <arg value="-d${dir.runtime-tmp.anode}/config" />
                                 </exec>
                             </target>
