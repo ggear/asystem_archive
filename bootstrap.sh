@@ -53,11 +53,13 @@ EOF
 
   elif [ "${MODE}" = "download" ]; then
 
+    echo "" && echo "" && echo "" && echo "Download [asystem]"
+    git pull --all
     echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
-    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo --delete
+    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
     du -cksh asystem-amodel/src/repo
     echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
-    aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
+    aws s3 sync s3://asystem-astore asystem-astore/src/repo
     du -cksh asystem-astore/src/repo
 
   elif [ "${MODE}" = "checkout_snapshot" ]; then

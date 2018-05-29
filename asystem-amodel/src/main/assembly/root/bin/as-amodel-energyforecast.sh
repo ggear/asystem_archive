@@ -12,7 +12,7 @@ PROCESS_STAGES=${3:-"interday-preparation,interday-training,intraday-all"}
 DELETE_CLUSTER=${6:-"false"}
 DO_PRODUCTION=${7:-"true"}
 
-PROCESS_TX=$(uuidgen)
+PROCESS_TX=$(echo $(uuidgen) | sed "s/[[:alpha:].-]//g")
 PROCESS_S3="$S3_URL_ASTAGING"
 PROCESS_TAGS="staging"
 PROCESS_GROUP="asystem-amodel-energyforecast"

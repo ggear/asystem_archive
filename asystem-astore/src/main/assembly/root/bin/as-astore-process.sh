@@ -12,7 +12,7 @@ PROCESS_STAGES=${3:-"repair,batch,stats"}
 DELETE_CLUSTER=${4:-"false"}
 DO_PRODUCTION=${5:-"false"}
 
-PROCESS_TX=$(uuidgen)
+PROCESS_TX=$(echo $(uuidgen) | sed "s/[[:alpha:].-]//g")
 PROCESS_S3="$S3_URL_ASTAGING"
 PROCESS_TAGS="staging"
 PROCESS_GROUP="asystem-astore-process"

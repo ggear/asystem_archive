@@ -3,12 +3,12 @@ port: 8091
 publish_host: 52.63.86.162
 publish_port: 8093
 publish_seconds: 4
-save_on_exit: True
-save_seconds: 14400
+model_pull_seconds: 30
 model_pull_region: 'ap-southeast-2'
 model_pull_bucket: 'asystem-amodel'
 model_pull_bucket_snapshot: '-staging'
-model_pull_seconds: 30
+save_on_exit: True
+save_seconds: 14400
 plugin:
     fronius:
       poll_seconds: 1
