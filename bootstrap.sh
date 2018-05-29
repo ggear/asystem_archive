@@ -16,10 +16,10 @@ function mode_execute {
 
   if [ "${MODE}" = "environment" ]; then
 
-    echo "" && echo "" && echo "" && echo "Source [asystem]"
+    echo "" && echo "" && echo "" && echo "Environment [asystem]"
     curl -s https://raw.githubusercontent.com/ggear/cloudera-framework/master/bootstrap.sh > target/bootstrap.sh
     chmod 744 target/bootstrap.sh
-    . ./target/bootstrap.sh
+    . ./target/bootstrap.sh environment
 
   elif [ "${MODE}" = "prepare" ]; then
 
@@ -54,7 +54,7 @@ EOF
   elif [ "${MODE}" = "download" ]; then
 
     echo "" && echo "" && echo "" && echo "Download [asystem]"
-    git pull --all
+    git pull -a
     echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
     aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
     du -cksh asystem-amodel/src/repo
@@ -76,6 +76,8 @@ EOF
   elif [ "${MODE}" = "build" ]; then
 
     echo "" && echo "" && echo "" && echo "Build [asystem]"
+    git checkout master
+    git pull -a
     mvn clean install
 
   elif [ "${MODE}" = "release" ]; then
@@ -135,7 +137,7 @@ EOF
 
     [[ -n "$(git status --porcelain asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python)" ]] && exit 1
     git checkout master
-    git pull --all
+    git pull -a
     mvn clean install -PCMP -pl asystem-amodel
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:dataset.py]"
     git-template-merge "asystem-amodel" "dataset.py"
@@ -205,7 +207,7 @@ function git-template-merge {
 }
 
 for MODE in "$@"; do
-  [[ ! "${MODE}" = "source" ]] && set -x -e
+  [[ ! "${MODE}" = "environment" ]] && set -x -e
   mode_execute
 done
 

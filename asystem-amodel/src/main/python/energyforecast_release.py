@@ -1,6 +1,11 @@
 #!/usr/local/bin/python -u
 '''
 Provide a release gateway script
+Usage: %s [options]
+Options:
+-h --help                                Show help
+--connection_jar=<path_to_jar>           The connection jar
+--transaction_id=<alpha-numeric-string>  The transaction ID
 '''
 
 import os
