@@ -226,6 +226,8 @@ class Process(config: Configuration) extends DriverSpark(config) {
     try {
       val spark = SparkSession.builder.config(new SparkConf).appName(
         getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
+      import spark.implicits._
+      spark.sql("SELECT 1+1 AS no_op")
       inputMode match {
         case CLEAN =>
           filesProcessedTodo.flatMap(_._2).toSet.union(filesProcessedSkip.flatMap(_._2).toSet).foreach(fileProcessed =>
@@ -238,7 +240,6 @@ class Process(config: Configuration) extends DriverSpark(config) {
             if (dfs.exists(new Path(filePath.getParent, "_SUCCESS"))) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
           })
         case BATCH =>
-          import spark.implicits._
           val filesProcessedMonths = mutable.Set[Path]()
           for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
             val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
