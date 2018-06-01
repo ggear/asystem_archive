@@ -106,8 +106,9 @@ class Energyforecast(Plugin):
                                     energy_production_forecast = model['execute'](model=model, features=model['execute'](
                                         features=model_features, engineering=True), prediction=True)[0]
                                 except Exception as exception:
-                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
-                                                                 .format(self.name, exception, model_version), exception)
+                                    anode.Log(logging.ERROR).log("Plugin", "error",
+                                                                 lambda: "[{}] error [{}] executing model [{}] with features {}".format(
+                                                                     self.name, exception, model_version, model_features_dict), exception)
                                 self.datum_push(
                                     "energy__production_Dforecast" + model_classifier + "__inverter",
                                     "forecast", "high" if day == 1 else "integral",
@@ -130,14 +131,17 @@ class Energyforecast(Plugin):
                                                              energy_production_forecast["data_scale"] \
                                     if energy_production_forecast is not None else 0
                                 energy_production_forecast_scaled = 0
+                                energy_production_forecast_scaled_features_dict = \
+                                    {"energy__production_Dforecast_Ddaylight__inverter": int(sun_percentage * 10)}
                                 try:
                                     energy_production_forecast_scaled = energy_production_forecast * model['execute'](
-                                        model=model, features=pandas.DataFrame([{
-                                            "energy__production_Dforecast_Ddaylight__inverter": int(sun_percentage * 10)
-                                        }]).apply(pandas.to_numeric, errors='ignore'), prediction=True).iloc[0][0].item()
+                                        model=model, features=pandas.DataFrame([energy_production_forecast_scaled_features_dict])
+                                            .apply(pandas.to_numeric, errors='ignore'), prediction=True).iloc[0][0].item()
                                 except Exception as exception:
-                                    anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] executing model [{}]"
-                                                                 .format("energyforecastintraday", exception, model_version), exception)
+                                    anode.Log(logging.ERROR).log("Plugin", "error",
+                                                                 lambda: "[{}] error [{}] executing model [{}] with features {}".format(
+                                                                     "energyforecastintraday", exception, model_version,
+                                                                     energy_production_forecast_scaled_features_dict), exception)
                                 self.datum_push(
                                     "energy__production_Dforecast" + model_classifier + "__inverter",
                                     "forecast", "integral",

@@ -55,11 +55,16 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Download [asystem]"
     git pull -a
+    echo "" && echo "" && echo "" && echo "Download [asystem-anode]"
+    rm -rf asystem-anode/src/main/python/anode/test/pickle
+    mkdir -p asystem-anode/src/main/python/anode/test/pickle
+    scp -r -P 8092 janeandgraham.com:/etc/anode/anode/* asystem-anode/src/main/python/anode/test/pickle
+    du -cksh asystem-anode/src/main/python/anode/test/pickle
     echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
-    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
+    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo --delete
     du -cksh asystem-amodel/src/repo
     echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
-    aws s3 sync s3://asystem-astore asystem-astore/src/repo
+    aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
     du -cksh asystem-astore/src/repo
 
   elif [ "${MODE}" = "checkout_snapshot" ]; then

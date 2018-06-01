@@ -1503,9 +1503,9 @@ HTTP_GETS = {
         ilio.read(DIR_TEST + "/template/netatmo_station_template.json"),
     "https://api.netatmo.com/api/gethomecoachsdata":
         ilio.read(DIR_TEST + "/template/netatmo_homecoach_template.json"),
-    "http://fronius-inverter/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
+    "http://192.168.2.10/solar_api/v1/GetPowerFlowRealtimeData.fcgi":
         ilio.read(DIR_TEST + "/template/fronius_flow_template.json"),
-    "http://fronius-inverter/solar_api/v1/GetMeterRealtimeData.cgi":
+    "http://192.168.2.10/solar_api/v1/GetMeterRealtimeData.cgi":
         ilio.read(DIR_TEST + "/template/fronius_meter_template.json"),
     "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
         ilio.read(DIR_TEST + "/template/wunderground_10dayforecast_template.json"),

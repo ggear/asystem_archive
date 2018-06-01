@@ -142,7 +142,8 @@ def pipeline():
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
     print("Session started:\n  Model version: [1005]\n  "
-          "ASystem version: [10.000.0058-SNAPSHOT]\n  Local path: [{}]\n  Data URI: [{}]\n  Model URI: [{}]\n"
+          "ASystem version: [10.000.0058-SNAPSHOT]\n  Local path: [{}]\n  "
+          "Data URI: [{}]\n  Model URI: [{}]\n"
           .format(local_model_path, remote_data_path, remote_model_path))
 
     training_uri = nearest(hdfs_make_qualified(

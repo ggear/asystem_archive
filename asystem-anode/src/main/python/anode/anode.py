@@ -147,6 +147,7 @@ class ANode:
             plugin.publish()
 
     def store_state(self):
+        if os._exists(self.options.db_dir): os.rename(self.options.db_dir, self.options.db_dir + ".last")
         for plugin in self.plugins.values():
             plugin.datums_store()
 

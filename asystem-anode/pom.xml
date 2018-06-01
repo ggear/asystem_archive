@@ -21,8 +21,8 @@
         <dir.source.python>${project.basedir}/src/main/python</dir.source.python>
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
-        <dir.runtime-tmp.anode>${project.build.directory}/anode-runtime-tmp</dir.runtime-tmp.anode>
-        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime-tmp.anode}/config --verbose</system.test.anode.opts>
+        <dir.runtime-clean.anode>${project.build.directory}/anode-runtime-clean</dir.runtime-clean.anode>
+        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime-clean.anode}/config --verbose</system.test.anode.opts>
         <system.test.anode.log>${project.build.directory}/anode-runtime/anode.log</system.test.anode.log>
     </properties>
 
@@ -263,11 +263,11 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
-                                <copy todir="${dir.runtime.anode}/config/amodel">
+                                <copy todir="${dir.runtime.anode}/config/anode">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
-                                <delete dir="${dir.runtime-tmp.anode}" />
-                                <mkdir dir="${dir.runtime-tmp.anode}/config" />
+                                <delete dir="${dir.runtime-clean.anode}" />
+                                <mkdir dir="${dir.runtime-clean.anode}/config" />
                                 <echo>
 
                                 </echo>
@@ -327,15 +327,15 @@
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
-                                <copy todir="${dir.runtime.anode}/config/amodel">
+                                <copy todir="${dir.runtime.anode}/config/anode">
                                     <fileset dir="${dir.source.python}/anode/test/pickle" includes="**/*.pkl" />
                                 </copy>
-                                <delete dir="${dir.runtime-tmp.anode}" />
-                                <mkdir dir="${dir.runtime-tmp.anode}/config" />
+                                <delete dir="${dir.runtime-clean.anode}" />
+                                <mkdir dir="${dir.runtime-clean.anode}/config" />
                                 <echo>Starting anode ...</echo>
                                 <exec executable="${python.home}/bin/anode" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c${dir.output.python}/config/anode.yaml" />
-                                    <arg value="-d${dir.runtime-tmp.anode}/config" />
+                                    <arg value="-d${dir.runtime.anode}/config" />
                                 </exec>
                             </target>
                         </configuration>
