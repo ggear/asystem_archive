@@ -55,6 +55,7 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Download [asystem]"
     git pull -a
+    mvn install -PCMP
     echo "" && echo "" && echo "" && echo "Download [asystem-anode]"
     rm -rf asystem-anode/src/main/python/anode/test/pickle
     mkdir -p asystem-anode/src/main/python/anode/test/pickle
