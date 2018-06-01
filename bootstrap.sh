@@ -48,8 +48,8 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
-    mvn clean install -PPKG -pl asystem-amodel -am
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "false" "true"
+    mvn install -PPKG -pl asystem-astore
+    ./asystem-astore/target/assembly/asystem-astore-*/bin/cldr-provision-altus.sh "false" "true"
 
   elif [ "${MODE}" = "download" ]; then
 

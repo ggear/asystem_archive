@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import logging
 import logging.config
+import shutil
 import urlparse
 from optparse import OptionParser
 
@@ -80,8 +81,6 @@ class ANode:
             loop_call.clock = self.core_reactor
             loop_call.start(loop_seconds)
 
-        if "save_seconds" in self.config and self.config["save_seconds"] > 0:
-            looping_call(self.store_state, self.config["save_seconds"])
         if "model_pull_seconds" in self.config and self.config["model_pull_seconds"] > 0:
             model_pull = ModelPull(self, "pullmodel", {
                 "pool": self.web_pool, "db_dir": self.options.db_dir,
@@ -119,6 +118,8 @@ class ANode:
         if self.publish_upstream and self.publish_upstream_plugin and \
                 "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
             looping_call(self.publish_datums, self.config["publish_seconds"])
+        if "save_seconds" in self.config and self.config["save_seconds"] > 0:
+            looping_call(self.store_state, self.config["save_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
 
     def get_plugin(self, plugin):
@@ -147,7 +148,12 @@ class ANode:
             plugin.publish()
 
     def store_state(self):
-        if os._exists(self.options.db_dir): os.rename(self.options.db_dir, self.options.db_dir + ".last")
+        state_dir = os.path.join(self.options.db_dir, "anode")
+        state_last_dir = os.path.join(self.options.db_dir, "anode.last")
+        if os.path.exists(state_dir):
+            if os.path.exists(state_last_dir):
+                shutil.rmtree(state_last_dir)
+            os.rename(state_dir, state_last_dir)
         for plugin in self.plugins.values():
             plugin.datums_store()
 
