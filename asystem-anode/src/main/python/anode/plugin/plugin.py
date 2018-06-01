@@ -48,7 +48,7 @@ import anode.plugin
 from anode.application import *
 
 
-# noinspection PyTypeChecker
+# noinspection PyTypeChecker,PyUnboundLocalVariable
 class Plugin(object):
     def poll(self):
         if self.has_poll:
@@ -1450,7 +1450,8 @@ PICKLES_CACHE = {}
 class ModelPull(Plugin):
 
     def poll(self):
-        self.http_get(self.config["model_pull_region"], self.config["model_pull_bucket"], "/", "list-type=2&max-keys=1000000&prefix=asystem", self.list_models)
+        self.http_get(self.config["model_pull_region"], self.config["model_pull_bucket"], "/",
+                      "list-type=2&max-keys=1000000&prefix=asystem", self.list_models)
 
     def http_get(self, region, bucket, path, params, callback):
         host = bucket + ".s3-" + region + ".amazonaws.com"

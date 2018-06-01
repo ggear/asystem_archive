@@ -68,7 +68,7 @@ def execute(model=None, features=None,
     from sklearn.linear_model import RidgeCV
     from sklearn.linear_model import LassoCV
     from sklearn.feature_extraction import DictVectorizer
-    FEATURES = [
+    features = [
         'temperature',
         'rain_mm',
         'humidity_mbar',
@@ -76,7 +76,7 @@ def execute(model=None, features=None,
         'day_length_sec',
         'condition'
     ]
-    FEATURES_ORIGINAL = [
+    features_original = [
         'datum__bin__date',
         'energy__production__inverter',
         'temperature__forecast__glen_Dforrest',
@@ -86,7 +86,7 @@ def execute(model=None, features=None,
         'conditions__forecast__glen_Dforrest',
         'day_length_sec'
     ]
-    FEATURES_RENAME = {
+    features_rename = {
         'datum__bin__date': 'date',
         'energy__production__inverter': 'energy',
         'temperature__forecast__glen_Dforrest': 'temperature',
@@ -96,7 +96,7 @@ def execute(model=None, features=None,
         'conditions__forecast__glen_Dforrest': 'condition'
     }
     if labels:
-        return FEATURES, FEATURES_ORIGINAL, FEATURES_RENAME
+        return features, features_original, features_rename
     elif statistics:
         energy_label = 'energy' if 'energy' in features \
             else 'energy__production__inverter'
@@ -109,9 +109,9 @@ def execute(model=None, features=None,
         features_engineered['day_length_sec'] = \
             features_engineered['sun__outdoor__set'] \
             - features_engineered['sun__outdoor__rise']
-        features_engineered_renamed = features_engineered[FEATURES_ORIGINAL]
+        features_engineered_renamed = features_engineered[features_original]
         features_engineered_renamed = features_engineered_renamed \
-            .rename(columns=FEATURES_RENAME)
+            .rename(columns=features_rename)
 
         # TODO: Remove
         # features_engineered_renamed['rain_mm_poly'] = \
@@ -122,7 +122,7 @@ def execute(model=None, features=None,
     elif prediction:
         if type(features) is not np.ndarray:
             features = model['vectorizer'] \
-                .transform(features[FEATURES].to_dict(orient='record'))
+                .transform(features[features].to_dict(orient='record'))
         predictions = model['pipeline'].predict(features)
         if 'statistics' in model:
             predictions = predictions.clip(
@@ -139,6 +139,7 @@ def pipeline():
         tempfile.mkdtemp()
 
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
+    # noinspection PyStringFormat
     print("Session started:\n  Model version: [${asystem-model-energyforecast-interday.build.version}]\n  "
           "ASystem version: [${project.version}]\n  Local path: [{}]\n  "
           "Data URI: [{}]\n  Model URI: [{}]\n"

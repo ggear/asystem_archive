@@ -45,7 +45,9 @@ S3_REGION = "ap-southeast-2"
 S3_BUCKET = "asystem-amodel"
 
 
+# noinspection PyUnboundLocalVariable
 class ANode:
+
     def __init__(self, core_reactor, options, config):
         log_timer = Log(logging.DEBUG).start()
         Log(logging.INFO).log("Service", "state", lambda: "[anode] initialising")
