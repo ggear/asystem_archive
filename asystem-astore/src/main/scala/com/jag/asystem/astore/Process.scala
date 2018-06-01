@@ -359,7 +359,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
 
 
   def getMetaData(exit: Integer, started: Instant = Instant.now, ended: Instant = Instant.now): Execution = {
-    var metaData = new Execution(getConf, new Template(getConf), exit, started, ended)
+    val metaData = new Execution(getConf, new Template(getConf), exit, started, ended)
     if (getConf.get(Process.OptionTags) != null) metaData.addTags(getConf.get(Process.OptionTags).split(",").map(_.trim).toList)
     metaData
   }

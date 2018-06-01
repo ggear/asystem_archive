@@ -40,7 +40,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
   var outputPath: Path = _
   var inputPaths: Set[String] = Set()
-  var outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
+  val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION")
 
   val Log: Logger = LoggerFactory.getLogger(classOf[EnergyForecastInterday])

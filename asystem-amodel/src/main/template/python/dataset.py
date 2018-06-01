@@ -19,9 +19,9 @@
 # The SCRIPT can be tested from within CDSW, the LIBRARY as part of  the maven
 # test phase.
 #
-# This is an example pipeline that shows the scafolding necessary to query the
-# core dataset, filtering, resampling and writing out a subset of the data,
-# specifcally temperature
+# This is an example pipeline that shows the scaffolding necessary to query the
+# core dataset, filtering, re-sampling and writing out a subset of the data,
+# specifically temperature
 #
 ###############################################################################
 

@@ -1,12 +1,12 @@
 #!/usr/local/bin/python -u
-'''
+"""
 Provide a release gateway script
 Usage: %s [options]
 Options:
 -h --help                                Show help
 --connection_jar=<path_to_jar>           The connection jar
 --transaction_id=<alpha-numeric-string>  The transaction ID
-'''
+"""
 
 import os
 
@@ -29,18 +29,18 @@ def do_call(connection_jar, transaction_id):
                       for metadata in getMetaData(connection_jar, transaction_id)])
     print("Found job metadata:")
     for name, metadata in metadatas.iteritems(): print("\t{}: {}".format(name, metadata['navigatorUrl']))
-    if len(metadatas) == 0:
-        print("Required job metadata not found")
+    if len(metadatas) != 3 or \
+            "asystem-astore-process-repair" not in metadatas or \
+            "asystem-astore-process-batch" not in metadatas or \
+            "asystem-astore-process-stats" not in metadatas:
+        print("Not releasing: Required job metadata not found")
         return 100
     if sum(int(metadata['customProperties'][METADATA_NAMESPACE]['Exit'])
            if 'customProperties' in metadata and metadata['customProperties'] is not None and
               METADATA_NAMESPACE in metadata['customProperties'] and metadata['customProperties'][METADATA_NAMESPACE] is not None and
               'Exit' in metadata['customProperties'][METADATA_NAMESPACE] else 0 for name, metadata in metadatas.iteritems()) != 0:
-        print("Required job returned failure codes")
+        print("Not releasing: Required job returned failure codes")
         return 200
-
-    # TODO: Implement more sophisticated quality checks, if only 1 script release, else require 3, assume order and interactions
-
     return 0
 
 
@@ -55,7 +55,7 @@ def setup_logging(level):
     logging.getLogger("requests").setLevel(logging.WARNING)
 
 
-def main(argv):
+def main():
     setup_logging(logging.INFO)
     connection_jar = None
     transaction_id = None
@@ -69,9 +69,9 @@ def main(argv):
         if option in ('-h', '--help'):
             usage()
             return -1
-        elif option in ('--connection_jar'):
+        elif option in '--connection_jar':
             connection_jar = value
-        elif option in ('--transaction_id'):
+        elif option in '--transaction_id':
             transaction_id = value
         else:
             print >> sys.stderr, 'Unknown option or flag: ' + option
@@ -86,4 +86,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())

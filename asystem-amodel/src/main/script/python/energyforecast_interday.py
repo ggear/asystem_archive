@@ -127,8 +127,9 @@ def execute(model=None, features=None,
             features = model['vectorizer'] \
                 .transform(features[FEATURES].to_dict(orient='record'))
         predictions = model['pipeline'].predict(features)
-        if 'statistics' in model: predictions = predictions.clip(
-            model['statistics']['energy_min'] * 0.9, model['statistics']['energy_max'] * 1.1)
+        if 'statistics' in model:
+            predictions = predictions.clip(
+                model['statistics']['energy_min'] * 0.9, model['statistics']['energy_max'] * 1.1)
         return predictions
 
 

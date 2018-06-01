@@ -20,7 +20,6 @@ import com.googlecode.zohhak.api.TestWith;
 import com.jag.asystem.amodel.Counter;
 import com.jag.asystem.amodel.EnergyForecastInterday;
 import org.junit.ClassRule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(TestRunner.class)

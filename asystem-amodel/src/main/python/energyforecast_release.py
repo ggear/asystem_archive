@@ -1,12 +1,12 @@
 #!/usr/local/bin/python -u
-'''
+"""
 Provide a release gateway script
 Usage: %s [options]
 Options:
 -h --help                                Show help
 --connection_jar=<path_to_jar>           The connection jar
 --transaction_id=<alpha-numeric-string>  The transaction ID
-'''
+"""
 
 import os
 
@@ -39,7 +39,7 @@ def setup_logging(level):
     logging.getLogger("requests").setLevel(logging.WARNING)
 
 
-def main(argv):
+def main():
     setup_logging(logging.INFO)
     connection_jar = None
     transaction_id = None
@@ -53,9 +53,9 @@ def main(argv):
         if option in ('-h', '--help'):
             usage()
             return -1
-        elif option in ('--connection_jar'):
+        elif option in '--connection_jar':
             connection_jar = value
-        elif option in ('--transaction_id'):
+        elif option in '--transaction_id':
             transaction_id = value
         else:
             print >> sys.stderr, 'Unknown option or flag: ' + option
@@ -70,4 +70,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())
