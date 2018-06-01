@@ -7,7 +7,7 @@ A pluggable set of home IoT modules.
 To bootstrap and verify the build environment:
 
 ```bash
-./bootstrap.sh env
+./bootstrap.sh environment
 ```
 
 # Build

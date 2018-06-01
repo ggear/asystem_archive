@@ -55,22 +55,24 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Download [asystem]"
     git pull -a
-    mvn install -PCMP
+    echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
+    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo
+    du -cksh asystem-amodel/src/repo
+    echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
+    aws s3 sync s3://asystem-astore asystem-astore/src/repo
+    du -cksh asystem-astore/src/repo
+
+  elif [ "${MODE}" = "download_anode" ]; then
+
     echo "" && echo "" && echo "" && echo "Download [asystem-anode]"
     rm -rf asystem-anode/src/main/python/anode/test/pickle
     mkdir -p asystem-anode/src/main/python/anode/test/pickle
     scp -r -P 8092 janeandgraham.com:/etc/anode/anode/* asystem-anode/src/main/python/anode/test/pickle
     du -cksh asystem-anode/src/main/python/anode/test/pickle
-    echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
-    aws s3 sync s3://asystem-amodel asystem-amodel/src/repo --delete
-    du -cksh asystem-amodel/src/repo
-    echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
-    aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
-    du -cksh asystem-astore/src/repo
 
-  elif [ "${MODE}" = "checkout_snapshot" ]; then
+  elif [ "${MODE}" = "checkout" ]; then
 
-    echo "" && echo "" && echo "" && echo "Checkout snapshot [asystem]"
+    echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
 
   elif [ "${MODE}" = "checkout_release" ]; then
@@ -155,6 +157,12 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
+  elif [ "${MODE}" = "run" ]; then
+
+    echo "" && echo "" && echo "" && echo "Run [asystem]"
+    ./bootstrap.sh run_astore
+    ./bootstrap.sh run_amodel
+
   elif [ "${MODE}" = "run_anode" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem-anode]"
@@ -176,7 +184,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|checkout_snapshot|checkout_release|build|release|deploy|merge|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_release|build|release|deploy|merge|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
