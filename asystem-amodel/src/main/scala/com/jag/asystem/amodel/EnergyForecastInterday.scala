@@ -6,17 +6,15 @@ import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, SUCCESS, getAppl
 import com.cloudera.framework.common.DriverSpark
 import com.jag.asystem.amodel.Counter.{RECORDS_TRAINING, RECORDS_VALIDATION}
 import com.jag.asystem.amodel.DatumFactory.getModelProperty
-import com.jag.asystem.amodel.EnergyForecastInterday.{DaysBlacklist, DaysVetted}
+import com.jag.asystem.amodel.EnergyForecastInterday.DaysBlacklist
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.{Logger, LoggerFactory}
 
 object EnergyForecastInterday {
-
-  val DaysVetted = "2018/06/05"
 
   val DaysBlacklist = List(
     "2017/10/12",
@@ -94,8 +92,6 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       val dateFormat = "y/MM/dd"
       val timezoneWorking = "Australia/Perth"
       val timezoneDefault = TimeZone.getDefault.getID
-      val calendarCurrent = new GregorianCalendar(TimeZone.getTimeZone(timezoneWorking))
-      calendarCurrent.setTimeInMillis(Calendar.getInstance.getTimeInMillis)
       val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
       input.createTempView("datums")
       var outputAll = List(
@@ -210,7 +206,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
            | GROUP BY datum__bin__date
               """.stripMargin)
         .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
-        .where($"datum__bin__date" < DaysVetted)
+        .where($"datum__bin__date" < dateFormat.format(Calendar.getInstance().getTime()))
       DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
       outputAll = outputAll.coalesce(1).orderBy("datum__bin__date")
       addResult("All data:")

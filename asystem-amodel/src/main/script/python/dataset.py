@@ -37,7 +37,7 @@ sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
-from script_util import hdfs_make_qualified
+from script_util import qualify
 
 pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
@@ -60,7 +60,7 @@ def pipeline():
                               "asystem/astore/processed/canonical/parquet/dict/snappy"
                               ) for i in range(10)]:
         try:
-            path_uri = hdfs_make_qualified(path)
+            path_uri = qualify(path)
             datasets.append(spark.read.parquet(path_uri))
             print("Cached partitions [{}]".format(path_uri))
         except AnalysisException:

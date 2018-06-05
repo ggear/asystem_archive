@@ -49,7 +49,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import LassoCV
 from sklearn.feature_extraction import DictVectorizer
 from pyspark.sql import SparkSession
-from script_util import hdfs_make_qualified
+from script_util import qualify
 from repo_util import publish
 from repo_util import nearest
 
@@ -145,7 +145,7 @@ def pipeline():
           "Data URI: [{}]\n  Model URI: [{}]\n"
           .format(local_model_path, remote_data_path, remote_model_path))
 
-    training_uri = nearest(hdfs_make_qualified(
+    training_uri = nearest(qualify(
         remote_data_path + "/train/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
     print("Training:\n  URI: [{}]   ".format(training_uri))
@@ -153,7 +153,7 @@ def pipeline():
     df2 = execute(features=df, engineering=True)
     print("  Dataframe:\n{}\n\n".format(df2.describe()))
 
-    test_uri = nearest(hdfs_make_qualified(
+    test_uri = nearest(qualify(
         remote_data_path + "/test/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
     print("Testing:\n  URI: [{}]".format(test_uri))

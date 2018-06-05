@@ -22,6 +22,7 @@
 ###############################################################################
 
 import dill
+import datetime
 import numpy as np
 import os.path
 import pandas as pd
@@ -40,9 +41,7 @@ from pyspark.sql.utils import AnalysisException
 from sklearn.externals import joblib
 
 from repo_util import publish
-from script_util import hdfs_make_qualified
-
-DAYS_VETTED = '2018/06/05'
+from script_util import qualify
 
 DAYS_BLACK_LIST = {
     '2017/10/08', '2017/10/09', '2017/10/12', '2017/10/13',
@@ -100,7 +99,7 @@ def pipeline():
                               "asystem/astore/processed/canonical/parquet/dict/snappy"
                               ) for i in range(10)]:
         try:
-            path_uri = hdfs_make_qualified(path)
+            path_uri = qualify(path)
             datasets.append(spark.read.parquet(path_uri))
             print("Loaded path [{}]".format(path_uri))
         except AnalysisException:
@@ -178,7 +177,8 @@ def pipeline():
     for dfs in df.groupby(df.index.date):
         day = dfs[0].strftime('%Y/%m/%d')
         dfvs[('PURGED' if day in DAYS_BLACK_LIST else
-              ('TOVETT' if day >= DAYS_VETTED else 'VETTED'))][day] = dfs[1]
+              ('TOVETT' if day >= datetime.datetime.now().strftime("%Y/%m/%d") \
+                   else 'VETTED'))][day] = dfs[1]
 
     for vetting in dfvs:
         for day, dfv in sorted(dfvs[vetting].iteritems()):
