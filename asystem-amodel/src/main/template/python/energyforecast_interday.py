@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-# TODO: Remove
+# TODO: Remove for demo
 # import mpmath as mp
 
 # Add plotting libraries${TEMPLATE.PRE-PROCESSOR.OPEN}import matplotlib.pyplot as plt
@@ -113,8 +113,8 @@ def execute(model=None, features=None,
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=feature_columns_rename)
 
-        # TODO: Remove
-        # features_engineered_renamed['rain_mm_poly'] = \
+        # TODO: Remove for demo
+        # features_engineered_renamed['rain_mm_2'] = \
         #    features_engineered['rain__forecast__glen_Dforrest'] \
         #        .apply(lambda (x): float(mp.power(x * 2, 2)))
 
