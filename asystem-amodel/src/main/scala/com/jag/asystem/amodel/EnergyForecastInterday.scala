@@ -16,7 +16,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 object EnergyForecastInterday {
 
-  val DaysVetted = "2018/06/5"
+  val DaysVetted = "2018/06/05"
 
   val DaysBlacklist = List(
     "2017/10/12",
