@@ -145,16 +145,14 @@ def pipeline():
           "Data URI: [{}]\n  Model URI: [{}]\n"
           .format(local_model_path, remote_data_path, remote_model_path))
 
-    training_uri = nearest(qualify(
-        remote_data_path + "/train/text/csv/none/" +
+    training_uri = nearest(qualify(remote_data_path + "/train/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
     print("Training:\n  URI: [{}]   ".format(training_uri))
     df = spark.read.csv(training_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("  Dataframe:\n{}\n\n".format(df2.describe()))
 
-    test_uri = nearest(qualify(
-        remote_data_path + "/test/text/csv/none/" +
+    test_uri = nearest(qualify(remote_data_path + "/test/text/csv/none/" +
         "amodel_version=${project.version}/amodel_model=${asystem-model-energyforecast-interday.build.version}"))
     print("Testing:\n  URI: [{}]".format(test_uri))
     dfv = spark.read.csv(test_uri, header=True).toPandas().apply(pd.to_numeric, errors='ignore')

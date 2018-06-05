@@ -20,13 +20,13 @@ import logging
 import sys
 import textwrap
 
-from metadata import getMetaData
+from metadata import get
 from metadata import METADATA_NAMESPACE
 
 
 def do_call(connection_jar, transaction_id):
     metadatas = dict([(metadata['originalName'] if 'originalName' in metadata and metadata['originalName'] is not None else '', metadata)
-                      for metadata in getMetaData(connection_jar, transaction_id)])
+                      for metadata in get(connection_jar, transaction_id)])
     print("Found job metadata:")
     for name, metadata in metadatas.iteritems(): print("\t{}: {}".format(name, metadata['navigatorUrl']))
     if len(metadatas) != 3 or \
@@ -41,6 +41,9 @@ def do_call(connection_jar, transaction_id):
               'Exit' in metadata['customProperties'][METADATA_NAMESPACE] else 0 for name, metadata in metadatas.iteritems()) != 0:
         print("Not releasing: Required job returned failure codes")
         return 200
+
+    # TODO: Implement more sophisticated quality checks, ie some checks :)
+
     return 0
 
 

@@ -23,7 +23,7 @@ import textwrap
 
 def do_call(connection_jar, transaction_id):
 
-    # TODO: Implement more sophisticated quality checks
+    # TODO: Implement more sophisticated quality checks, ie some checks :)
 
     return 0
 
