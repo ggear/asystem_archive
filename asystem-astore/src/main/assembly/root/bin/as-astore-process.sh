@@ -53,4 +53,4 @@ fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
 
-exit PROCESS_RETURN
+exit ${PROCESS_RETURN}
