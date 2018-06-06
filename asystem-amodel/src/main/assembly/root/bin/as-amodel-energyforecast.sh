@@ -12,6 +12,7 @@ PROCESS_STAGES=${3:-"interday-preparation,interday-training,intraday-all"}
 DELETE_CLUSTER=${6:-"false"}
 DO_PRODUCTION=${7:-"true"}
 
+PROCESS_RETURN=0
 PROCESS_TX=$(echo $(uuidgen) | sed "s/[[:alpha:].-]//g")
 PROCESS_S3="$S3_URL_ASTAGING"
 PROCESS_TAGS="staging"
@@ -58,10 +59,15 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   fi
 done
 
-if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX && [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
-  $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
+if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
+  if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
+    $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
+  else
+    echo "Release quality script failed, halting release"
+    PROCESS_RETURN=1
+  fi
 fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
 
-exit 0
+exit PROCESS_RETURN

@@ -26,7 +26,7 @@ from metadata import METADATA_NAMESPACE
 
 def assert_metadata(metadatas, job, key=None, custom=True, expected="0", compare=lambda (actual): str(actual) == "0"):
     if job not in metadatas:
-        print("Not releasing: Required job [{}] metadata not found".format(job))
+        print("Required job [{}] metadata not found".format(job))
         return True
     if key is not None:
         actual = "NOT_DEFINED"
@@ -41,7 +41,7 @@ def assert_metadata(metadatas, job, key=None, custom=True, expected="0", compare
             if 'properties' in metadata and metadata['properties'] is not None and key in metadata['properties']:
                 actual = metadata['properties'][key]
         if not compare(actual):
-            print("Not releasing: Required job [{}] metadata {}property [{}] was actual [{}] when expected [{}]"
+            print("Required job [{}] metadata {}property [{}] was actual [{}] when expected [{}]"
                   .format(job, "custom " if custom else "", key, actual, expected))
             return True
     return False

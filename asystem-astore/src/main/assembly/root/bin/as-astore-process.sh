@@ -12,6 +12,7 @@ PROCESS_STAGES=${3:-"repair,batch,stats"}
 DELETE_CLUSTER=${4:-"false"}
 DO_PRODUCTION=${5:-"false"}
 
+PROCESS_RETURN=0
 PROCESS_TX=$(echo $(uuidgen) | sed "s/[[:alpha:].-]//g")
 PROCESS_S3="$S3_URL_ASTAGING"
 PROCESS_TAGS="staging"
@@ -40,11 +41,16 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$S3_URL_ALIB/jar/"
 done
 
-if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX && [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
-  $ROOT_DIR/bin/as-astore-process.sh "$WAIT_TASK" "true" "$PROCESS_STAGES" "false" "true"
-  $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
+if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
+  if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
+    $ROOT_DIR/bin/as-astore-process.sh "$WAIT_TASK" "true" "$PROCESS_STAGES" "false" "true"
+    $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
+  else
+    echo "Release quality script failed, halting release"
+    PROCESS_RETURN=1
+  fi
 fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
 
-exit 0
+exit PROCESS_RETURN
