@@ -41,7 +41,7 @@ def assert_metadata(metadatas, job, key=None, custom=True, expected="0", compare
             if 'properties' in metadata and metadata['properties'] is not None and key in metadata['properties']:
                 actual = metadata['properties'][key]
         if not compare(actual):
-            print("Not releasing: Required job [{}] {}property [{}] was actual [{}] when expected [{}]"
+            print("Not releasing: Required job [{}] metadata {}property [{}] was actual [{}] when expected [{}]"
                   .format(job, "custom " if custom else "", key, actual, expected))
             return True
     return False
