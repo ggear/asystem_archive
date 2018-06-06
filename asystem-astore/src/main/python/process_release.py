@@ -24,27 +24,62 @@ from metadata import get
 from metadata import METADATA_NAMESPACE
 
 
+def assert_metadata(metadatas, job, key=None, custom=True, expected="0", compare=lambda (actual): str(actual) == "0"):
+    if job not in metadatas:
+        print("Not releasing: Required job [{}] metadata not found".format(job))
+        return True
+    if key is not None:
+        actual = "NOT_DEFINED"
+        metadata = metadatas[job]
+        if custom:
+            if 'customProperties' in metadata and metadata['customProperties'] is not None and \
+                    METADATA_NAMESPACE in metadata['customProperties'] and metadata['customProperties'][METADATA_NAMESPACE] is not None \
+                    and \
+                    key in metadata['customProperties'][METADATA_NAMESPACE]:
+                actual = metadata['customProperties'][METADATA_NAMESPACE][key]
+        else:
+            if 'properties' in metadata and metadata['properties'] is not None and key in metadata['properties']:
+                actual = metadata['properties'][key]
+        if not compare(actual):
+            print("Not releasing: Required job [{}] {}property [{}] was actual [{}] when expected [{}]"
+                  .format(job, "custom " if custom else "", key, actual, expected))
+            return True
+    return False
+
+
 def do_call(connection_jar, transaction_id):
     metadatas = dict([(metadata['originalName'] if 'originalName' in metadata and metadata['originalName'] is not None else '', metadata)
                       for metadata in get(connection_jar, transaction_id)])
     print("Found job metadata:")
     for name, metadata in metadatas.iteritems(): print("\t{}: {}".format(name, metadata['navigatorUrl']))
-    if len(metadatas) != 3 or \
-            "asystem-astore-process-repair" not in metadatas or \
-            "asystem-astore-process-batch" not in metadatas or \
-            "asystem-astore-process-stats" not in metadatas:
-        print("Not releasing: Required job metadata not found")
-        return 100
-    if sum(int(metadata['customProperties'][METADATA_NAMESPACE]['Exit'])
-           if 'customProperties' in metadata and metadata['customProperties'] is not None and
-              METADATA_NAMESPACE in metadata['customProperties'] and metadata['customProperties'][METADATA_NAMESPACE] is not None and
-              'Exit' in metadata['customProperties'][METADATA_NAMESPACE] else 0 for name, metadata in metadatas.iteritems()) != 0:
-        print("Not releasing: Required job returned failure codes")
-        return 200
-
-    # TODO: Implement more sophisticated quality checks, ie some checks :)
-
-    return 0
+    failure = \
+        assert_metadata(metadatas, 'asystem-astore-process-repair') or \
+        assert_metadata(metadatas, 'asystem-astore-process-repair', 'Exit') or \
+        assert_metadata(metadatas, 'asystem-astore-process-repair', 'STAGED_FILES_PURE', False, ">0", lambda (actual): actual > 0) or \
+        assert_metadata(metadatas, 'asystem-astore-process-repair', 'STAGED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-repair', 'PROCESSED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-repair', 'PROCESSED_FILES_PURE', False, ">0", lambda (actual): actual > 0) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch') or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'Exit') or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'STAGED_FILES_PURE', False, ">0", lambda (actual): actual > 0) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'STAGED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'STAGED_FILES_TEMP', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'STAGED_PARTITIONS_TEMP', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'PROCESSED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-batch', 'PROCESSED_FILES_PURE', False, ">0", lambda (actual): actual > 0) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats') or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'Exit') or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_FILES_PURE', False, ">0", lambda (actual): actual > 0) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_FILES_TEMP', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_TEMP', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_DONE', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'PROCESSED_FILES_FAIL', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_DONE', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False) or \
+        assert_metadata(metadatas, 'asystem-astore-process-stats', 'PROCESSED_FILES_PURE', False, ">0", lambda (actual): actual > 0)
+    return 1 if failure else 0
 
 
 def usage():

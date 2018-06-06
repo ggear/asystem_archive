@@ -21,6 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.collection.JavaConversions._
+import scala.util.Random
 
 class Process(config: Configuration) extends DriverSpark(config) {
 
@@ -236,7 +237,13 @@ class Process(config: Configuration) extends DriverSpark(config) {
             var fileSuccess = false
             val filePath = new Path(fileStagedTemp)
             var filePathSansTemp = new Path(filePath.getParent,
-              filePath.getName.slice(1, filePath.getName.length - 4).replace(".avro", "_TEMP.avro"))
+              filePath.getName.slice(1, filePath.getName.length - 4)
+
+                // TODO: Remove for demo
+                // TODO: Move datum.1517135083368.avro to datum.1517135083367.avro in test and add .datum.1527652050778.avro.tmp back to S3
+                .replace(".avro", "_%06d.avro".format(Random.nextInt(1000000)))
+
+            )
             dfs.rename(filePath, filePathSansTemp)
             if (dfs.exists(new Path(filePath.getParent, "_SUCCESS"))) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
           })
