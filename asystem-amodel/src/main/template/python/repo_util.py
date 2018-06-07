@@ -46,7 +46,8 @@ def nearest(publish_url):
         re.search('.*/amodel_version=([1-9][0-9]\.[0-9]{3}.[0-9]{4})(.*)/.*', publish_url)
     if publish_matcher is None: raise Exception('Eroneous URL [{}]'.format(publish_url))
     publish_version_base = str(int(re.sub('[^0-9]', '', publish_matcher.group(1))) - 1)
-    if publish_version_base < 100000000: raise Exception('Cannot find base version for URL [{}]'.format(publish_url))
+    if publish_version_base < 100000000:
+        raise Exception('Cannot find base version for URL [{}]'.format(publish_url))
     return nearest(publish_url.replace(
         publish_matcher.group(1) + publish_matcher.group(2),
         '{}.{}.{}'.format(publish_version_base[:2], publish_version_base[2:5], publish_version_base[5:])))
