@@ -75,12 +75,16 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
+    rm -rf asystem-anode/src/main/python/anode/test/pickle
+    git checkout -- asystem-anode/src/main/python/anode/test/pickle
+    git status
 
   elif [ "${MODE}" = "checkout_release" ]; then
 
     echo "" && echo "" && echo "" && echo "Checkout release [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
     git checkout $(git describe \-\-tags | cut -c1-19)
+    git status
 
   elif [ "${MODE}" = "build" ]; then
 
