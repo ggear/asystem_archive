@@ -75,10 +75,11 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
+    find . -name *.pyc -path "*/src/*" -exec rm {} \;
     rm -rf asystem-anode/src/main/python/anode/test/pickle
     git checkout -- asystem-anode/src/main/python/anode/test/pickle
     git status
-    mvn clean
+
 
   elif [ "${MODE}" = "checkout_release" ]; then
 
