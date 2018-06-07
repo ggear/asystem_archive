@@ -152,7 +152,7 @@ def pipeline():
     training_uri = nearest(qualify(remote_data_path + "/train/text/csv/none/" +
                                    "amodel_version=10.000.0070-SNAPSHOT/amodel_model=1005"))
     print("Training:\n  URI: [{}]   ".format(training_uri))
-    df = spark.read.csv(training_uri, header=True).toPandas()\
+    df = spark.read.csv(training_uri, header=True).toPandas() \
         .apply(pd.to_numeric, errors='ignore')
     df2 = execute(features=df, engineering=True)
     print("  Dataframe:\n{}\n\n".format(df2.describe()))
@@ -160,7 +160,7 @@ def pipeline():
     test_uri = nearest(qualify(remote_data_path + "/test/text/csv/none/" +
                                "amodel_version=10.000.0070-SNAPSHOT/amodel_model=1005"))
     print("Testing:\n  URI: [{}]".format(test_uri))
-    dfv = spark.read.csv(test_uri, header=True).toPandas()\
+    dfv = spark.read.csv(test_uri, header=True).toPandas() \
         .apply(pd.to_numeric, errors='ignore')
     dfv2 = execute(features=dfv, engineering=True)
     print("  Dataframe:\n{}\n".format(dfv2.describe()))

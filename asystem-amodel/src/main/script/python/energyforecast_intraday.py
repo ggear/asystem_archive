@@ -94,7 +94,7 @@ def pipeline():
         tempfile.mkdtemp()
 
     time_start = int(round(time.time()))
-    spark = SparkSession.builder\
+    spark = SparkSession.builder \
         .appName("asystem-amodel-energyforecastintraday").getOrCreate()
 
     datasets = []
