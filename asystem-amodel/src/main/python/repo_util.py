@@ -22,8 +22,11 @@ def publish(local_file, publish_url):
                                 publish_url).group(1)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
-        if is_snapshot or len(list(s3_bucket.list(prefix=s3_key_name))) == 0:
-            s3_key = Key(s3_bucket, s3_key_name)
+        s3_key = Key(s3_bucket, s3_key_name)
+        s3_key_exists = len(list(s3_bucket.list(prefix=s3_key_name))) != 0
+        if is_snapshot and s3_key_exists:
+            s3_bucket.delete_key(s3_key)
+        if is_snapshot or not s3_key_exists:
             s3_key.set_contents_from_filename(local_file)
     elif publish_url.startswith('file://'):
         publish_file = publish_url.replace('file://', '')
