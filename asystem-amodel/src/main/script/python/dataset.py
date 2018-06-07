@@ -99,7 +99,8 @@ def pipeline():
     dataframe = dataframe.round(1)
     dataframe = dataframe.loc[(dataframe < 50).all(axis=1), :]
     dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
-    dataframe.columns = dataframe.columns.map(lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
+    dataframe.columns = dataframe.columns.map(
+        lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
     print("Training data:\n{}\n\n".format(dataframe.describe()))
 
     # Write the data out to CSV

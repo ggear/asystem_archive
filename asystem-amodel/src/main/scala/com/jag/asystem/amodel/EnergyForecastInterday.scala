@@ -1,5 +1,6 @@
 package com.jag.asystem.amodel
 
+import java.text.SimpleDateFormat
 import java.util.{Calendar, GregorianCalendar, TimeZone}
 
 import com.cloudera.framework.common.Driver.{FAILURE_ARGUMENTS, SUCCESS, getApplicationProperty}
@@ -206,7 +207,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
            | GROUP BY datum__bin__date
               """.stripMargin)
         .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
-        .where($"datum__bin__date" < dateFormat.format(Calendar.getInstance().getTime()))
+        .where($"datum__bin__date" < new SimpleDateFormat(dateFormat).format(Calendar.getInstance().getTime()))
       DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
       outputAll = outputAll.coalesce(1).orderBy("datum__bin__date")
       addResult("All data:")

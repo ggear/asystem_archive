@@ -71,7 +71,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-def execute(model=None, features=None, labels=False, engineering=False, prediction=False):
+def execute(model=None, features=None, labels=False,
+            engineering=False, prediction=False):
     if prediction:
         return model['pipeline'].loc[features[
             'energy__production_Dforecast_Ddaylight__inverter']] \
@@ -90,7 +91,8 @@ def pipeline():
         tempfile.mkdtemp()
 
     time_start = int(round(time.time()))
-    spark = SparkSession.builder.appName("asystem-amodel-energyforecastintraday").getOrCreate()
+    spark = SparkSession.builder\
+        .appName("asystem-amodel-energyforecastintraday").getOrCreate()
 
     datasets = []
     timezone = 'Australia/Perth'
@@ -209,7 +211,8 @@ def pipeline():
         dfns.loc[0:10] = 0
         dfns.loc[990:1000] = 1
         dfnss.append(dfns)
-        if DAYS_PLOT and DAYS_PLOT_DEBUG: dfns.plot(title="Energy ({}) - VETTED".format(day))
+        if DAYS_PLOT and DAYS_PLOT_DEBUG:
+            dfns.plot(title="Energy ({}) - VETTED".format(day))
 
     dfnsa = pd.concat(dfnss, axis=1, ignore_index=True)
     if DAYS_PLOT:
