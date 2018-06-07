@@ -78,6 +78,7 @@ EOF
     rm -rf asystem-anode/src/main/python/anode/test/pickle
     git checkout -- asystem-anode/src/main/python/anode/test/pickle
     git status
+    mvn clean
 
   elif [ "${MODE}" = "checkout_release" ]; then
 
