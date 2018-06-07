@@ -238,8 +238,10 @@ def pipeline():
             # print("TRAIN:", train_index, "TEST:", test_index)
             # regr = LinearRegression()
 
-            X_train, X_test = energies_train[train_index], energies_train[test_index]
-            y_train, y_test = energies_target.iloc[train_index], energies_target.iloc[test_index]
+            X_train, X_test = energies_train[train_index], \
+                              energies_train[test_index]
+            y_train, y_test = energies_target.iloc[train_index], \
+                              energies_target.iloc[test_index]
             regr.fit(X_train, y_train)
             # print(X_test, y_test)
 
