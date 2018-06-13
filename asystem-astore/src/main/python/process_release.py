@@ -84,10 +84,10 @@ def do_call(connection_jar, transaction_id):
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_DONE', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False, ">=0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_DONE', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False, ">=0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_PURE', False, ">0",
                         lambda (actual): actual > 0)
     return 0 if success else 1
