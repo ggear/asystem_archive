@@ -15,10 +15,12 @@ DO_PRODUCTION=${7:-"true"}
 PROCESS_RETURN=0
 PROCESS_TX=$(echo $(uuidgen) | sed "s/[[:alpha:].-]//g")
 PROCESS_S3="$S3_URL_ASTAGING"
-PROCESS_TAGS="staging"
+PROCESS_TAGS="production"
 PROCESS_GROUP="asystem-amodel-energyforecast"
 PROCESS_STAGES_ARRAY=(${PROCESS_STAGES//,/ })
 PROCESS_JAR="$ROOT_DIR/lib/jar/$(basename $(dirname $(dirname $ROOT_DIR))).jar"
+PROCESS_PROPERTIES="$ROOT_DIR/lib/avro/model.properties"
+PROCESS_VALIDATION="$ROOT_DIR/lib/data/energyforecast_validate.csv"
 
 [[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK="true"
 [[ "$APP_VERSION" = *-SNAPSHOT ]] && DO_RELEASE="false" && DO_PRODUCTION="false"
@@ -37,7 +39,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "false" \
     "$PROCESS_GROUP-interday-preparation" \
     "com.jag.asystem.amodel.EnergyForecastInterday" \
-    "$S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
+    " --cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-validation --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
     "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/jar/"
   elif [ "$PROCESS_STAGE" = "interday-training" ]; then
@@ -60,7 +62,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
 done
 
 if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
-  if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
+  if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX --job_group=$PROCESS_GROUP --job_name=$PROCESS_GROUP-validation --job_version=$APP_VERSION --job_properties=$PROCESS_PROPERTIES --job_validation=$PROCESS_VALIDATION; then
     $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
   else
     echo "Release quality script failed, halting release"

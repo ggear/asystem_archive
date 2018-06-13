@@ -19,6 +19,7 @@ PROCESS_TAGS="staging"
 PROCESS_GROUP="asystem-astore-process"
 PROCESS_STAGES_ARRAY=(${PROCESS_STAGES//,/ })
 PROCESS_JAR="$ROOT_DIR/lib/jar/$(basename $(dirname $(dirname $ROOT_DIR))).jar"
+PROCESS_PROPERTIES="$ROOT_DIR/lib/avro/model.properties"
 
 [[ "$DELETE_CLUSTER" = "true" ]] && WAIT_TASK="true"
 [[ "$APP_VERSION" = *-SNAPSHOT ]] && DO_RELEASE="false" && DO_PRODUCTION="false"

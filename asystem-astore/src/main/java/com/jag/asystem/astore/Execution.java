@@ -1,7 +1,5 @@
 package com.jag.asystem.astore;
 
-import java.util.Map;
-
 import com.cloudera.framework.common.navigator.MetaDataExecution;
 import com.cloudera.framework.common.navigator.MetaDataTemplate;
 import com.cloudera.nav.sdk.model.annotations.MClass;
@@ -55,25 +53,6 @@ public class Execution extends MetaDataExecution {
     super(conf, template, exit);
     setStarted(started);
     setEnded(ended);
-  }
-
-  @Override
-  public MetaDataExecution clone(MetaDataExecution metaData, Map<String, Object> metaDataMap, String string) {
-    Execution clone = new Execution();
-    clone.update(metaData, metaDataMap, string);
-    clone.setStagedFilesFail(((Map) metaDataMap.get("properties")).get("STAGED_FILES_FAIL").toString());
-    clone.setStagedFilesTemp(((Map) metaDataMap.get("properties")).get("STAGED_FILES_TEMP").toString());
-    clone.setStagedFilesPure(((Map) metaDataMap.get("properties")).get("STAGED_FILES_PURE").toString());
-    clone.setStagedPartitionsTemp(((Map) metaDataMap.get("properties")).get("STAGED_PARTITIONS_TEMP").toString());
-    clone.setStagedPartitionsSkip(((Map) metaDataMap.get("properties")).get("STAGED_PARTITIONS_SKIP").toString());
-    clone.setStagedPartitionsRedo(((Map) metaDataMap.get("properties")).get("STAGED_PARTITIONS_REDO").toString());
-    clone.setStagedPartitionsDone(((Map) metaDataMap.get("properties")).get("STAGED_PARTITIONS_DONE").toString());
-    clone.setStagedFilesFail(((Map) metaDataMap.get("properties")).get("PROCESSED_FILES_FAIL").toString());
-    clone.setStagedFilesPure(((Map) metaDataMap.get("properties")).get("PROCESSED_FILES_PURE").toString());
-    clone.setProcessedPartitionsSkip(((Map) metaDataMap.get("properties")).get("PROCESSED_PARTITIONS_SKIP").toString());
-    clone.setProcessedPartitionsRedo(((Map) metaDataMap.get("properties")).get("PROCESSED_PARTITIONS_REDO").toString());
-    clone.setProcessedPartitionsDone(((Map) metaDataMap.get("properties")).get("PROCESSED_PARTITIONS_DONE").toString());
-    return clone;
   }
 
   public String getStagedFilesFail() {

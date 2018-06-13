@@ -185,10 +185,6 @@ class Process(config: Configuration) extends DriverSpark(config) {
             filesProcessedTodo(("*", "*")) ++= filesProcessedSetsParents
         }
       }
-    } catch {
-      case exception: Exception =>
-        exit = FAILURE_RUNTIME
-        if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] failed during preparation", exception)
     } finally {
       if (Log.isInfoEnabled()) {
         Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with mode [" +
@@ -223,7 +219,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
-    var exit = SUCCESS
+    val exit = SUCCESS
     try {
       val spark = SparkSession.builder.config(new SparkConf).appName(
         getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
@@ -236,7 +232,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
           filesStageTemp.foreach(fileStagedTemp => {
             var fileSuccess = false
             val filePath = new Path(fileStagedTemp)
-            var filePathSansTemp = new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)
+            val filePathSansTemp = new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)
 
               // TODO: Remove for demo
               // .replace(".avro", "_%06d.avro".format(Random.nextInt(1000000)))
@@ -302,36 +298,32 @@ class Process(config: Configuration) extends DriverSpark(config) {
         case _ =>
       }
       spark.close()
-    } catch {
-      case exception: Exception =>
-        exit = FAILURE_RUNTIME
-        if (Log.isErrorEnabled()) Log.error("Driver [" + this.getClass.getSimpleName + "] failed during execution", exception)
     } finally {
       val metaData = getMetaData(exit, timestampStart)
       addMetaDataCounter(metaData, STAGED_FILES_FAIL,
-        filesStageFail.size)
+        filesStageFail.size.toLong)
       addMetaDataCounter(metaData, STAGED_FILES_TEMP,
-        filesStageTemp.size)
+        filesStageTemp.size.toLong)
       addMetaDataCounter(metaData, STAGED_FILES_PURE,
-        filesStagePure.size)
+        filesStagePure.size.toLong)
       addMetaDataCounter(metaData, STAGED_PARTITIONS_TEMP,
-        filesStageTemp.size)
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_SKIP, filesStagedTodo.foldLeft(0)(_ + _._2.size) +
-        filesStagedSkip.foldLeft(0)(_ + _._2.size) - filesProcessedTodo.foldLeft(0)(_ + _._2.size))
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_REDO, filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
-        filesStagedTodo.foldLeft(0)(_ + _._2.size))
+        filesStageTemp.size.toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_SKIP, (filesStagedTodo.foldLeft(0)(_ + _._2.size) +
+        filesStagedSkip.foldLeft(0)(_ + _._2.size) - filesProcessedTodo.foldLeft(0)(_ + _._2.size)).toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_REDO, (filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
+        filesStagedTodo.foldLeft(0)(_ + _._2.size)).toLong)
       addMetaDataCounter(metaData, STAGED_PARTITIONS_DONE,
-        filesStagedTodo.foldLeft(0)(_ + _._2.size))
+        filesStagedTodo.foldLeft(0)(_ + _._2.size).toLong)
       addMetaDataCounter(metaData, PROCESSED_FILES_FAIL,
-        filesProcessedFail.size)
+        filesProcessedFail.size.toLong)
       addMetaDataCounter(metaData, PROCESSED_FILES_PURE,
-        filesProcessedPure.size)
+        filesProcessedPure.size.toLong)
       addMetaDataCounter(metaData, PROCESSED_PARTITIONS_SKIP,
-        filesProcessedSkip.foldLeft(0)(_ + _._2.size))
+        filesProcessedSkip.foldLeft(0)(_ + _._2.size).toLong)
       addMetaDataCounter(metaData, PROCESSED_PARTITIONS_REDO,
-        filesProcessedRedo.foldLeft(0)(_ + _._2.size))
+        filesProcessedRedo.foldLeft(0)(_ + _._2.size).toLong)
       addMetaDataCounter(metaData, PROCESSED_PARTITIONS_DONE,
-        filesProcessedDone.foldLeft(0)(_ + _._2.size))
+        filesProcessedDone.foldLeft(0)(_ + _._2.size).toLong)
       pushMetaData(metaData)
       if (Log.isInfoEnabled()) Log.info("Driver [" + this.getClass.getSimpleName + "] execute metadata: " +
         pullMetaData(metaData).mkString(" "))
@@ -362,7 +354,6 @@ class Process(config: Configuration) extends DriverSpark(config) {
     if (dfs != null) dfs.close()
     SUCCESS
   }
-
 
   def getMetaData(exit: Integer, started: Instant = Instant.now, ended: Instant = Instant.now): Execution = {
     val metaData = new Execution(getConf, new Template(getConf), exit, started, ended)

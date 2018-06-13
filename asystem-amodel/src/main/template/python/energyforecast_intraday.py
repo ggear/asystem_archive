@@ -108,7 +108,7 @@ def pipeline():
             continue
     ds = reduce(lambda x, y: x.union(y), datasets)
     ds.createOrReplaceTempView('dataset')
-    dfEnergy = spark.sql("""
+    df_energy = spark.sql("""
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_energy
@@ -121,7 +121,7 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
-    dfSunRise = spark.sql("""
+    df_sun_rise = spark.sql("""
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_sunrise
@@ -134,7 +134,7 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
-    dfSunSet = spark.sql("""
+    df_sun_set = spark.sql("""
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_sunset
@@ -149,25 +149,25 @@ def pipeline():
     """).toPandas()
     print("Data loaded and filtered\n")
 
-    df = dfEnergy.set_index(pd.to_datetime(dfEnergy['bin_timestamp'], unit='s')
+    df = df_energy.set_index(pd.to_datetime(df_energy['bin_timestamp'], unit='s')
                             .dt.tz_localize('UTC').dt.tz_convert(timezone))
     df['bin_date'] = df.index.date
     df.set_index('bin_date', inplace=True)
-    dfEnergyDay = df.groupby(df.index)['bin_energy'].max().to_frame() \
+    df_energy_day = df.groupby(df.index)['bin_energy'].max().to_frame() \
         .rename(columns={'bin_energy': 'bin_energy_day'})
-    df = df.merge(dfEnergyDay, how='inner', left_index=True, right_index=True)
-    dfSunRise.set_index(pd.to_datetime(dfSunRise['bin_timestamp'], unit='s')
+    df = df.merge(df_energy_day, how='inner', left_index=True, right_index=True)
+    df_sun_rise.set_index(pd.to_datetime(df_sun_rise['bin_timestamp'], unit='s')
                         .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-    dfSunRise['bin_date'] = dfSunRise.index.date
-    dfSunRise.set_index('bin_date', inplace=True)
-    df = df.merge(dfSunRise.groupby(dfSunRise.index)['bin_sunrise'].max()
+    df_sun_rise['bin_date'] = df_sun_rise.index.date
+    df_sun_rise.set_index('bin_date', inplace=True)
+    df = df.merge(df_sun_rise.groupby(df_sun_rise.index)['bin_sunrise'].max()
                   .to_frame(), how='inner', left_index=True, right_index=True)
-    dfSunSet.set_index(
-        pd.to_datetime(dfSunSet['bin_timestamp'], unit='s')
+    df_sun_set.set_index(
+        pd.to_datetime(df_sun_set['bin_timestamp'], unit='s')
             .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
-    dfSunSet['bin_date'] = dfSunSet.index.date
-    dfSunSet.set_index('bin_date', inplace=True)
-    df = df.merge(dfSunSet.groupby(dfSunSet.index)['bin_sunset'].max()
+    df_sun_set['bin_date'] = df_sun_set.index.date
+    df_sun_set.set_index('bin_date', inplace=True)
+    df = df.merge(df_sun_set.groupby(df_sun_set.index)['bin_sunset'].max()
                   .to_frame(), how='inner', left_index=True, right_index=True)
     df.set_index(pd.to_datetime(df['bin_timestamp'], unit='s')
                  .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
@@ -179,7 +179,7 @@ def pipeline():
     for dfs in df.groupby(df.index.date):
         day = dfs[0].strftime('%Y/%m/%d')
         dfvs[('PURGED' if day in DAYS_BLACK_LIST else
-              ('TOVETT' if day >= datetime.datetime.now().strftime("%Y/%m/%d") \
+              ('TOVETT' if day >= datetime.datetime.now().strftime("%Y/%m/%d")
                    else 'VETTED'))][day] = dfs[1]
 
     for vetting in dfvs:

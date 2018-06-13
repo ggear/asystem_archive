@@ -76,6 +76,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
     git clean -d -x -f asystem-*/src/main asystem-*/src/test
+    git checkout -- .
     git status
 
   elif [ "${MODE}" = "checkout_release" ]; then
