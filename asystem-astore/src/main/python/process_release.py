@@ -13,7 +13,7 @@ import inspect
 import logging
 import os
 import textwrap
-
+import inspect
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/../manager/python')
@@ -22,8 +22,8 @@ import metadata
 from metadata import METADATA_NAMESPACE
 
 
-def assert_metadata(metadatas, job, key=None, custom=True, expected="0",
-                    compare=lambda (actual): str(actual) == "0"):
+def assert_metadata(metadatas, job, key=None, custom=True,
+                    compare=lambda actual: actual == "0"):
     asserted = True
     if job not in metadatas:
         print("Required job [{}] metadata not found".format(job))
@@ -42,9 +42,10 @@ def assert_metadata(metadatas, job, key=None, custom=True, expected="0",
                 if 'properties' in metadata and metadata['properties'] is not None \
                         and key in metadata['properties']:
                     actual = metadata['properties'][key]
-        if not compare(actual):
+        if actual == "NOT_DEFINED" or not compare(actual):
             print("Required job [{}] metadata {}property [{}] was actual [{}] when expected [{}]"
-                  .format(job, "custom " if custom else "", key, actual, expected))
+                  .format(job, "custom " if custom else "", key, actual,
+                          inspect.getsource(compare).split('\n', 1)[0].split(": ", 1)[-1].rsplit(")", 1)[0]))
             asserted = False
     return asserted
 
@@ -60,36 +61,38 @@ def do_call(connection_jar, transaction_id):
     success = \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'Exit') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'STAGED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'STAGED_FILES_PURE', False,
+                        lambda (actual): actual > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'PROCESSED_FILES_FAIL', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'PROCESSED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'PROCESSED_FILES_PURE', False,
+                        lambda (actual): actual > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'Exit') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_PURE', False,
+                        lambda (actual): actual > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_PARTITIONS_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'PROCESSED_FILES_FAIL', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'PROCESSED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'PROCESSED_FILES_PURE', False,
+                        lambda (actual): actual > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'Exit') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_PURE', False,
+                        lambda (actual): actual > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_DONE', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False, ">=0") and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False,
+                        lambda (actual): actual >= "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_DONE', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False, ">=0") and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_PURE', False, ">0",
-                        lambda (actual): actual > 0)
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False,
+                        lambda (actual): actual >= "0") and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_PURE', False,
+                        lambda (actual): actual > "0")
     return 0 if success else 1
 
 
