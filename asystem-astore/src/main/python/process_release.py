@@ -11,6 +11,7 @@ Options:
 import getopt
 import inspect
 import logging
+import os
 import textwrap
 
 import sys
