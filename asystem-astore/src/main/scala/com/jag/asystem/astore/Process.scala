@@ -289,6 +289,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
                       filesProcessedDone(fileMonthYear) = mutable.SortedSet()
                     filesProcessedDone(fileMonthYear) += fileParent
                   }
+                case _ =>
               }
             }
           }

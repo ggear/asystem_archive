@@ -58,9 +58,11 @@ EOF
     git pull -a
     echo "" && echo "" && echo "" && echo "Download [asystem-amodel]"
     aws s3 sync s3://asystem-amodel asystem-amodel/src/repo --delete
+    find ./asystem-amodel/src/repo -type d -empty -delete
     du -cksh asystem-amodel/src/repo
     echo "" && echo "" && echo "" && echo "Download [asystem-astore]"
     aws s3 sync s3://asystem-astore asystem-astore/src/repo --delete
+    find ./asystem-astore/src/repo -type d -empty -delete
     du -cksh asystem-astore/src/repo
 
   elif [ "${MODE}" = "download_anode" ]; then
