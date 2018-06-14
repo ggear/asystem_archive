@@ -107,7 +107,8 @@ def do_call(connection_jar, transaction_id, job_group, job_name,
             "VALIDATION_INSTANCES": str(validation_rows),
             "VALIDATION_MEAN_ACCURACY": str(int(validation_mean_accuracy)),
             "VALIDATION_RMS_ERROR": str(int(validation_rmse))
-        }, {"Exit": 0 if validation_rmse > ENERGYFORECAST_ACCEPTABLE_RMSE else 1}, ["production"])])
+        }, {"Exit": 0 if validation_rmse > ENERGYFORECAST_ACCEPTABLE_RMSE else 1
+            }, ["staging"] if job_version.endswith("-SNAPSHOT") else ["production"])])
     if len(metadata_bodies) == 0:
         print("Energy forecast metadata not found")
         return 1

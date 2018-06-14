@@ -281,9 +281,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
   }
 
   def getMetaData(exit: Integer, started: Instant = Instant.now, ended: Instant = Instant.now): Execution = {
-    val metaData = new Execution(getConf, new Template(getConf), exit, timestampStart, Instant.now)
-    metaData.addTags("staging")
-    metaData
+    new Execution(getConf, new Template(getConf), exit, timestampStart, Instant.now)
   }
 
 }
