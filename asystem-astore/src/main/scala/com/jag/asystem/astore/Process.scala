@@ -190,18 +190,18 @@ class Process(config: Configuration) extends DriverSpark(config) {
         Log.info("Driver [" + this.getClass.getSimpleName + "] prepared with mode [" +
           (if (inputMode == null) "null" else inputMode.toString.toLowerCase()) + "], input ["
           + inputOutputPath + "] and inputs:")
-        logFiles("STAGED_FILES_FAIL", mutable.Map(("*", "*") -> filesStageFail))
-        logFiles("STAGED_FILES_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
-        logFiles("STAGED_FILES_PURE", mutable.Map(("*", "*") -> filesStagePure))
-        logFiles("STAGED_PARTITIONS_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
-        logFiles("STAGED_PARTITIONS_TODO", filesStagedTodo)
-        logFiles("STAGED_PARTITIONS_SKIP", filesStagedSkip)
         logFiles("PROCESSED_FILES_FAIL", mutable.Map(("*", "*") -> filesProcessedFail))
         logFiles("PROCESSED_FILES_PURE", mutable.Map(("*", "*") -> filesProcessedPure))
         logFiles("PROCESSED_PARTITIONS_SETS", filesProcessedSets)
         logFiles("PROCESSED_PARTITIONS_EXEC", filesProcessedTodo)
         logFiles("PROCESSED_PARTITIONS_REDO", filesProcessedRedo)
         logFiles("PROCESSED_PARTITIONS_SKIP", filesProcessedSkip)
+        logFiles("STAGED_FILES_FAIL", mutable.Map(("*", "*") -> filesStageFail))
+        logFiles("STAGED_FILES_PURE", mutable.Map(("*", "*") -> filesStagePure))
+        logFiles("STAGED_FILES_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
+        logFiles("STAGED_PARTITIONS_TODO", filesStagedTodo)
+        logFiles("STAGED_PARTITIONS_SKIP", filesStagedSkip)
+        logFiles("STAGED_PARTITIONS_TEMP", mutable.Map(("*", "*") -> filesStageTemp))
       }
       if (exit != SUCCESS) {
         val metaData = getMetaData(exit, timestampStart)
@@ -301,30 +301,30 @@ class Process(config: Configuration) extends DriverSpark(config) {
       spark.close()
     } finally {
       val metaData = getMetaData(exit, timestampStart)
-      addMetaDataCounter(metaData, STAGED_FILES_FAIL,
-        filesStageFail.size.toLong)
-      addMetaDataCounter(metaData, STAGED_FILES_TEMP,
-        filesStageTemp.size.toLong)
-      addMetaDataCounter(metaData, STAGED_FILES_PURE,
-        filesStagePure.size.toLong)
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_TEMP,
-        filesStageTemp.size.toLong)
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_SKIP, (filesStagedTodo.foldLeft(0)(_ + _._2.size) +
-        filesStagedSkip.foldLeft(0)(_ + _._2.size) - filesProcessedTodo.foldLeft(0)(_ + _._2.size)).toLong)
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_REDO, (filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
-        filesStagedTodo.foldLeft(0)(_ + _._2.size)).toLong)
-      addMetaDataCounter(metaData, STAGED_PARTITIONS_DONE,
-        filesStagedTodo.foldLeft(0)(_ + _._2.size).toLong)
       addMetaDataCounter(metaData, PROCESSED_FILES_FAIL,
         filesProcessedFail.size.toLong)
       addMetaDataCounter(metaData, PROCESSED_FILES_PURE,
         filesProcessedPure.size.toLong)
-      addMetaDataCounter(metaData, PROCESSED_PARTITIONS_SKIP,
-        filesProcessedSkip.foldLeft(0)(_ + _._2.size).toLong)
-      addMetaDataCounter(metaData, PROCESSED_PARTITIONS_REDO,
-        filesProcessedRedo.foldLeft(0)(_ + _._2.size).toLong)
       addMetaDataCounter(metaData, PROCESSED_PARTITIONS_DONE,
         filesProcessedDone.foldLeft(0)(_ + _._2.size).toLong)
+      addMetaDataCounter(metaData, PROCESSED_PARTITIONS_REDO,
+        filesProcessedRedo.foldLeft(0)(_ + _._2.size).toLong)
+      addMetaDataCounter(metaData, PROCESSED_PARTITIONS_SKIP,
+        filesProcessedSkip.foldLeft(0)(_ + _._2.size).toLong)
+      addMetaDataCounter(metaData, STAGED_FILES_FAIL,
+        filesStageFail.size.toLong)
+      addMetaDataCounter(metaData, STAGED_FILES_PURE,
+        filesStagePure.size.toLong)
+      addMetaDataCounter(metaData, STAGED_FILES_TEMP,
+        filesStageTemp.size.toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_DONE,
+        filesStagedTodo.foldLeft(0)(_ + _._2.size).toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_REDO, (filesProcessedTodo.foldLeft(0)(_ + _._2.size) -
+        filesStagedTodo.foldLeft(0)(_ + _._2.size)).toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_SKIP, (filesStagedTodo.foldLeft(0)(_ + _._2.size) +
+        filesStagedSkip.foldLeft(0)(_ + _._2.size) - filesProcessedTodo.foldLeft(0)(_ + _._2.size)).toLong)
+      addMetaDataCounter(metaData, STAGED_PARTITIONS_TEMP,
+        filesStageTemp.size.toLong)
       pushMetaData(metaData)
       if (Log.isInfoEnabled()) Log.info("Driver [" + this.getClass.getSimpleName + "] execute metadata: " +
         pullMetaData(metaData).mkString(" "))

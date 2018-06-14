@@ -61,13 +61,13 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   fi
 done
 
-if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
-  if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX --job_group=$PROCESS_GROUP --job_name=$PROCESS_GROUP-validation --job_version=$APP_VERSION --job_properties=$PROCESS_PROPERTIES --job_validation=$PROCESS_VALIDATION; then
+if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX --job_group=$PROCESS_GROUP --job_name=$PROCESS_GROUP-validation --job_version=$APP_VERSION --job_properties=$PROCESS_PROPERTIES --job_validation=$PROCESS_VALIDATION; then
+  if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
     $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
-  else
-    echo "Release quality script failed, halting release"
-    PROCESS_RETURN=1
   fi
+else
+  echo "Release quality script failed, halting release"
+  PROCESS_RETURN=1
 fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"

@@ -42,14 +42,14 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$S3_URL_ALIB/jar/"
 done
 
-if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
-  if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
+if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
+  if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
     $ROOT_DIR/bin/as-astore-process.sh "$WAIT_TASK" "true" "$PROCESS_STAGES" "false" "true"
     $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_ASTORE" "$S3_URL_ASTORE""$S3_URL_ASTAGING" "true" "false"
-  else
-    echo "Release quality script failed, halting release"
-    PROCESS_RETURN=1
   fi
+else
+  echo "Release quality script failed, halting release"
+  PROCESS_RETURN=1
 fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"
