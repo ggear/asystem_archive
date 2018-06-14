@@ -93,7 +93,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Build [asystem]"
     git checkout master
     git pull -a
-    mvn clean install
+    mvn clean install -U
 
   elif [ "${MODE}" = "release" ]; then
 
