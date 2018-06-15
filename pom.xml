@@ -90,6 +90,7 @@
     </profiles>
 
     <modules>
+        <module>asystem-adoc</module>
         <module>asystem-amodel</module>
         <module>asystem-anode</module>
         <module>asystem-arouter</module>

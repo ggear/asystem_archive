@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.jag.asystem</groupId>
+    <artifactId>asystem-adoc</artifactId>
+    <packaging>jar</packaging>
+    <version>10.000.0080-SNAPSHOT</version>
+
+    <parent>
+        <groupId>com.jag</groupId>
+        <artifactId>asystem</artifactId>
+        <version>10.000.0080-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <templater-scala.build.skip>true</templater-scala.build.skip>
+        <templater-python.build.skip>true</templater-python.build.skip>
+        <conda.build.skip>true</conda.build.skip>
+        <parcel.build.skip>true</parcel.build.skip>
+        <tar.build.skip>true</tar.build.skip>
+    </properties>
+
+</project>

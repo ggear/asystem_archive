@@ -46,3 +46,4 @@ asystem-anode/src/main/python/anode/web/js/metadata
 asystem-anode/src/main/python/anode/application.properties
 asystem-amodel/src/main/java/com/jag/asystem/amodel/avro/*.java
 asystem-amodel/src/test/resources/data/astore/datums/pristine/?/asystem/1*
+asystem-adoc/src/site/resources/~*.xlsx
