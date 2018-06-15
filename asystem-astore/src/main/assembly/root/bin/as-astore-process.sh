@@ -38,7 +38,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$PROCESS_GROUP-$PROCESS_STAGE" \
     "com.jag.asystem.astore.Process " \
     "--cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-$PROCESS_STAGE --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $PROCESS_STAGE $S3_URL_ASTORE$PROCESS_S3/" \
-    "--conf spark.driver.cores=1 --conf spark.driver.memory=512m --num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
+    "--driver.memory 512m --num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/jar/"
 done
 
