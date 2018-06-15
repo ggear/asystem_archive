@@ -47,7 +47,8 @@ def do_call(connection_jar, transaction_id, job_group, job_name,
                         "energyforecastinterday/model/pickle/joblib/none/amodel_version=" + \
                         job_version + "/amodel_model=" + job_properties_dict[
                             "MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION"]
-    if model_interday_s3 != repo_util.nearest(script_util.qualify(model_interday_s3), "model.pkl"):
+    if model_interday_s3 != repo_util.nearest(script_util.qualify(model_interday_s3),
+                                              "model.pkl", True):
         print("Required model [{}] not found".format(model_interday_s3))
         return 1
     model_interday_s3 = model_interday_s3 + "/model.pkl"
@@ -56,7 +57,8 @@ def do_call(connection_jar, transaction_id, job_group, job_name,
                         "energyforecastintraday/model/pickle/joblib/none/amodel_version=" + \
                         job_version + "/amodel_model=" + job_properties_dict[
                             "MODEL_ENERGYFORECAST_INTRADAY_BUILD_VERSION"]
-    if model_intraday_s3 != repo_util.nearest(script_util.qualify(model_intraday_s3), "model.pkl"):
+    if model_intraday_s3 != repo_util.nearest(script_util.qualify(model_intraday_s3),
+                                              "model.pkl", True):
         print("Required model [{}] not found".format(model_intraday_s3))
         return 1
     model_intraday_s3 = model_intraday_s3 + "/model.pkl"

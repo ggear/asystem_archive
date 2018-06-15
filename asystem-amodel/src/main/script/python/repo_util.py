@@ -39,7 +39,7 @@ def publish(local_file, publish_url):
             shutil.copyfile(local_file, publish_file)
 
 
-def nearest(publish_url, publish_file="_SUCCESS"):
+def nearest(publish_url, publish_file="_SUCCESS", single_level=False):
     if publish_url.startswith('s3a://'):
         s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*',
                                    publish_url).group(1)
@@ -68,7 +68,7 @@ def nearest(publish_url, publish_file="_SUCCESS"):
         "{}.{}.{}".format(publish_version_base[:2],
                           publish_version_base[2:5],
                           publish_version_base[5:]))
-    return nearest(publish_url_next, publish_file)
+    return None if single_level else nearest(publish_url_next, publish_file)
 
 
 def get(publish_url):
