@@ -245,7 +245,7 @@ def pipeline():
     ]).apply(pd.to_numeric, errors='ignore')
     dfo = dill.load(StringIO(model['execute'].getvalue())) \
         (model=model, features=dfi, prediction=True)
-    print("Energy Mean Input:\n{}\nEnergy Mean Output:\n{}".format(dfi, dfo))
+    print("\nEnergy Mean Input:\n{}\n\nEnergy Mean Output:\n{}\n".format(dfi, dfo))
     publish(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)
 

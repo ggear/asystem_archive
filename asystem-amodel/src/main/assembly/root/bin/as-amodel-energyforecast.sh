@@ -48,7 +48,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$PROCESS_GROUP-interday-training" \
     "energyforecast_interday.py" \
     "" \
-    "--num-executors 1 --executor-cores 1 --executor-memory 1g" \
+    "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/py/"
   elif [ "$PROCESS_STAGE" = "intraday-all" ]; then
   $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
@@ -56,7 +56,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$PROCESS_GROUP-intraday-training" \
     "energyforecast_intraday.py" \
     "" \
-    "--num-executors 1 --executor-cores 1 --executor-memory 1g" \
+    "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/py/"
   fi
 done

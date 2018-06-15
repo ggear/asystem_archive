@@ -68,7 +68,7 @@ def nearest(publish_url, publish_file="_SUCCESS"):
         "{}.{}.{}".format(publish_version_base[:2],
                           publish_version_base[2:5],
                           publish_version_base[5:]))
-    return nearest(publish_url_next)
+    return nearest(publish_url_next, publish_file)
 
 
 def get(publish_url):

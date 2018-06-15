@@ -93,7 +93,16 @@ EOF
     echo "" && echo "" && echo "" && echo "Build [asystem]"
     git checkout master
     git pull -a
-    mvn clean install -U
+    mvn install -PCMP -U
+    mvn clean install
+
+  elif [ "${MODE}" = "package" ]; then
+
+    echo "" && echo "" && echo "" && echo "Package [asystem]"
+    git checkout master
+    git pull -a
+    mvn install -PCMP -U
+    mvn clean install -PPKG
 
   elif [ "${MODE}" = "release" ]; then
 
@@ -164,6 +173,12 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
+  elif [ "${MODE}" = "provision" ]; then
+
+    echo "" && echo "" && echo "" && echo "Provision [asystem]"
+    mvn clean install -PPKG
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
+
   elif [ "${MODE}" = "run" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem]"
@@ -191,7 +206,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_release|build|release|deploy|merge|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_release|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
