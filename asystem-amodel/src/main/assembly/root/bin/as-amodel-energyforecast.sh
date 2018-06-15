@@ -38,8 +38,8 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   $ROOT_DIR/bin/cldr-shell-spark2.sh \
     "false" \
     "$PROCESS_GROUP-interday-preparation" \
-    "com.jag.asystem.amodel.EnergyForecastInterday" \
-    " --cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-validation --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
+    "com.jag.asystem.amodel.EnergyForecastInterday " \
+    "--cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-validation --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
     "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/jar/"
   elif [ "$PROCESS_STAGE" = "interday-training" ]; then

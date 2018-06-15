@@ -36,8 +36,8 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   $ROOT_DIR/bin/cldr-shell-spark2.sh \
     "$WAIT_TASK" \
     "$PROCESS_GROUP-$PROCESS_STAGE" \
-    "com.jag.asystem.astore.Process" \
-    " --cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-$PROCESS_STAGE --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $PROCESS_STAGE $S3_URL_ASTORE$PROCESS_S3/" \
+    "com.jag.asystem.astore.Process " \
+    "--cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-$PROCESS_STAGE --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $PROCESS_STAGE $S3_URL_ASTORE$PROCESS_S3/" \
     "--num-executors ""$SPARK_EXEC_NUM"" --executor-cores ""$SPARK_EXEC_CORES"" --executor-memory ""$SPARK_EXEC_MEMORY""" \
     "$S3_URL_ALIB/jar/"
 done
