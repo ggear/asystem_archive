@@ -48,9 +48,11 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
-    mvn clean -pl asystem-astore
-    mvn install -PPKG
-    ./asystem-astore/target/assembly/asystem-astore-*/bin/cldr-provision-altus.sh "false" "true"
+    if [ ! -f ./asystem-amodel/target/assembly/asystem-amodel-*/cfg/provision.time ]; then
+      mvn clean -pl asystem-amodel
+      mvn install -PPKG
+    fi
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true" "true"
 
   elif [ "${MODE}" = "download" ]; then
 
@@ -242,8 +244,13 @@ function git-template-merge {
   rm -rf ${1}/src/main/template/python/*.py.*
 }
 
+TIME=$(date +%s)
+
 for MODE in "$@"; do
   [[ ! "${MODE}" = "environment" ]] && set -x -e
   mode_execute
 done
 
+set +x
+TIME="$(($(date +%s) - $TIME))"
+echo "" && echo "Pipeline execution took ["$(printf '%02d:%02d:%02d\n' $(($TIME/3600)) $(($TIME%3600/60)) $(($TIME%60)))"] time" && echo ""
