@@ -48,10 +48,8 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
-    if [ ! -f ./asystem-amodel/target/assembly/asystem-amodel-*/cfg/provision.time ]; then
-      mvn clean -pl asystem-amodel
-      mvn install -PPKG
-    fi
+    mvn clean -pl asystem-amodel
+    mvn install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true" "true"
 
   elif [ "${MODE}" = "download" ]; then
