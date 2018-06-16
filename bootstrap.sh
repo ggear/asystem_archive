@@ -48,6 +48,7 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
+    mvn install -PCMP -U
     mvn clean -pl asystem-amodel
     mvn install -PPKG
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true" "true"
@@ -94,14 +95,12 @@ EOF
     git checkout master
     git pull -a
     mvn install -PCMP -U
-    mvn clean install
 
   elif [ "${MODE}" = "package" ]; then
 
     echo "" && echo "" && echo "" && echo "Package [asystem]"
     git checkout master
     git pull -a
-    mvn install -PCMP -U
     mvn clean install -PPKG
 
   elif [ "${MODE}" = "release" ]; then
@@ -162,14 +161,14 @@ EOF
     [[ -n "$(git status --porcelain asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python)" ]] && exit 1
     git checkout master
     git pull -a
-    mvn clean install -PCMP -pl asystem-amodel
+    mvn install -PCMP -pl asystem-amodel
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:dataset.py]"
     git-template-merge "asystem-amodel" "dataset.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_interday.py]"
     git-template-merge "asystem-amodel" "energyforecast_interday.py"
     echo "" && echo "" && echo "" && echo "Diff [asystem-amodel:energyforecast_intraday.py]"
     git-template-merge "asystem-amodel" "energyforecast_intraday.py"
-    mvn clean install -PCMP -pl asystem-amodel
+    mvn install -PCMP -pl asystem-amodel
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
