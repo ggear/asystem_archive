@@ -12,6 +12,8 @@ CLOUD_HOST_IP="52.63.86.162"
 AROUTER_HOST_IP="52.63.86.162"
 ANODE_HOST_IP="192.168.1.10"
 
+PACKAGE_PERFORMED="false"
+
 function mode_execute {
 
   if [ "${MODE}" = "environment" ]; then
@@ -48,9 +50,7 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
-    mvn install -PCMP -U
-    mvn clean -pl asystem-amodel
-    mvn install -PPKG
+    build_package
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true" "true"
 
   elif [ "${MODE}" = "download" ]; then
@@ -78,6 +78,13 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
+    mvn install -PCMP -U
+    git status
+
+  elif [ "${MODE}" = "checkout_master" ]; then
+
+    echo "" && echo "" && echo "" && echo "Checkout master [asystem]"
+    git checkout master
     git clean -d -x -f asystem-*/src/main asystem-*/src/test
     git checkout -- .
     git status
@@ -89,19 +96,12 @@ EOF
     git checkout $(git describe \-\-tags | cut -c1-19)
     git status
 
-  elif [ "${MODE}" = "build" ]; then
-
-    echo "" && echo "" && echo "" && echo "Build [asystem]"
-    git checkout master
-    git pull -a
-    mvn install -PCMP -U
-
   elif [ "${MODE}" = "package" ]; then
 
     echo "" && echo "" && echo "" && echo "Package [asystem]"
     git checkout master
     git pull -a
-    mvn clean install -PPKG
+    build_package
 
   elif [ "${MODE}" = "release" ]; then
 
@@ -125,7 +125,7 @@ EOF
       -DreleaseVersion=${VERSION_RELEASE} \
       -DdevelopmentVersion=${VERSION_HEAD}-SNAPSHOT -PPKG -Dresume=false
     mvn release:clean
-    mvn clean install -PPKG &&
+    mvn clean install -PPKG
     git add -A
     git commit -m "Update generated files for asystem-${VERSION_HEAD}-SNAPSHOT"
     git push --all
@@ -175,7 +175,7 @@ EOF
   elif [ "${MODE}" = "provision" ]; then
 
     echo "" && echo "" && echo "" && echo "Provision [asystem]"
-    mvn clean install -PPKG
+    build_package
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
 
   elif [ "${MODE}" = "run" ]; then
@@ -192,23 +192,30 @@ EOF
   elif [ "${MODE}" = "run_amodel" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem-amodel]"
-    mvn clean install -PPKG
+    build_package
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/as-amodel-energyforecast.sh
 
   elif [ "${MODE}" = "run_astore" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem-astore]"
-    mvn clean install -PPKG
+    build_package
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
     ./asystem-astore/target/assembly/asystem-astore-*/bin/as-astore-process.sh
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_release|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
+}
+
+function build_package {
+  if [ "$PACKAGE_PERFORMED" != "true" ]; then
+    PACKAGE_PERFORMED="true"
+    mvn clean install -PPKG
+  fi
 }
 
 function ec2-instance-resize {
