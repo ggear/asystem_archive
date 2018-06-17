@@ -39,12 +39,12 @@ To deploy the latest release to production:
 To perform a full release, deploy, run pipeline:
 
 ```bash
-./bootstrap.sh prepare release deploy run || ./bootstrap.sh teardown
+./bootstrap.sh prepare release deploy run teardown
 ```
 
 or alternatively, to run the most recent release: 
 
 ```bash
-./bootstrap.sh checkout_release prepare run || ./bootstrap.sh teardown checkout
+./bootstrap.sh checkout_release prepare run teardown checkout
 ```
 
