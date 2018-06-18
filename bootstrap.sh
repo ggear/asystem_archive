@@ -69,6 +69,8 @@ EOF
   elif [ "${MODE}" = "download_anode" ]; then
 
     echo "" && echo "" && echo "" && echo "Download [asystem-anode]"
+    ssh janeandgraham.com -p 8092 "sudo service anode restart"
+    sleep 5
     rm -rf asystem-anode/src/main/python/anode/test/pickle
     mkdir -p asystem-anode/src/main/python/anode/test/pickle
     scp -r -P 8092 janeandgraham.com:/etc/anode/anode/* asystem-anode/src/main/python/anode/test/pickle
@@ -78,7 +80,6 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
-    mvn install -PCMP -U
     git status
 
   elif [ "${MODE}" = "checkout_master" ]; then
@@ -96,19 +97,26 @@ EOF
     git checkout $(git describe \-\-tags | cut -c1-19)
     git status
 
-  elif [ "${MODE}" = "build" ]; then
+  elif [ "${MODE}" = "compile" ]; then
 
     echo "" && echo "" && echo "" && echo "Build [asystem]"
     git checkout master
     git pull -a
     build_package "CMP"
 
+  elif [ "${MODE}" = "build" ]; then
+
+    echo "" && echo "" && echo "" && echo "Build [asystem]"
+    git checkout master
+    git pull -a
+    build_package "BLD"
+
   elif [ "${MODE}" = "package" ]; then
 
     echo "" && echo "" && echo "" && echo "Package [asystem]"
     git checkout master
     git pull -a
-    build_package
+    build_package "PKG"
 
   elif [ "${MODE}" = "release" ]; then
 
@@ -212,7 +220,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|compile|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
@@ -222,7 +230,13 @@ function build_package {
   if [ "$PACKAGE_PERFORMED" != "true" ]; then
     PROFILE="PKG"
     [[ ! -z ${1+x} ]] && PROFILE="$1"
+    set +e
     mvn clean install -P"$PROFILE"
+    set -e
+    if [ $? -ne 0 ]; then
+      mvn install -PCMP -U
+      mvn clean install -P"$PROFILE"
+    fi
     PACKAGE_PERFORMED="true"
   fi
 }

@@ -22,7 +22,7 @@
         <dir.output.python>${project.build.directory}/python</dir.output.python>
         <dir.runtime.anode>${project.build.directory}/anode-runtime</dir.runtime.anode>
         <dir.runtime-clean.anode>${project.build.directory}/anode-runtime-clean</dir.runtime-clean.anode>
-        <system.test.anode.opts>--config=${dir.source.python}/config/anode.yaml --db-dir=${dir.runtime-clean.anode}/config --verbose</system.test.anode.opts>
+        <system.test.anode.opts>-c${dir.source.python}/config/anode.yaml -d${dir.runtime-clean.anode}/config -v</system.test.anode.opts>
         <system.test.anode.log>${project.build.directory}/anode-runtime/anode.log</system.test.anode.log>
     </properties>
 
@@ -218,7 +218,7 @@
                         <phase>clean</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">
-                                <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
+                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="clean" />
                                 </exec>
@@ -256,7 +256,7 @@
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">
-                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="develop" />
                                     <arg value="--user" />

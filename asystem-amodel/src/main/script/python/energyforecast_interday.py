@@ -115,7 +115,7 @@ def execute(model=None, features=None,
 
         # TODO: Remove for demo
         # import mpmath as mp
-        # features_engineered_renamed['rain_mm_2'] = \
+        # features_engineered_renamed['rain_mm'] = \
         #    features_engineered['rain__forecast__glen_Dforrest'] \
         #        .apply(lambda (x): float(mp.power(x * 2, 2)))
 
