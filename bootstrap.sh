@@ -80,12 +80,14 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout [asystem]"
     git checkout master
+    git pull -a
     git status
 
   elif [ "${MODE}" = "checkout_master" ]; then
 
     echo "" && echo "" && echo "" && echo "Checkout master [asystem]"
     git checkout master
+    git pull -a
     git clean -d -x -f asystem-*/src/main asystem-*/src/test
     git checkout -- .
     git status
@@ -94,6 +96,8 @@ EOF
 
     echo "" && echo "" && echo "" && echo "Checkout release [asystem]"
     [[ -n "$(git status --porcelain)" ]] && exit 1
+    git checkout master
+    git pull -a
     git checkout $(git describe \-\-tags | cut -c1-19)
     git status
 
