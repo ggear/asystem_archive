@@ -96,6 +96,13 @@ EOF
     git checkout $(git describe \-\-tags | cut -c1-19)
     git status
 
+  elif [ "${MODE}" = "build" ]; then
+
+    echo "" && echo "" && echo "" && echo "Build [asystem]"
+    git checkout master
+    git pull -a
+    build_package "CMP"
+
   elif [ "${MODE}" = "package" ]; then
 
     echo "" && echo "" && echo "" && echo "Package [asystem]"
@@ -205,7 +212,7 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
 
   fi
 
@@ -213,8 +220,10 @@ EOF
 
 function build_package {
   if [ "$PACKAGE_PERFORMED" != "true" ]; then
+    PROFILE="PKG"
+    [[ ! -z ${1+x} ]] && PROFILE="$1"
+    mvn clean install -P"$PROFILE"
     PACKAGE_PERFORMED="true"
-    mvn clean install -PPKG
   fi
 }
 
