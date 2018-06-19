@@ -232,12 +232,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
           filesStageTemp.foreach(fileStagedTemp => {
             var fileSuccess = false
             val filePath = new Path(fileStagedTemp)
-            val filePathSansTemp = new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4)
-
-              // TODO: Remove for demo
-              // .replace(".avro", "_%06d.avro".format(Random.nextInt(1000000)))
-
-            )
+            val filePathSansTemp = new Path(filePath.getParent, filePath.getName.slice(1, filePath.getName.length - 4))
             dfs.rename(filePath, filePathSansTemp)
             if (dfs.exists(new Path(filePath.getParent, "_SUCCESS"))) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
           })
