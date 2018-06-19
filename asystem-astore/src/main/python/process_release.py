@@ -59,13 +59,13 @@ def do_call(connection_jar, transaction_id):
         print("\t{}: {}".format(name, metadata_body['navigatorUrl']))
     success = \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'Exit') and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'System_Exit') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'STAGED_FILES_PURE', False, lambda x: x > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'PROCESSED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-repair', 'PROCESSED_FILES_PURE', False, lambda x: x >= "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'Exit') and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'System_Exit') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_PURE', False, lambda x: x > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'STAGED_FILES_TEMP', False) and \
@@ -73,7 +73,7 @@ def do_call(connection_jar, transaction_id):
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'PROCESSED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-batch', 'PROCESSED_FILES_PURE', False, lambda x: x >= "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats') and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'Exit') and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'System_Exit') and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_PURE', False, lambda x: x > "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_TEMP', False) and \

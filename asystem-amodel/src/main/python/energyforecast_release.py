@@ -110,7 +110,7 @@ def do_call(connection_jar, transaction_id, job_group, job_name,
             "VALIDATION_INSTANCES": str(validation_rows),
             "VALIDATION_MEAN_ACCURACY": str(int(validation_mean_accuracy)),
             "VALIDATION_RMS_ERROR": str(int(validation_rmse))
-        }, {"Exit": 1 if validation_failed else 0
+        }, {"System_Exit": 1 if validation_failed else 0
             }, ["staging"] if job_version.endswith("-SNAPSHOT") else ["production"])])
     if len(metadata_bodies) == 0:
         print("Energy forecast metadata not found")
@@ -119,11 +119,11 @@ def do_call(connection_jar, transaction_id, job_group, job_name,
     for name, metadata_body in metadata_bodies.iteritems():
         print("\t{}: {}".format(name, metadata_body['navigatorUrl']))
         validation_exit = validation_exit + (
-            metadata_body['customProperties'][METADATA_NAMESPACE]["Exit"]
+            metadata_body['customProperties'][METADATA_NAMESPACE]["System_Exit"]
             if 'customProperties' in metadata_body and metadata_body['customProperties'] is not None and
                METADATA_NAMESPACE in metadata_body['customProperties'] and
                metadata_body['customProperties'][METADATA_NAMESPACE] is not None
-               and "Exit" in metadata_body['customProperties'][METADATA_NAMESPACE] else 1)
+               and "System_Exit" in metadata_body['customProperties'][METADATA_NAMESPACE] else 1)
     if validation_failed:
         print("Energy validation RMSE [{}] greater than releasable (ie historic) threshold [{}]"
               .format(validation_rmse, ENERGYFORECAST_ACCEPTABLE_RMSE))

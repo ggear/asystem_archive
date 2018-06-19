@@ -318,7 +318,7 @@ public class ProcessTest implements TestConstants {
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
     driverWrite.getConf().set(CONF_CLDR_JOB_METADATA, "true");
     driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
-    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString().replaceAll("[\\W]", ""));
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
     assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
       dfsServer.getPath(HDFS_DIR).toString()));
@@ -353,7 +353,7 @@ public class ProcessTest implements TestConstants {
     }
     assertEquals(test.<Long>getAssert(PROCESSED_ROWS_PURE),
       new Long(query.length() > 0 ? hiveServer.execute(query.toString()).iterator().next() : "0"));
-    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString().replaceAll("[\\W]", ""));
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
     assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
       dfsServer.getPath(HDFS_DIR).toString()));
@@ -374,7 +374,7 @@ public class ProcessTest implements TestConstants {
       .put(PROCESSED_PARTITIONS_REDO, 0L)
       .put(PROCESSED_PARTITIONS_DONE, 0L)
       .build()), driverWrite.getCounters());
-    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString().replaceAll("[\\W]", ""));
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
     assertEquals(SUCCESS, driverWrite.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-clean", "clean",
       dfsServer.getPath(HDFS_DIR).toString()));
@@ -397,7 +397,7 @@ public class ProcessTest implements TestConstants {
       .put(PROCESSED_PARTITIONS_REDO, 0L)
       .put(PROCESSED_PARTITIONS_DONE, driverRead.getCounters().get(Process.class.getName()).get(PROCESSED_PARTITIONS_SKIP))
       .build()), driverWrite.getCounters());
-    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString());
+    driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString().replaceAll("[\\W]", ""));
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
     assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-repair", "repair",
       dfsServer.getPath(HDFS_DIR).toString()));
