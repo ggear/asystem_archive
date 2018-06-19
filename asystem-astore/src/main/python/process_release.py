@@ -42,7 +42,7 @@ def assert_metadata(metadatas, job, key=None, custom=True, compare=lambda x: x =
                         and key in metadata['properties']:
                     actual = metadata['properties'][key]
         if actual == "NOT_DEFINED" or not compare(str(actual)):
-            print("Required job [{}] metadata {}property [{}] was actual [{}] when expected [{}]"
+            print("Required job [{}] metadata {}property [{}] was [{}] when expected [{}]"
                   .format(job, "custom " if custom else "", key, actual,
                           inspect.getsource(compare).split('\n', 1)[0].split(": ", 1)[-1].rsplit(")", 1)[0]))
             asserted = False
