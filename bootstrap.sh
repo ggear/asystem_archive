@@ -50,7 +50,7 @@ EOF
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown cluster [asystem]"
-    build_package
+    [ ! -f ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh ] && build_package
     ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh "true" "true"
 
   elif [ "${MODE}" = "download" ]; then
