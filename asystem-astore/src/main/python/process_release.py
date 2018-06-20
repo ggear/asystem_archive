@@ -44,7 +44,9 @@ def assert_metadata(metadatas, job, key=None, custom=True, compare=lambda x: x =
         if actual == "NOT_DEFINED" or not compare(str(actual)):
             print("Required job [{}] metadata {}property [{}] was [{}] when expected [{}]"
                   .format(job, "custom " if custom else "", key, actual,
-                          inspect.getsource(compare).split('\n', 1)[0].split(": ", 1)[-1].rsplit(")", 1)[0]))
+                          inspect.getsource(compare).split('\n', 1)[0]
+                          .split(": ", 1)[-1].rsplit(")", 1)[0]
+                          .split(" ", 1)[-1].replace("\"", "")))
             asserted = False
     return asserted
 
@@ -78,10 +80,10 @@ def do_call(connection_jar, transaction_id):
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_FAIL', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_FILES_TEMP', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_TEMP', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_DONE', False) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_DONE', False, lambda x: x >= "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'STAGED_PARTITIONS_REDO', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_FAIL', False) and \
-        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_DONE', False) and \
+        assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_DONE', False, lambda x: x >= "0") and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_PARTITIONS_REDO', False) and \
         assert_metadata(metadata_bodies, 'asystem-astore-process-stats', 'PROCESSED_FILES_PURE', False, lambda x: x > "0")
     return 0 if success else 1
