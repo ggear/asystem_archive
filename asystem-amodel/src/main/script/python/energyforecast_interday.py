@@ -112,6 +112,12 @@ def execute(model=None, features=None,
         features_engineered_renamed = features_engineered[feature_columns_original]
         features_engineered_renamed = features_engineered_renamed \
             .rename(columns=feature_columns_rename)
+        
+        import mpmath as mp
+        features_engineered_renamed['rain_mm'] = \
+          features_engineered_renamed['rain_mm'] \
+          .apply(lambda(x): float(mp.power(x*2,2)))
+        
         return features_engineered_renamed
     elif prediction:
         if type(features) is not np.ndarray:
