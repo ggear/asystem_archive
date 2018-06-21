@@ -243,7 +243,7 @@
                                     <arg value="setup.py" />
                                     <arg value="trial" />
                                     <arg value="--reporter=text" />
-                                    <env key="INTEGRATION_TEST_SKIP" value="${maven.integration-test.skip}" />
+                                    <env key="INTEGRATION_TEST_SKIP" value="${maven.system-test.skip}" />
                                 </exec>
                             </target>
                         </configuration>

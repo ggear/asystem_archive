@@ -58,20 +58,23 @@
 
     <profiles>
         <profile>
+            <id>DFT</id>
+            <properties>
+                <maven.test.skip>false</maven.test.skip>
+                <maven.system-test.skip>true</maven.system-test.skip>
+                <maven.package.skip>false</maven.package.skip>
+                <maven.install-python.skip>true</maven.install-python.skip>
+                <maven.install-flume.skip>true</maven.install-flume.skip>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
             <id>CMP</id>
             <properties>
                 <maven.test.skip>true</maven.test.skip>
                 <maven.system-test.skip>true</maven.system-test.skip>
-                <maven.package.skip>true</maven.package.skip>
-                <maven.install-python.skip>true</maven.install-python.skip>
-                <maven.install-flume.skip>true</maven.install-flume.skip>
-            </properties>
-        </profile>
-        <profile>
-            <id>BLD</id>
-            <properties>
-                <maven.test.skip>false</maven.test.skip>
-                <maven.system-test.skip>false</maven.system-test.skip>
                 <maven.package.skip>true</maven.package.skip>
                 <maven.install-python.skip>true</maven.install-python.skip>
                 <maven.install-flume.skip>true</maven.install-flume.skip>
@@ -87,6 +90,16 @@
                 <maven.install-flume.skip>true</maven.install-flume.skip>
             </properties>
         </profile>
+        <profile>
+            <id>ALL</id>
+            <properties>
+                <maven.test.skip>false</maven.test.skip>
+                <maven.system-test.skip>false</maven.system-test.skip>
+                <maven.package.skip>false</maven.package.skip>
+                <maven.install-python.skip>false</maven.install-python.skip>
+                <maven.install-flume.skip>false</maven.install-flume.skip>
+            </properties>
+        </profile>
     </profiles>
 
     <modules>
@@ -95,7 +108,6 @@
         <module>asystem-anode</module>
         <module>asystem-arouter</module>
         <module>asystem-astore</module>
-        <module>asystem-astream</module>
     </modules>
 
     <build>

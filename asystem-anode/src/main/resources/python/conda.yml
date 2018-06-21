@@ -26,5 +26,8 @@ dependencies:
 - python-dateutil=2.6.1
 - attrs=18.1.0
 - mpmath=1.0.0
+- mock=2.0.0
+- pbr=4.0.4
+- funcsigs=1.0.2
 - pip=9.0.1
 - python=2.7.11

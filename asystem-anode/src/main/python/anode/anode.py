@@ -345,7 +345,7 @@ class Log:
 
     # noinspection PyArgumentList, PyProtectedMember
     @staticmethod
-    def configure(verbose, quiet):
+    def configure(verbose, quiet, shutup):
         client._HTTP11ClientFactory.noisy = False
         if not logging.getLogger().handlers:
             logging_handler = logging.StreamHandler(sys.stdout)
@@ -361,7 +361,7 @@ class Log:
                 twisted_log_fitler.setLogLevelForNamespace(namespace="mqtt", level=LogLevel.warn)
                 globalLogBeginner.beginLoggingTo([FilteringLogObserver(observer=textFileLogObserver(sys.stdout),
                                                                        predicates=[twisted_log_fitler])], redirectStandardIO=False)
-        logging.getLogger().setLevel(logging.ERROR if quiet else (logging.DEBUG if verbose else logging.INFO))
+        logging.getLogger().setLevel(logging.FATAL if shutup else logging.ERROR if quiet else logging.DEBUG if verbose else logging.INFO)
 
     def start(self):
         if logging.getLogger().isEnabledFor(self.level):
@@ -420,9 +420,10 @@ def main(core_reactor=reactor):
     parser.add_option("-c", "--config", dest="config", default="/etc/anode/anode.yaml", help="config FILE", metavar="FILE")
     parser.add_option("-d", "--db-dir", dest="db_dir", default="/etc/anode/", help="config FILE", metavar="FILE")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="noisy output to stdout")
-    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress all output to stdout")
+    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress most output to stdout")
+    parser.add_option("-s", "--shutup", action="store_true", dest="shutup", default=False, help="suppress all output to stdout")
     (options, args) = parser.parse_args()
-    Log.configure(options.verbose, options.quiet)
+    Log.configure(options.verbose, options.quiet, options.shutup)
     with open(options.config, "r") as stream:
         config = yaml.load(stream)
     if not os.path.isdir(options.db_dir):

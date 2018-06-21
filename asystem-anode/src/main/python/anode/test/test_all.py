@@ -274,32 +274,29 @@ class ANodeTest(TestCase):
         self.assertEqual(-1, Plugin.compare_version("10.000.0000-SNAPSHOT", "10.000.0000"))
 
     def test_bare(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, iterations=5)
         self.assertRest(0, anode, "/rest", False)
 
     def test_null(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, True, False)
         self.assertRest(0, anode, "/rest", False)
 
     def test_corrupt(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, True)
         self.assertRest(9, anode, "/rest/?metrics=internet&types=point")
 
     def test_random(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(True, True, False, False, iterations=5)
         self.assertRest(0, anode, "/rest", False)
 
     def test_coverage(self):
         for arguments in [
-            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP],
-            ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-v"],
-            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "--verbose"],
-            ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"],
-            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "--quiet"]
+            ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"],
+            ["anode", "--config=" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "--shutup"]
         ]:
             self.patch(sys, "argv", arguments)
             anode = self.anode_init(False, True, False, False)
@@ -466,7 +463,7 @@ class ANodeTest(TestCase):
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
             FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE
         ]:
-            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-q"])
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-s"])
             anode = self.anode_init(False, False, False, False, period=10, iterations=25)
             for filter_method in [None, "min", "max"]:
                 for fitler_fill in [None, "zeros", "linear"]:
@@ -495,14 +492,14 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 101
         partition_index = 50
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_BOUNDED_TICKS, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_BOUNDED_TICKS, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(266, anode, "/rest/?metrics=power&scope=history", True)[1]
         for config in [
             FILE_CONFIG_FRONIUS_BOUNDED_TICKS,
             FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS
         ]:
-            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-q"])
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-s"])
             anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
             self.assertEquals(0 if config == FILE_CONFIG_FRONIUS_BOUNDED_TICKS else 100,
                               self.assertRest(1,
@@ -528,7 +525,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 100
         partition_index = 48
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(1527, anode, "/rest/?scope=history", True)[1]
         for config in [
@@ -536,7 +533,7 @@ class ANodeTest(TestCase):
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
             FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE
         ]:
-            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-q"])
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-s"])
             anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
             self.assertEquals(0,
                               self.assertRest(1,
@@ -561,7 +558,7 @@ class ANodeTest(TestCase):
     def test_publish(self):
         period = 100
         self.patch(MqttPublishService, "isConnected", lambda myself: False)
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_PUBLISH, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_PUBLISH, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         metrics = self.assertRest(24, anode, "/rest/?scope=publish&format=csv", True)[1]
         self.assertRest(metrics,
@@ -578,7 +575,7 @@ class ANodeTest(TestCase):
     def test_temporal(self):
         period = 1
         iterations = 3
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         self.assertRest(1,
                         anode,
@@ -602,7 +599,7 @@ class ANodeTest(TestCase):
 
     def test_dailies(self):
         period = 1
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_DAY, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_DAY, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.assertRest(2,
                         anode,
@@ -882,7 +879,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 10
         iterations_repeat = 15
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(66, anode, "/rest/?scope=history&metrics=power", True)[1]
         self.assertTrue(metrics > 0)
@@ -937,7 +934,7 @@ class ANodeTest(TestCase):
                                           "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
                                           True)[0]["bin_timestamp"][iterations - 1])
         self.setUp()
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_DB, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_DB, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=(iterations * 11))
         metrics = self.assertRest(566, anode, "/rest/?scope=history&metrics=power", True)[1]
         self.assertTrue(metrics > 0)
@@ -968,7 +965,7 @@ class ANodeTest(TestCase):
         period = 1
         iterations = 1
         iterations_repeat = 2
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(40, anode, "/rest/?metrics=energy", False)[1]
         self.assertTrue(metrics > 0)
@@ -1032,7 +1029,7 @@ class ANodeTest(TestCase):
     def test_partition(self):
         period = 1
         iterations = 10
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         self.assertRest(iterations,
                         anode,
@@ -1062,7 +1059,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty&partitions=" +
                         "a", True)
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.clock_tick(anode, 1, 2 * 2460 * 60 + 1, True)
         self.assertRest(1,
@@ -1078,7 +1075,7 @@ class ANodeTest(TestCase):
             FILE_CONFIG_FRONIUS_REPEAT_DAY,
             FILE_CONFIG_FRONIUS_REPEAT_PARTITION
         ]:
-            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-q"])
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-s"])
             anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
             self.assertRest(iterations if config != FILE_CONFIG_FRONIUS_REPEAT_DAY else iterations + 1,
                             anode,
@@ -1161,7 +1158,7 @@ class ANodeTest(TestCase):
             FILE_CONFIG_FRONIUS_UNBOUNDED_DAY,
             FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE
         ]:
-            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-q"])
+            self.patch(sys, "argv", ["anode", "-c" + config, "-d" + DIR_ANODE_DB_TMP, "-s"])
             anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
             self.assertRest(iterations,
                             anode,
@@ -1226,7 +1223,7 @@ class ANodeTest(TestCase):
     def test_bad_plots(self):
         period = 1
         iterations = 50
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         self.assertRest(0,
                         anode,
@@ -1280,7 +1277,7 @@ class ANodeTest(TestCase):
                         False, True)
 
     def test_good_plots(self):
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB, "-s"])
         anode = self.anode_init(False, False, False, False, period=1, iterations=0)
         last_timestamp = \
             self.assertRest(0, anode,
@@ -1335,7 +1332,7 @@ class ANodeTest(TestCase):
             try:
                 period = 1
                 iterations = 1
-                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+                self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
                 anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
                 self.assertRest(len(test_integration_tests) * 3,
                                 anode,
@@ -1347,7 +1344,7 @@ class ANodeTest(TestCase):
 
     def test_oneoff(self):
         period = 1
-        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-q"])
+        self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.assertRest(0,
                         anode,

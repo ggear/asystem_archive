@@ -41,6 +41,12 @@ EOF
       sleep 1
     done
 
+  elif [ "${MODE}" = "prepare_cluster" ]; then
+
+    echo "" && echo "" && echo "" && echo "Prepare cluster [asystem]"
+    build_package
+    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
+
   elif [ "${MODE}" = "teardown" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
@@ -113,7 +119,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Build [asystem]"
     git checkout master
     git pull -a
-    build_package "BLD"
+    build_package "DFT"
 
   elif [ "${MODE}" = "package" ]; then
 
@@ -121,6 +127,13 @@ EOF
     git checkout master
     git pull -a
     build_package "PKG"
+
+  elif [ "${MODE}" = "test" ]; then
+
+    echo "" && echo "" && echo "" && echo "Test [asystem]"
+    git checkout master
+    git pull -a
+    build_package "ALL"
 
   elif [ "${MODE}" = "release" ]; then
 
@@ -191,12 +204,6 @@ EOF
     git diff asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
     git status asystem-amodel/src/main/script asystem-amodel/src/main/python asystem-amodel/src/main/template/python
 
-  elif [ "${MODE}" = "provision" ]; then
-
-    echo "" && echo "" && echo "" && echo "Provision [asystem]"
-    build_package
-    ./asystem-amodel/target/assembly/asystem-amodel-*/bin/cldr-provision-altus.sh
-
   elif [ "${MODE}" = "run" ]; then
 
     echo "" && echo "" && echo "" && echo "Run [asystem]"
@@ -224,19 +231,32 @@ EOF
 
   else
 
-    echo "Usage: ${0} <environment|prepare|download|download_anode|checkout|checkout_master|checkout_release|compile|build|package|release|deploy|merge|provision|run|run_anode|run_amodel|run_astore|teardown|teardown_cluster>"
+    usage
 
   fi
 
+}
+
+function usage {
+    set +x +e
+    echo "" && echo "Usage: ${0} <commands>"
+    echo "" && echo "Commands:"
+    echo "  help |"
+    echo "  environment |"
+    echo "  download | download_anode"
+    echo "  checkout | checkout_master | checkout_release"
+    echo "  compile | build | package | test | release| deploy | merge"
+    echo "  prepare | prepare_cluster | teardown | teardown_cluster"
+    echo "  run | run_anode | run_amodel | run_astore"
+    echo ""
+    exit 1
 }
 
 function build_package {
   if [ "$PACKAGE_PERFORMED" != "true" ]; then
     PROFILE="PKG"
     [[ ! -z ${1+x} ]] && PROFILE="$1"
-    set +e
     mvn clean install -P"$PROFILE"
-    set -e
     if [ $? -ne 0 ]; then
       mvn install -PCMP -U
       mvn clean install -P"$PROFILE"
@@ -277,6 +297,7 @@ function git-template-merge {
 
 TIME=$(date +%s)
 
+[ $# -eq 0 ] && usage
 for MODE in "$@"; do
   [[ ! "${MODE}" = "environment" ]] && set -x -e
   mode_execute
