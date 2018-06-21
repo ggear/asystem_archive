@@ -219,7 +219,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
-    var exit = SUCCESS
+    val exit = SUCCESS
     try {
       val spark = SparkSession.builder.config(new SparkConf).appName(
         getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
@@ -297,7 +297,6 @@ class Process(config: Configuration) extends DriverSpark(config) {
             }
           } catch {
             case exception: Exception =>
-              exit = FAILURE_RUNTIME
               if (Log.isDebugEnabled()) Log.debug("Driver [" + this.getClass.getSimpleName + "] failed during batch execution", exception)
           }
         case _ =>
