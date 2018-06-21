@@ -94,6 +94,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Checkout snapshot [asystem]"
     git checkout master
     git pull -a
+    git reset HEAD asystem-anode/src/main/python/anode/test/pickle
     git clean -d -x -f asystem-*/src/main asystem-*/src/test
     git checkout -- .
     git status

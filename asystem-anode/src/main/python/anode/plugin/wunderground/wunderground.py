@@ -59,10 +59,10 @@ class Wunderground(Plugin):
                     forecast_index - day_index_start + 1,
                     "day",
 
-                    # TODO: Return after demo
+                    # TODO: Return after demo -
                     # data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index,
                     #                                             "conditions"]).lower().encode("ascii", "ignore")
-                    "rain"
+                    data_string="chance of rain"
 
                 )
                 self.datum_push(
@@ -98,9 +98,9 @@ class Wunderground(Plugin):
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
 
-                    # TODO: Return after demo
+                    # TODO: Return after demo -
                     # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    5,
+                    self.datum_value(3),
 
                     "mm",
                     1,
@@ -116,9 +116,9 @@ class Wunderground(Plugin):
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
 
-                    # TODO: Return after demo
+                    # TODO: Return after demo -
                     # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    5,
+                    self.datum_value(3),
 
                     "mm",
                     1,
