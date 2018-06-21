@@ -100,7 +100,7 @@ class Wunderground(Plugin):
 
                     # TODO: Return after demo -
                     # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    self.datum_value(3),
+                    self.datum_value(1),
 
                     "mm",
                     1,
@@ -118,7 +118,7 @@ class Wunderground(Plugin):
 
                     # TODO: Return after demo -
                     # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    self.datum_value(3),
+                    self.datum_value(1),
 
                     "mm",
                     1,
