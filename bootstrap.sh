@@ -89,9 +89,9 @@ EOF
     git pull -a
     git status
 
-  elif [ "${MODE}" = "checkout_master" ]; then
+  elif [ "${MODE}" = "checkout_snapshot" ]; then
 
-    echo "" && echo "" && echo "" && echo "Checkout master [asystem]"
+    echo "" && echo "" && echo "" && echo "Checkout snapshot [asystem]"
     git checkout master
     git pull -a
     git clean -d -x -f asystem-*/src/main asystem-*/src/test
@@ -244,7 +244,7 @@ function usage {
     echo "  help |"
     echo "  environment |"
     echo "  download | download_anode"
-    echo "  checkout | checkout_master | checkout_release"
+    echo "  checkout | checkout_snapshot | checkout_release"
     echo "  compile | build | package | test | release| deploy | merge"
     echo "  prepare | prepare_cluster | teardown | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
