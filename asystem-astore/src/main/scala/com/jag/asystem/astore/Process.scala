@@ -219,7 +219,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
 
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
-    val exit = SUCCESS
+    var exit = SUCCESS
     try {
       val spark = SparkSession.builder.config(new SparkConf).appName(
         getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
@@ -238,59 +238,67 @@ class Process(config: Configuration) extends DriverSpark(config) {
             if (dfs.exists(new Path(filePath.getParent, "_SUCCESS"))) dfs.delete(new Path(filePath.getParent, "_SUCCESS"), true)
           })
         case BATCH =>
-          val filesProcessedMonths = mutable.Set[Path]()
-          for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
-            val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
-            filesProcessedMonths += filesProcessedMonth
-            filesProcessedYear(filesProcessedMonth.getParent.toString) -= 1
-            filesProcessedTops(filesProcessedMonth.getParent.getParent.toString) -= 1
-          }
-          filesProcessedMonths.foreach(dfs.delete(_, true))
-          for ((filesProcessedYear, filesProcessedYearCount) <- filesProcessedYear)
-            if (filesProcessedYearCount == 0) dfs.delete(new Path(filesProcessedYear), true)
-          for ((filesProcessedVersion, filesProcessedVersionCount) <- filesProcessedTops)
-            if (filesProcessedVersionCount == 0) dfs.delete(new Path(filesProcessedVersion), true)
-          val fileModel = lit(getModelProperty("MODEL_VERSION"))
-          val fileVersion = lit(getApplicationProperty("APP_VERSION"))
-          val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)
-          val filesProcessedPath = s"$inputOutputPath/${filesCount.zipWithIndex.min._2}" +
-            s"/asystem/astore/processed/canonical/parquet/dict/snappy"
-          if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*"))
-            .map(filesProcessedTodoParent => spark.read.avro(filesProcessedTodoParent))
-            .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
-            .withColumn("astore_version", fileVersion)
-            .withColumn("astore_year", year(to_date(from_unixtime($"bin_timestamp"))))
-            .withColumn("astore_month", month(to_date(from_unixtime($"bin_timestamp"))))
-            .withColumn("astore_model", fileModel)
-            .withColumn("astore_metric", substring_index($"data_metric", "__", 1))
-            .repartition(filesProcessedTodoRedo.size, $"astore_version", $"astore_year", $"astore_month", $"astore_model", $"astore_metric")
-            .write.mode("append").partitionBy("astore_version", "astore_year", "astore_month", "astore_model", "astore_metric")
-            .parquet(filesProcessedPath)
-          val filesProcessedSuccess = new Path(filesProcessedPath, "_SUCCESS")
-          if (dfs.exists(filesProcessedSuccess)) {
-            dfs.delete(filesProcessedSuccess, true)
-            for ((_, filesStagedTodoParents) <- filesStagedTodo)
-              filesStagedTodoParents.foreach(filesStagedTodoParent => touchFile(new Path(filesStagedTodoParent, "_SUCCESS")))
-            val filesProcessed = dfs.listFiles(filesProcessedSuccess.getParent, true)
-            while (filesProcessed.hasNext) {
-              val fileUri = filesProcessed.next().getPath.toString
-              val filePartitionsPattern = ".*/astore_year=(.*)/astore_month=(.*)/astore_model=(.*)/astore_metric=(.*)/(.*\\.parquet)".r
-              fileUri match {
-                case filePartitionsPattern(astoreYear, astoreMonth, astoreModel, astoreMetric, fileName) =>
-                  val fileParent = fileUri.replace(fileName, "")
-                  val fileMonthYear = (astoreYear, astoreMonth)
-                  if (filesProcessedTodoRedo.contains(fileMonthYear)) {
-                    touchFile(new Path(fileParent, "_SUCCESS"))
-                    if (!filesProcessedDone.contains(fileMonthYear))
-                      filesProcessedDone(fileMonthYear) = mutable.SortedSet()
-                    filesProcessedDone(fileMonthYear) += fileParent
-                  }
-                case _ =>
+          try {
+            val filesProcessedMonths = mutable.Set[Path]()
+            for ((_, filesProcessedRedoParents) <- filesProcessedRedo) for (filesProcessedRedoParent <- filesProcessedRedoParents) {
+              val filesProcessedMonth = new Path(filesProcessedRedoParent).getParent.getParent
+              filesProcessedMonths += filesProcessedMonth
+              filesProcessedYear(filesProcessedMonth.getParent.toString) -= 1
+              filesProcessedTops(filesProcessedMonth.getParent.getParent.toString) -= 1
+            }
+            filesProcessedMonths.foreach(dfs.delete(_, true))
+            for ((filesProcessedYear, filesProcessedYearCount) <- filesProcessedYear)
+              if (filesProcessedYearCount == 0) dfs.delete(new Path(filesProcessedYear), true)
+            for ((filesProcessedVersion, filesProcessedVersionCount) <- filesProcessedTops)
+              if (filesProcessedVersionCount == 0) dfs.delete(new Path(filesProcessedVersion), true)
+            val fileModel = lit(getModelProperty("MODEL_VERSION"))
+            val fileVersion = lit(getApplicationProperty("APP_VERSION"))
+            val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)
+            val filesProcessedPath = s"$inputOutputPath/${filesCount.zipWithIndex.min._2}" +
+              s"/asystem/astore/processed/canonical/parquet/dict/snappy"
+            if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*"))
+              .map(filesProcessedTodoParent => spark.read.avro(filesProcessedTodoParent))
+              .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
+              .withColumn("astore_version", fileVersion)
+              .withColumn("astore_year", year(to_date(from_unixtime($"bin_timestamp"))))
+              .withColumn("astore_month", month(to_date(from_unixtime($"bin_timestamp"))))
+              .withColumn("astore_model", fileModel)
+              .withColumn("astore_metric", substring_index($"data_metric", "__", 1))
+              .repartition(filesProcessedTodoRedo.size,
+                $"astore_version", $"astore_year", $"astore_month", $"astore_model", $"astore_metric")
+              .write.mode("append")
+              .partitionBy("astore_version", "astore_year", "astore_month", "astore_model", "astore_metric")
+              .parquet(filesProcessedPath)
+            val filesProcessedSuccess = new Path(filesProcessedPath, "_SUCCESS")
+            if (dfs.exists(filesProcessedSuccess)) {
+              dfs.delete(filesProcessedSuccess, true)
+              for ((_, filesStagedTodoParents) <- filesStagedTodo)
+                filesStagedTodoParents.foreach(filesStagedTodoParent => touchFile(new Path(filesStagedTodoParent, "_SUCCESS")))
+              val filesProcessed = dfs.listFiles(filesProcessedSuccess.getParent, true)
+              while (filesProcessed.hasNext) {
+                val fileUri = filesProcessed.next().getPath.toString
+                val filePartitionsPattern = ".*/astore_year=(.*)/astore_month=(.*)/astore_model=(.*)/astore_metric=(.*)/(.*\\.parquet)".r
+                fileUri match {
+                  case filePartitionsPattern(astoreYear, astoreMonth, astoreModel, astoreMetric, fileName) =>
+                    val fileParent = fileUri.replace(fileName, "")
+                    val fileMonthYear = (astoreYear, astoreMonth)
+                    if (filesProcessedTodoRedo.contains(fileMonthYear)) {
+                      touchFile(new Path(fileParent, "_SUCCESS"))
+                      if (!filesProcessedDone.contains(fileMonthYear))
+                        filesProcessedDone(fileMonthYear) = mutable.SortedSet()
+                      filesProcessedDone(fileMonthYear) += fileParent
+                    }
+                  case _ =>
+                }
               }
             }
-          }
-          if (Log.isInfoEnabled()) {
-            logFiles("PROCESSED_PARTITIONS_DONE", filesProcessedDone)
+            if (Log.isInfoEnabled()) {
+              logFiles("PROCESSED_PARTITIONS_DONE", filesProcessedDone)
+            }
+          } catch {
+            case exception: Exception =>
+              exit = FAILURE_RUNTIME
+              if (Log.isDebugEnabled()) Log.debug("Driver [" + this.getClass.getSimpleName + "] failed during batch execution", exception)
           }
         case _ =>
       }
