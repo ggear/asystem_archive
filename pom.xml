@@ -5,7 +5,7 @@
     <groupId>com.jag</groupId>
     <artifactId>asystem</artifactId>
     <packaging>pom</packaging>
-    <version>10.000.0092</version>
+    <version>10.000.0093-SNAPSHOT</version>
 
     <parent>
         <groupId>com.cloudera.framework</groupId>
@@ -36,7 +36,7 @@
         <connection>scm:git:git@github.com:ggear/asystem.git</connection>
         <url>scm:git:git@github.com:ggear/asystem.git</url>
         <developerConnection>scm:git:git@github.com:ggear/asystem.git</developerConnection>
-        <tag>asystem-10.000.0092</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <repositories>
