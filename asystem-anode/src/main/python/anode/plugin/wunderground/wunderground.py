@@ -58,8 +58,12 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-                    data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "conditions"])
-                    .lower().encode("ascii", "ignore"),
+
+                    # TODO: Return after demo
+                    # data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index,
+                    #                                             "conditions"]).lower().encode("ascii", "ignore")
+                    "rain"
+
                 )
                 self.datum_push(
                     "temperature__forecast__glen_Dforrest",
@@ -93,7 +97,11 @@ class Wunderground(Plugin):
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
+
+                    # TODO: Return after demo
+                    # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
+                    5,
+
                     "mm",
                     1,
                     data_timestamp,
@@ -107,7 +115,11 @@ class Wunderground(Plugin):
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
-                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
+
+                    # TODO: Return after demo
+                    # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
+                    5,
+
                     "mm",
                     1,
                     data_timestamp,
