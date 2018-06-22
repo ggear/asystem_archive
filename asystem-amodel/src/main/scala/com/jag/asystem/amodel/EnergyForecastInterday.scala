@@ -105,12 +105,12 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     val exit = SUCCESS
     var recordsTrain = 0L
     var recordsTest = 0L
+    val spark = SparkSession.builder.config(new SparkConf).appName(
+      getConf.get(CONF_CLDR_JOB_NAME, "asystem-energyforecast-preparation")).getOrCreate()
+    import spark.implicits._
     try {
       var outputTest = None: Option[DataFrame]
       var outputTrain = None: Option[DataFrame]
-      val spark = SparkSession.builder.config(new SparkConf).appName(
-        getConf.get(CONF_CLDR_JOB_NAME, "asystem-energyforecast-preparation")).getOrCreate()
-      import spark.implicits._
       if (inputPaths.nonEmpty) {
         val dateFormat = "y/MM/dd"
         val timezoneWorking = "Australia/Perth"
@@ -268,8 +268,8 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         outputTest.get.collect.foreach(row => addResult("  " + row.mkString(",")))
         recordsTest = outputTest.get.count()
       }
-      spark.close()
     } finally {
+      spark.close()
       val metaData = getMetaData(exit, timestampStart)
       addMetaDataCounter(metaData, TRAINING_INSTANCES, recordsTrain)
       addMetaDataCounter(metaData, TESTING_INSTANCES, recordsTest)

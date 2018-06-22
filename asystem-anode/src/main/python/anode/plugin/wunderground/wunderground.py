@@ -58,12 +58,8 @@ class Wunderground(Plugin):
                     bin_timestamp,
                     forecast_index - day_index_start + 1,
                     "day",
-
-                    # TODO: Return after demo -
-                    # data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index,
-                    #                                             "conditions"]).lower().encode("ascii", "ignore")
-                    data_string="chance of rain"
-
+                    data_string=self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index,
+                                                                "conditions"]).lower().encode("ascii", "ignore")
                 )
                 self.datum_push(
                     "temperature__forecast__glen_Dforrest",
@@ -97,11 +93,7 @@ class Wunderground(Plugin):
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
-
-                    # TODO: Return after demo -
-                    # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    self.datum_value(1),
-
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
                     "mm",
                     1,
                     data_timestamp,
@@ -115,11 +107,7 @@ class Wunderground(Plugin):
                 self.datum_push(
                     "rain__forecast__glen_Dforrest",
                     "forecast", "integral",
-
-                    # TODO: Return after demo -
-                    # self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    self.datum_value(1),
-
+                    self.datum_value(dict_content, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
                     "mm",
                     1,
                     data_timestamp,
