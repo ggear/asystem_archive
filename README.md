@@ -45,6 +45,6 @@ To perform a full release, deploy, run pipeline:
 or alternatively, to run the most recent release: 
 
 ```bash
-./bootstrap.sh checkout_release prepare run teardown checkout_master download
+./bootstrap.sh checkout_release prepare run teardown checkout_snapshot download
 ```
 
