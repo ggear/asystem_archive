@@ -26,7 +26,7 @@ function mode_execute {
   elif [ "${MODE}" = "prepare" ]; then
 
     echo "" && echo "" && echo "" && echo "Prepare [asystem]"
-    ec2-instance-resize ${CLOUD_HOST_ID} "c4.4xlarge"
+    ec2-instance-resize ${CLOUD_HOST_ID} "c4.4xlarge" "true"
     ssh -tt ${CLOUD_HOST_IP} << EOF
       sudo service cloudera-scm-server-db start
       sudo service cloudera-scm-agent start
@@ -50,7 +50,7 @@ EOF
   elif [ "${MODE}" = "teardown" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
-    ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro"
+    ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro" "false"
     ./bootstrap.sh teardown_cluster
 
   elif [ "${MODE}" = "teardown_cluster" ]; then
@@ -283,12 +283,14 @@ function ec2-instance-resize {
     fi
     sleep 1
   done
-  for TICK in {720..1}; do
-    if ssh ${AROUTER_HOST_IP} ls > /dev/null; then
-      break
-    fi
-    sleep 1
-  done
+  if [ "$3" = "true" ]; then
+    for TICK in {720..1}; do
+      if ssh ${AROUTER_HOST_IP} ls > /dev/null; then
+        break
+      fi
+      sleep 1
+    done
+  fi
 }
 
 function git-template-merge {
