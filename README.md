@@ -39,6 +39,6 @@ To deploy the latest release to production:
 To perform a full release, deploy, run pipeline:
 
 ```bash
-./bootstrap.sh checkout_snapshot prepare release_remote checkout_release run teardown checkout_snapshot deploy download
+./bootstrap.sh checkout_snapshot prepare release_remote checkout_release run teardown_cluster checkout_snapshot deploy teardown download
 ```
 
