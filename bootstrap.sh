@@ -164,6 +164,15 @@ EOF
     git push --all
     git tag
 
+  elif [ "${MODE}" = "release_remote" ]; then
+
+    echo "" && echo "" && echo "" && echo "Release remote [asystem-arouter]"
+    ssh -tt ${CLOUD_HOST_IP} << EOF
+      cd dev/asystem
+      ./bootstrap.sh checkout_snapshot release
+      exit
+EOF
+
   elif [ "${MODE}" = "deploy" ]; then
 
     echo "" && echo "" && echo "" && echo "Deploy [asystem-arouter]"
@@ -246,7 +255,7 @@ function usage {
     echo "  environment |"
     echo "  download | download_anode"
     echo "  checkout | checkout_snapshot | checkout_release"
-    echo "  compile | build | package | test | release| deploy | merge"
+    echo "  compile | build | package | test | release | release_remote | deploy | merge"
     echo "  prepare | prepare_cluster | teardown | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
     echo ""
