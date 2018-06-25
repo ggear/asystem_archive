@@ -169,6 +169,7 @@ EOF
     echo "" && echo "" && echo "" && echo "Release remote [asystem-arouter]"
     ssh -tt ${CLOUD_HOST_IP} << EOF
       cd dev/asystem
+      git clean -d -x -f
       ./bootstrap.sh checkout_snapshot release
       exit
 EOF
