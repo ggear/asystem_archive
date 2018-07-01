@@ -176,17 +176,17 @@ EOF
 
   elif [ "${MODE}" = "deploy" ]; then
 
-#    echo "" && echo "" && echo "" && echo "Deploy [asystem-arouter]"
-#    ssh -tt ${AROUTER_HOST_IP} << EOF
-#      cd dev/asystem
-#      git checkout master
-#      git clean -d -x -f
-#      git checkout -- .
-#      git pull -a
-#      git checkout $(git describe \-\-tags | cut -c1-19)
-#      mvn clean deploy -pl asystem-arouter -PPKG -am -Dmaven.install-flume.skip=false -U
-#      exit
-#EOF
+    echo "" && echo "" && echo "" && echo "Deploy [asystem-arouter]"
+    ssh -tt ${AROUTER_HOST_IP} << EOF
+      cd dev/asystem
+      git checkout master
+      git clean -d -x -f
+      git checkout -- .
+      git pull -a
+      git checkout $(git describe \-\-tags | cut -c1-19)
+      mvn clean deploy -pl asystem-arouter -PPKG -am -Dmaven.install-flume.skip=false -U
+      exit
+EOF
     echo "" && echo "" && echo "" && echo "Deploy [asystem-anode]"
     ssh -tt janeandgraham.com -p 8092 << EOF
       cd dev/asystem
