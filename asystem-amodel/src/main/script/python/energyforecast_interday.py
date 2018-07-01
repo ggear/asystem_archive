@@ -142,12 +142,12 @@ def pipeline():
     spark = SparkSession.builder.appName("asystem-amodel-energyforecast").getOrCreate()
     # noinspection PyStringFormat
     print("Session started:\n  Model version: [1006]\n  "
-          "ASystem version: [10.000.0103]\n  Local path: [{}]\n  "
+          "ASystem version: [10.000.0104-SNAPSHOT]\n  Local path: [{}]\n  "
           "Data URI: [{}]\n  Model URI: [{}]\n"
           .format(local_model_path, remote_data_path, remote_model_path))
 
     training_uri = nearest(qualify(remote_data_path + "/train/text/csv/none/" +
-                                   "amodel_version=10.000.0103/amodel_model=1006"))
+                                   "amodel_version=10.000.0104-SNAPSHOT/amodel_model=1006"))
     print("Training:\n  URI: [{}]   ".format(training_uri))
     df = spark.read.csv(training_uri, header=True).toPandas() \
         .apply(pd.to_numeric, errors='ignore')
@@ -155,7 +155,7 @@ def pipeline():
     print("  Dataframe:\n{}\n\n".format(df2.describe()))
 
     test_uri = nearest(qualify(remote_data_path + "/test/text/csv/none/" +
-                               "amodel_version=10.000.0103/amodel_model=1006"))
+                               "amodel_version=10.000.0104-SNAPSHOT/amodel_model=1006"))
     print("Testing:\n  URI: [{}]".format(test_uri))
     dfv = spark.read.csv(test_uri, header=True).toPandas() \
         .apply(pd.to_numeric, errors='ignore')
@@ -338,7 +338,7 @@ def pipeline():
     print("Best model: {}\tMin Dev RMSE: {}\tTest RMSE: {}"
           .format(type(best_model).__name__, min_rmse, best_model_test_rmse))
 
-    model_file = '/model/pickle/joblib/none/amodel_version=10.000.0103' \
+    model_file = '/model/pickle/joblib/none/amodel_version=10.000.0104-SNAPSHOT' \
                  '/amodel_model=1006/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
