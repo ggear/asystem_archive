@@ -19,8 +19,8 @@
         <asystem-model.version>1000</asystem-model.version>
 
         <!-- Production model versions, these versions are mapped to the entire user population -->
-        <asystem-model-energyforecast-interday.prod.version>1006</asystem-model-energyforecast-interday.prod.version>
-        <asystem-model-energyforecast-intraday.prod.version>1003</asystem-model-energyforecast-intraday.prod.version>
+        <asystem-model-energyforecast-interday.prod.version>1005</asystem-model-energyforecast-interday.prod.version>
+        <asystem-model-energyforecast-intraday.prod.version>1002</asystem-model-energyforecast-intraday.prod.version>
 
         <!-- Build model versions, if these versions are above their production equivalents, they are flagged for A/B testing -->
         <asystem-model-energyforecast-interday.build.version>1006</asystem-model-energyforecast-interday.build.version>
