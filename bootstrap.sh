@@ -92,6 +92,7 @@ EOF
   elif [ "${MODE}" = "checkout_snapshot" ]; then
 
     echo "" && echo "" && echo "" && echo "Checkout snapshot [asystem]"
+    git checkout -- .
     git checkout master
     git pull -a
     git reset HEAD asystem-anode/src/main/python/anode/test/pickle
