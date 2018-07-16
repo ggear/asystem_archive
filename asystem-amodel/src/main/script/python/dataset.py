@@ -78,9 +78,13 @@ def pipeline():
         FROM dataset
         WHERE
           astore_metric='temperature' AND
+          data_version=0 AND
           data_temporal='current' AND
           data_type='point' AND
-          data_metric NOT LIKE '%forecast%'
+          data_metric NOT LIKE '%forecast%' AND
+          data_metric NOT LIKE '%shed' AND
+          data_metric NOT LIKE '%deck' AND
+          data_metric NOT LIKE '%roof'
         ORDER BY timestamp
     """)
     print("Data loaded and filtered\n")

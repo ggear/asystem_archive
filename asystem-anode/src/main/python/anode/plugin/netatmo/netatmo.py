@@ -90,6 +90,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_derived_max=True,
                     data_derived_min=True
                 )
@@ -103,6 +104,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_bound_upper=100,
                     data_bound_lower=0,
                     data_derived_max=True,
@@ -118,6 +120,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -132,6 +135,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -146,6 +150,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -160,6 +165,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
+                    data_version=1000,
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -175,6 +181,7 @@ class Netatmo(Plugin):
                         bin_timestamp,
                         self.config["poll_seconds"],
                         "second",
+                        data_version=1000,
                         data_bound_lower=0,
                         data_derived_max=True,
                         data_derived_min=True
@@ -183,7 +190,7 @@ class Netatmo(Plugin):
                     for device_sub in device["modules"]:
                         module_name = (("__indoor__" if device_sub["type"] == "NAModule4" else "__outdoor__") +
                                        device_sub["module_name"].lower()).encode("UTF-8")
-                        if module_name != "__outdoor__deck":
+                        if module_name != "__outdoor__ignore":
                             data_timestamp = device_sub["dashboard_data"]["time_utc"]
                             self.datum_push(
                                 "temperature" + module_name,
@@ -195,6 +202,7 @@ class Netatmo(Plugin):
                                 bin_timestamp,
                                 self.config["poll_seconds"],
                                 "second",
+                                data_version=0 if module_name == "__outdoor__parents" else 1000,
                                 data_derived_max=True,
                                 data_derived_min=True
                             )
@@ -208,8 +216,9 @@ class Netatmo(Plugin):
                                 bin_timestamp,
                                 self.config["poll_seconds"],
                                 "second",
+                                data_version=1000,
                                 data_bound_upper=100,
-                                data_bound_lower=0,
+                                data_bound_lower=0 if module_name == "__outdoor__parents" else 1000,
                                 data_derived_max=True,
                                 data_derived_min=True
                             )
@@ -224,7 +233,8 @@ class Netatmo(Plugin):
                                     bin_timestamp,
                                     self.config["poll_seconds"],
                                     "second",
-                                    data_bound_lower=0,
+                                    data_version=1000,
+                                    data_bound_lower=0 if module_name == "__outdoor__parents" else 1000,
                                     data_derived_max=True,
                                     data_derived_min=True
                                 )
