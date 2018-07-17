@@ -1325,7 +1325,7 @@ class Plugin(object):
     @staticmethod
     def datum_version_encode(version, base=100000000):
         return (-1 if version.endswith("-SNAPSHOT") else 1) * ((int(re.sub("[^0-9]", "", version)) - base + 1) if (
-                int(re.sub("[^0-9]", "", version)) > base) else int(re.sub("[^0-9]", "", version)))
+                int(re.sub("[^0-9]", "", version)) >= base) else int(re.sub("[^0-9]", "", version)))
 
     @staticmethod
     def datum_field_encode(field):

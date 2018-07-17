@@ -90,7 +90,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_derived_max=True,
                     data_derived_min=True
                 )
@@ -104,7 +104,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_bound_upper=100,
                     data_bound_lower=0,
                     data_derived_max=True,
@@ -120,7 +120,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -135,7 +135,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -150,7 +150,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -165,7 +165,7 @@ class Netatmo(Plugin):
                     bin_timestamp,
                     self.config["poll_seconds"],
                     "second",
-                    data_version="1001",
+                    data_version="1000",
                     data_bound_lower=0,
                     data_derived_max=True,
                     data_derived_min=True
@@ -181,7 +181,7 @@ class Netatmo(Plugin):
                         bin_timestamp,
                         self.config["poll_seconds"],
                         "second",
-                        data_version="1001",
+                        data_version="1000",
                         data_bound_lower=0,
                         data_derived_max=True,
                         data_derived_min=True
@@ -202,7 +202,7 @@ class Netatmo(Plugin):
                                 bin_timestamp,
                                 self.config["poll_seconds"],
                                 "second",
-                                data_version="0" if module_name == "__outdoor__parents" else "1001",
+                                data_version="0" if module_name == "__outdoor__parents" else "1000",
                                 data_derived_max=True,
                                 data_derived_min=True
                             )
@@ -216,9 +216,9 @@ class Netatmo(Plugin):
                                 bin_timestamp,
                                 self.config["poll_seconds"],
                                 "second",
-                                data_version="1001",
+                                data_version="0" if module_name == "__outdoor__parents" else "1000",
                                 data_bound_upper=100,
-                                data_bound_lower="0" if module_name == "__outdoor__parents" else "1001",
+                                data_bound_lower=0,
                                 data_derived_max=True,
                                 data_derived_min=True
                             )
@@ -233,8 +233,8 @@ class Netatmo(Plugin):
                                     bin_timestamp,
                                     self.config["poll_seconds"],
                                     "second",
-                                    data_version="1001",
-                                    data_bound_lower="0" if module_name == "__outdoor__parents" else "1001",
+                                    data_version="0" if module_name == "__outdoor__parents" else "1000",
+                                    data_bound_lower=0,
                                     data_derived_max=True,
                                     data_derived_min=True
                                 )
