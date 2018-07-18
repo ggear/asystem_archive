@@ -1178,8 +1178,11 @@ class Plugin(object):
         log_timer = anode.Log(logging.INFO).start()
         metrics_count = 0
         datums_pickled = self.pickled_get(os.path.join(self.config["db_dir"], "anode"), name=self.name, cache=False)
-        self.datums = datums_pickled[self.name][APP_MODEL_VERSION][1] \
-            if self.name in datums_pickled and APP_MODEL_VERSION in datums_pickled[self.name] else {}
+        model_version = int(APP_MODEL_VERSION)
+        while model_version >= 1000 and self.name in datums_pickled and str(model_version) not in datums_pickled[self.name]:
+            model_version -= 1
+        self.datums = datums_pickled[self.name][str(model_version)][1] \
+            if self.name in datums_pickled and str(model_version) in datums_pickled[self.name] else {}
         metrics_count = sum(len(units)
                             for metrics in self.datums.values()
                             for types in metrics.values()

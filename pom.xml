@@ -16,7 +16,7 @@
     <properties>
 
         <!-- Data model version -->
-        <asystem-model.version>1000</asystem-model.version>
+        <asystem-model.version>1001</asystem-model.version>
 
         <!-- Production model versions, these versions are mapped to the entire user population -->
         <asystem-model-energyforecast-interday.prod.version>1006</asystem-model-energyforecast-interday.prod.version>
