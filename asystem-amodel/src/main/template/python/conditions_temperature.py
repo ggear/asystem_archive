@@ -85,6 +85,7 @@ def pipeline():
         values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
                                     .tz_localize('UTC').tz_convert('Australia/Perth'))
+    dataframe = dataframe.loc[(dataframe.index.strftime('%Y-%m-%d') >= '2018-07-19')]
     dataframe = dataframe.fillna(method='bfill')
     dataframe = dataframe.fillna(method='ffill')
     dataframe = dataframe.resample('300S').mean()
