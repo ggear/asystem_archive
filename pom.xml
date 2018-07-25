@@ -23,7 +23,7 @@
         <asystem-model-energyforecast-intraday.prod.version>1003</asystem-model-energyforecast-intraday.prod.version>
 
         <!-- Build model versions, if these versions are above their production equivalents, they are flagged for A/B testing -->
-        <asystem-model-energyforecast-interday.build.version>1006</asystem-model-energyforecast-interday.build.version>
+        <asystem-model-energyforecast-interday.build.version>1007</asystem-model-energyforecast-interday.build.version>
         <asystem-model-energyforecast-intraday.build.version>1003</asystem-model-energyforecast-intraday.build.version>
 
         <!-- Build parameters -->
