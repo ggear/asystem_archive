@@ -254,17 +254,16 @@ class Process(config: Configuration) extends DriverSpark(config) {
           val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)
           val filesProcessedPath = s"$inputOutputPath/${filesCount.zipWithIndex.min._2}" +
             s"/asystem/astore/processed/canonical/parquet/dict/snappy"
-          if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*"))
-            .map(filesProcessedTodoParent => {
-              try {
-                Some(spark.read.avro(filesProcessedTodoParent))
-              } catch {
-                case exception: IOException => if (Log.isWarnEnabled())
-                  Log.warn("Driver [" + this.getClass.getSimpleName + "] encountered IO issue reading ["
-                    + filesProcessedTodoParent + "], ignoring and continuing")
-                  None
-              }
-            }).flatten
+          if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*")).flatMap(filesProcessedTodoParent => {
+            try {
+              Some(spark.read.avro(filesProcessedTodoParent))
+            } catch {
+              case exception: IOException => if (Log.isWarnEnabled())
+                Log.warn("Driver [" + this.getClass.getSimpleName + "] encountered IO issue reading ["
+                  + filesProcessedTodoParent + "], ignoring and continuing")
+                None
+            }
+          })
             .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
             .withColumn("astore_version", fileVersion)
             .withColumn("astore_year", year(to_date(from_unixtime($"bin_timestamp"))))

@@ -1,0 +1,3 @@
+var htmlTemplatesInjector = {
+    htmlTemplates: %s
+};

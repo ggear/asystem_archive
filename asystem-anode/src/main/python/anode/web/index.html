@@ -24,7 +24,7 @@
     <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-title" content="ANode">
-    <script type="text/javascript" src="js/moment/moment.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
     <script type="text/javascript" src="js/anode.js"></script>
     <script type="text/javascript">
         window.onpageshow = function (event) {
@@ -36,6 +36,7 @@
             var datumsLast = [];
             var datumsTimer = {};
             var datumsPlot = new Set();
+            var datumsPlotTime = new Date().getTime()
             var anode = new ANode(document.location.href,
                 function (metadata) {
                     document.getElementById("datums_header").innerHTML =
@@ -53,9 +54,9 @@
                 function (datum) {
                     if (document.location.href.indexOf("metrics=_system") > 0 || datum.data_metric.indexOf("anode") == -1) {
                         var datumDiv = document.getElementById(datum.ui_id);
-                        if (datumDiv == null && datum.data_type !== "high" && datum.data_type !== "low") {
-                            if (document.location.href.indexOf("metrics") != -1 && datum["data_type"] != "enumeration") {
-                                if (!datumsPlot.has(datum["data_unit"]) && document.location.href.indexOf("metrics=_system") == -1) {
+                        if (datum.data_type !== "high" && datum.data_type !== "low") {
+                            if (document.location.href.indexOf("metrics") != -1 && document.location.href.indexOf("metrics=_system") == -1 && datum["data_type"] != "enumeration") {
+                                if (datumDiv == null && !datumsPlot.has(datum["data_unit"])) {
                                     datumsPlot.add(datum["data_unit"]);
                                     var datumsPlotUri = document.location.href.replace("/?", "/rest/?") + "&units=" + datum["data_unit"] +
                                         "&types=point&types=integral&types=mean" +
@@ -64,85 +65,82 @@
                                     if (window.location.href.indexOf("&plot=") > 0) {
                                         plot = window.location.href.split("&plot=")[1].split("&")
                                     }
-                                    if (plot == "hour") {
-                                        datumsPlotUri += "&start=" + Math.floor((new Date).getTime() / 1000 - (60 * 60)) + "&period=5&method=max&fill=linear"
-                                    }
-                                    else if (plot == "today") {
-                                        datumsPlotUri += "&partitions=1&period=300&method=min&fill=linear"
-                                    }
-                                    else if (plot == "3days") {
-                                        datumsPlotUri += "&partitions=3&period=1800&method=min&fill=linear"
-                                    }
-                                    else if (plot == "week") {
-                                        datumsPlotUri += "&partitions=7&period=3600&method=min&fill=linear"
-                                    }
-                                    else if (plot == "fortnight") {
-                                        datumsPlotUri += "&partitions=14&period=7200&method=min&fill=linear"
-                                    }
-                                    else {
-                                        datumsPlotUri += "&period=7200&method=min&fill=linear"
-                                    }
+                                    if (plot == "hour") datumsPlotUri += "&start=" + Math.floor((new Date).getTime() / 1000 - (60 * 60)) + "&period=5&method=max&fill=linear"
+                                    else if (plot == "today") datumsPlotUri += "&partitions=1&period=300&method=min&fill=linear"
+                                    else if (plot == "3days") datumsPlotUri += "&partitions=3&period=1800&method=min&fill=linear"
+                                    else if (plot == "week") datumsPlotUri += "&partitions=7&period=3600&method=min&fill=linear"
+                                    else if (plot == "fortnight") datumsPlotUri += "&partitions=14&period=7200&method=min&fill=linear"
+                                    else datumsPlotUri += "&period=7200&method=min&fill=linear"
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
                                         "<hr/><div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
-                                        datumsPlotUri + "&format=svg' class='datum-plot'/></a></div>"
+                                        datumsPlotUri + "&format=svg&renderTimestamp=" + datumsPlotTime + "' class='datum-plot'/></a></div>"
+                                }
+                                else if ((new Date().getTime() - datumsPlotTime) > 1000 * 60) {
+                                    datumsPlotTime = new Date().getTime()
+                                    var plotImgs = document.getElementById("plots").getElementsByTagName('img')
+                                    for (i = 0; i < plotImgs.length; ++i) {
+                                        plotImgs[i].src = plotImgs[i].src.split("renderTimestamp")[0] + "renderTimestamp=" + datumsPlotTime
+                                    }
                                 }
                             }
-                            datumDiv = document.createElement("div");
-                            datumDiv.id = datum.ui_id;
-                            datumDiv.className = "datum";
-                            datumDiv.appendChild(document.createElement("hr"));
-                            var datumGroupsFields = {
-                                "header": {
-                                    "metric": (function (metric) {
-                                        var i;
-                                        var metricLinks = "";
-                                        var metricTokens = metric.split("\.");
-                                        for (i = 0; i < metricTokens.length; i++) {
-                                            metricLinks += (i == 0 ? "" : ".") + "<a href='/?metrics=" + metricTokens[i] +
-                                                ((datum.data_metric.indexOf("anode") == 0) ? "&metrics=_system" : "") + "'>" + metricTokens[i] + "</a>"
-                                        }
-                                        return metricLinks
-                                    })(datum.data_metric),
-                                    "timeliness": datum.data_timeliness
-                                },
-                                "detail": {
-                                    "value": "",
-                                    "unit": (datum.data_unit == "scalar" || datum.data_type == "enumeration") ? null : datum.data_unit,
-                                    "trend": "",
-                                    "low": "",
-                                    "high": ""
+                            if (datumDiv == null) {
+                                datumDiv = document.createElement("div");
+                                datumDiv.id = datum.ui_id;
+                                datumDiv.className = "datum";
+                                datumDiv.appendChild(document.createElement("hr"));
+                                var datumGroupsFields = {
+                                    "header": {
+                                        "metric": (function (metric) {
+                                            var i;
+                                            var metricLinks = "";
+                                            var metricTokens = metric.split("\.");
+                                            for (i = 0; i < metricTokens.length; i++) {
+                                                metricLinks += (i == 0 ? "" : ".") + "<a href='/?metrics=" + metricTokens[i] +
+                                                    ((datum.data_metric.indexOf("anode") == 0) ? "&metrics=_system" : "") + "'>" + metricTokens[i] + "</a>"
+                                            }
+                                            return metricLinks
+                                        })(datum.data_metric),
+                                        "timeliness": datum.data_timeliness
+                                    },
+                                    "detail": {
+                                        "value": "",
+                                        "unit": (datum.data_unit == "scalar" || datum.data_type == "enumeration") ? null : datum.data_unit,
+                                        "trend": "",
+                                        "low": "",
+                                        "high": ""
+                                    }
+                                };
+                                for (var datumGroup in datumGroupsFields) {
+                                    var datumGroupDiv = document.createElement("div");
+                                    datumGroupDiv.className = "datum";
+                                    if (datumGroup == "detail") {
+                                        datumGroupDiv.appendChild(datumGroupDiv = document.createElement("a"));
+                                        datumGroupDiv.href = "/?metrics=" + datum.data_metric + "&bins=" + datum.bin_width + datum.bin_unit + "&bins=1day"
+                                    }
+                                    for (var datumField in datumGroupsFields[datumGroup]) {
+                                        (function (datumField) {
+                                            if (datumGroupsFields[datumGroup][datumField] != null) {
+                                                var datumFieldSpan = document.createElement("span");
+                                                datumFieldSpan.id = ((datumField == "low" || datumField == "high") ?
+                                                    (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" || datum.data_type == "integral" ?
+                                                        (datum.bin_width + "_" + datum.bin_unit) : "1_day")) : datum.ui_id) + "_" + datumField;
+                                                datumFieldSpan.className = "datum-detail-" + datumField;
+                                                datumFieldSpan.innerHTML = datumGroupsFields[datumGroup][datumField];
+                                                datumGroupDiv.appendChild(datumFieldSpan);
+                                            }
+                                        })(datumField);
+                                    }
+                                    datumDiv.appendChild(datumGroupDiv);
                                 }
-                            };
-                            for (var datumGroup in datumGroupsFields) {
-                                var datumGroupDiv = document.createElement("div");
-                                datumGroupDiv.className = "datum";
-                                if (datumGroup == "detail") {
-                                    datumGroupDiv.appendChild(datumGroupDiv = document.createElement("a"));
-                                    datumGroupDiv.href = "/?metrics=" + datum.data_metric + "&bins=" + datum.bin_width + datum.bin_unit + "&bins=1day"
+                                var index;
+                                for (index = 0; index < datumsLast.length; index++) {
+                                    if (datumsLast[index].order_index > datum.order_index) {
+                                        break;
+                                    }
                                 }
-                                for (var datumField in datumGroupsFields[datumGroup]) {
-                                    (function (datumField) {
-                                        if (datumGroupsFields[datumGroup][datumField] != null) {
-                                            var datumFieldSpan = document.createElement("span");
-                                            datumFieldSpan.id = ((datumField == "low" || datumField == "high") ?
-                                                (datum.ui_id_sans_bin + (datum.data_temporal == "forecast" || datum.data_type == "integral" ?
-                                                    (datum.bin_width + "_" + datum.bin_unit) : "1_day")) : datum.ui_id) + "_" + datumField;
-                                            datumFieldSpan.className = "datum-detail-" + datumField;
-                                            datumFieldSpan.innerHTML = datumGroupsFields[datumGroup][datumField];
-                                            datumGroupDiv.appendChild(datumFieldSpan);
-                                        }
-                                    })(datumField);
-                                }
-                                datumDiv.appendChild(datumGroupDiv);
+                                datumsLast.splice(index, 0, datum);
+                                document.getElementById("datums").insertBefore(datumDiv, document.getElementById("datums").childNodes[index]);
                             }
-                            var index;
-                            for (index = 0; index < datumsLast.length; index++) {
-                                if (datumsLast[index].order_index > datum.order_index) {
-                                    break;
-                                }
-                            }
-                            datumsLast.splice(index, 0, datum);
-                            document.getElementById("datums").insertBefore(datumDiv, document.getElementById("datums").childNodes[index]);
                         }
                         if (datumsPlot.size > 0) {
                             document.getElementById("plots_header").style.display = "block";
@@ -182,9 +180,7 @@
                                         if (datumDetailDiv !== null) {
                                             styleTick(datumDetailDiv, datumGroupsValues[datumGroup]["value_delta"]);
                                             datumDetailDiv.innerHTML = datumGroupsValues[datumGroup]["value_prefix"] + datumGroupsValues[datumGroup]["value"];
-                                            if (datumGroupsValues[datumGroup]["id"] in datumsTimer) {
-                                                window.clearTimeout(datumsTimer[datumGroupsValues[datumGroup]["id"]]);
-                                            }
+                                            if (datumGroupsValues[datumGroup]["id"] in datumsTimer) window.clearTimeout(datumsTimer[datumGroupsValues[datumGroup]["id"]]);
                                             datumsTimer[datumGroupsValues[datumGroup]["id"]] = window.setTimeout(function () {
                                                 styleTick(datumDetailDiv, 0);
                                             }, 5000);
@@ -211,23 +207,16 @@
         function styleTick(element, delta) {
             element.classList.remove("datum-detail-up");
             element.classList.remove("datum-detail-down");
-            if (delta > 0) {
-                element.classList.add("datum-detail-up");
-            }
-            else if (delta < 0) {
-                element.classList.add("datum-detail-down");
-            }
+            if (delta > 0) element.classList.add("datum-detail-up");
+            else if (delta < 0) element.classList.add("datum-detail-down");
+
         }
 
         function addorReplaceLastUriParam(name, value) {
             var uri = window.location.href;
             if (uri.indexOf("metrics=") > 0) {
-                if (uri.indexOf("&" + name + "=") > 0) {
-                    uri = uri.split("&" + name + "=")[0]
-                }
-                if (value != "") {
-                    uri = uri + "&" + name + "=" + value;
-                }
+                if (uri.indexOf("&" + name + "=") > 0) uri = uri.split("&" + name + "=")[0]
+                if (value != "") uri = uri + "&" + name + "=" + value;
             }
             document.location.href = uri;
         }
@@ -276,7 +265,8 @@
                     </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
-                            href="/?metrics=temperature.forecast.glen-forrest&metrics=temperature.indoor.kitchen&metrics=temperature.indoor.lounge&metrics=temperature.indoor.dining&metrics=temperature.indoor.pantry&metrics=temperature.indoor.hardey&metrics=temperature.indoor.edwin&metrics=temperature.indoor.ada&metrics=temperature.indoor.office&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.roof&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a></span></div>
+                            href="/?metrics=temperature.forecast.glen-forrest&metrics=temperature.indoor.kitchen&metrics=temperature.indoor.lounge&metrics=temperature.indoor.dining&metrics=temperature.indoor.pantry&metrics=temperature.indoor.hardey&metrics=temperature.indoor.edwin&metrics=temperature.indoor.ada&metrics=temperature.indoor.office&metrics=temperature.outdoor.deck&metrics=temperature.outdoor.roof&metrics=conditions&bins=1day&bins=50s&bins=2s">temperature</a></span>
+                    </div>
                     <div class="datum"><span class="datum-detail"><a
                             href="/?metrics=temperature&metrics=humidity&metrics=humidity&metrics=noise">comfort</a>.<a
                             href="/?metrics=carbon-dioxide">carbon-dioxide</a></span></div>

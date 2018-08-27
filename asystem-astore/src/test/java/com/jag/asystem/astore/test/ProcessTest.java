@@ -304,20 +304,20 @@ public class ProcessTest implements TestConstants {
         FLUME_AGENT, MODEL_1_SOURCE, MODEL_1_SINK, new MqttSource(), new HDFSEventSink(),
         HDFS_DIR, DATUMS_COUNT, this::mqttClientSendMessage) > 0);
     }
-    Driver driverRead = new Process(dfsServer.getConf());
+    Process driverRead = new Process(dfsServer.getConf());
     driverRead.getConf().setBoolean(Process.OptionSnapshots(), true);
     driverRead.getConf().set(Process.OptionTags(), "test");
     driverRead.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
     driverRead.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
     driverRead.getConf().set(CONF_CLDR_JOB_METADATA, "true");
-    driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
+    driverRead.pollMetaData(driverRead.getMetaData(0, null, null));
     Driver driverWrite = new Process(dfsServer.getConf());
     driverWrite.getConf().setBoolean(Process.OptionSnapshots(), true);
     driverWrite.getConf().set(Process.OptionTags(), "test");
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-astore-process");
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
     driverWrite.getConf().set(CONF_CLDR_JOB_METADATA, "true");
-    driverRead.pollMetaData(((Process) driverRead).getMetaData(0, null, null));
+    driverRead.pollMetaData(driverRead.getMetaData(0, null, null));
     driverRead.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, UUID.randomUUID().toString().replaceAll("[\\W]", ""));
     driverWrite.getConf().set(Driver.CONF_CLDR_JOB_TRANSACTION, driverRead.getConf().get(Driver.CONF_CLDR_JOB_TRANSACTION));
     assertEquals(SUCCESS, driverRead.runner("--" + Driver.CONF_CLDR_JOB_NAME + "=test-asystem-astore-process-stats", "stats",
