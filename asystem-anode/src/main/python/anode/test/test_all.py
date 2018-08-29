@@ -29,6 +29,8 @@ from twisted.trial.unittest import TestCase
 from twisted_s3 import auth
 
 from anode.anode import MqttPublishService
+from anode.anode import S3_BUCKET
+from anode.anode import S3_REGION
 from anode.anode import main
 from anode.application import *
 from anode.application import APP_MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION
@@ -37,8 +39,6 @@ from anode.application import APP_MODEL_ENERGYFORECAST_INTRADAY_BUILD_VERSION
 from anode.application import APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION
 from anode.plugin import PICKLE_PATH_REGEX
 from anode.plugin import Plugin
-from anode.anode import S3_BUCKET
-from anode.anode import S3_REGION
 
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker

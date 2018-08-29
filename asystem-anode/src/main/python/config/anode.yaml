@@ -10,63 +10,63 @@ model_pull_bucket_snapshot: '-staging'
 save_on_exit: True
 save_seconds: 14400
 plugin:
-    fronius:
-      poll_seconds: 1
-      buffer_ticks: 60
-      history_partitions: 5
-      history_ticks: 3500000
-      history_partition_seconds: 86400
-      repeat_seconds: 101
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-    davis:
-      poll_seconds: -1
-      buffer_ticks: 30
-      history_partitions: 5
-      history_ticks: 600000
-      history_partition_seconds: 86400
-      repeat_seconds: 103
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-    netatmo:
-      poll_seconds: 50
-      buffer_ticks: 10
-      history_partitions: 5
-      history_ticks: 700000
-      history_partition_seconds: 86400
-      repeat_seconds: 107
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-    wunderground:
-      poll_seconds: 300
-      buffer_ticks: 5
-      history_partitions: 5
-      history_ticks: 500000
-      history_partition_seconds: 86400
-      repeat_seconds: 111
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-    speedtest:
-      poll_seconds: -1
-      buffer_ticks: 30
-      history_partitions: 5
-      history_ticks: 150000
-      history_partition_seconds: 86400
-      repeat_seconds: 113
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-    energyforecast:
-      poll_seconds: 15
-      buffer_ticks: 5
-      history_partitions: 5
-      history_ticks: 100000
-      history_partition_seconds: 86400
-      repeat_seconds: 115
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
+  fronius:
+    poll_seconds: 1
+    buffer_ticks: 60
+    history_partitions: 5
+    history_ticks: 3500000
+    history_partition_seconds: 86400
+    repeat_seconds: 101
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  davis:
+    poll_seconds: -1
+    buffer_ticks: 30
+    history_partitions: 5
+    history_ticks: 600000
+    history_partition_seconds: 86400
+    repeat_seconds: 103
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  netatmo:
+    poll_seconds: 50
+    buffer_ticks: 10
+    history_partitions: 5
+    history_ticks: 700000
+    history_partition_seconds: 86400
+    repeat_seconds: 107
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  wunderground:
+    poll_seconds: 300
+    buffer_ticks: 5
+    history_partitions: 5
+    history_ticks: 500000
+    history_partition_seconds: 86400
+    repeat_seconds: 111
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  speedtest:
+    poll_seconds: -1
+    buffer_ticks: 30
+    history_partitions: 5
+    history_ticks: 150000
+    history_partition_seconds: 86400
+    repeat_seconds: 113
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  energyforecast:
+    poll_seconds: 15
+    buffer_ticks: 5
+    history_partitions: 5
+    history_ticks: 100000
+    history_partition_seconds: 86400
+    repeat_seconds: 115
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True

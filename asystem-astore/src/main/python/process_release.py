@@ -13,7 +13,7 @@ import inspect
 import logging
 import os
 import textwrap
-import inspect
+
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/../manager/python')

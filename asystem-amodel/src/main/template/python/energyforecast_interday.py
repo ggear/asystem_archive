@@ -229,21 +229,21 @@ def pipeline():
             # print("TRAIN:", train_index, "TEST:", test_index)
             # regr = LinearRegression()
 
-            X_train, X_test = energies_train[train_index], \
+            x_train, x_test = energies_train[train_index], \
                               energies_train[test_index]
             y_train, y_test = energies_target.iloc[train_index], \
                               energies_target.iloc[test_index]
-            regr.fit(X_train, y_train)
+            regr.fit(x_train, y_train)
             # print(X_test, y_test)
 
             y_train_pred = execute({'pipeline': regr, 'statistics': features_statistics},
-                                   features=X_train, prediction=True)
+                                   features=x_train, prediction=True)
             y_test_pred = execute({'pipeline': regr, 'statistics': features_statistics},
-                                  features=X_test, prediction=True)
+                                  features=x_test, prediction=True)
 
             # print(y_test.values, y_test_pred)
 
-            train_r2_score = regr.score(X_train, y_train)
+            train_r2_score = regr.score(x_train, y_train)
             train_r2_scores = np.append(train_r2_scores, train_r2_score)
             test_r2_score = r2_score(y_test.values, y_test_pred)
             test_r2_scores = np.append(test_r2_scores, test_r2_score)

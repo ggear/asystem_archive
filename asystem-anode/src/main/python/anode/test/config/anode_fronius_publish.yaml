@@ -4,12 +4,12 @@ publish_host: 37.187.106.16
 publish_port: 1883
 publish_seconds: 10
 plugin:
-    fronius:
-      poll_seconds: 100
-      buffer_ticks: 10
-      history_partitions: 100000000000000
-      history_ticks: 100000000000000
-      history_partition_seconds: 9999999999
-      repeat_seconds: -1
-      publish_ticks: -1
-      publish_upstream: True
+  fronius:
+    poll_seconds: 100
+    buffer_ticks: 10
+    history_partitions: 100000000000000
+    history_ticks: 100000000000000
+    history_partition_seconds: 9999999999
+    repeat_seconds: -1
+    publish_ticks: -1
+    publish_upstream: True
