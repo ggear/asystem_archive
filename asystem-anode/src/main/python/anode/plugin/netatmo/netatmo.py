@@ -77,105 +77,45 @@ class Netatmo(Plugin):
             dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             for device in dict_content["body"]["devices"]:
-                module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" else
-                ("station_name" if "station_name" in device else "name")].lower().encode("UTF-8")
-                data_timestamp = device["dashboard_data"]["time_utc"]
-                self.datum_push(
-                    "temperature" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "humidity" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Humidity"]),
-                    "_P25",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_bound_upper=100,
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "pressure" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Pressure"]),
-                    "mbar",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "pressure_Dabsolute" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "AbsolutePressure"]),
-                    "mbar",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "carbon_Ddioxide" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "CO2"]),
-                    "ppm",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "noise" + module_name,
-                    "current", "point",
-                    self.datum_value(device, ["dashboard_data", "Noise"]),
-                    "dB",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    self.config["poll_seconds"],
-                    "second",
-                    data_version="1001",
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                if device["type"] == "NHC":
+                module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" \
+                    else ("station_name" if "station_name" in device else "name")].lower().encode("UTF-8")
+                if module_name != "__indoor__ignore":
+                    data_timestamp = device["dashboard_data"]["time_utc"]
                     self.datum_push(
-                        "health_Dindex" + module_name,
+                        "temperature" + module_name,
                         "current", "point",
-                        self.datum_value(device, ["dashboard_data", "health_idx"]),
-                        "scalar",
+                        self.datum_value(device, ["dashboard_data", "Temperature"], factor=10),
+                        "_PC2_PB0C",
+                        10,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_version="1001",
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    self.datum_push(
+                        "humidity" + module_name,
+                        "current", "point",
+                        self.datum_value(device, ["dashboard_data", "Humidity"]),
+                        "_P25",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_version="1001",
+                        data_bound_upper=100,
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    self.datum_push(
+                        "pressure" + module_name,
+                        "current", "point",
+                        self.datum_value(device, ["dashboard_data", "Pressure"]),
+                        "mbar",
                         1,
                         data_timestamp,
                         bin_timestamp,
@@ -186,6 +126,67 @@ class Netatmo(Plugin):
                         data_derived_max=True,
                         data_derived_min=True
                     )
+                    self.datum_push(
+                        "pressure_Dabsolute" + module_name,
+                        "current", "point",
+                        self.datum_value(device, ["dashboard_data", "AbsolutePressure"]),
+                        "mbar",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_version="1001",
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    self.datum_push(
+                        "carbon_Ddioxide" + module_name,
+                        "current", "point",
+                        self.datum_value(device, ["dashboard_data", "CO2"]),
+                        "ppm",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_version="1001",
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    self.datum_push(
+                        "noise" + module_name,
+                        "current", "point",
+                        self.datum_value(device, ["dashboard_data", "Noise"]),
+                        "dB",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        self.config["poll_seconds"],
+                        "second",
+                        data_version="1001",
+                        data_bound_lower=0,
+                        data_derived_max=True,
+                        data_derived_min=True
+                    )
+                    if device["type"] == "NHC":
+                        self.datum_push(
+                            "health_Dindex" + module_name,
+                            "current", "point",
+                            self.datum_value(device, ["dashboard_data", "health_idx"]),
+                            "scalar",
+                            1,
+                            data_timestamp,
+                            bin_timestamp,
+                            self.config["poll_seconds"],
+                            "second",
+                            data_version="1001",
+                            data_bound_lower=0,
+                            data_derived_max=True,
+                            data_derived_min=True
+                        )
                 if "modules" in device:
                     for device_sub in device["modules"]:
                         module_name = (("__indoor__" if device_sub["type"] == "NAModule4" else "__outdoor__") +
