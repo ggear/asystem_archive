@@ -33,11 +33,11 @@ import time
 import pandas as pd
 from pyspark.sql import SparkSession
 
-from repo_util import paths
-from script_util import qualify
-
 # Add working directory to the system path
 sys.path.insert(0, 'asystem-amodel/src/main/script/python')
+
+from repo_util import paths
+from script_util import qualify
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -47,10 +47,10 @@ pd.set_option('display.width', 1000)
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
-    print("Pipeline starting [{}]".format(remote_data_path))
+    print("Pipeline starting on [{}]".format(remote_data_path))
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
-    print("Session created in [{}] s".format(int(round(time.time())) - time_start))
+    print("Session created ...")
 
     # datasets = []
     # for path in [os.path.join(remote_data_path, str(i),
@@ -85,7 +85,7 @@ def pipeline():
         *paths(qualify(remote_data_path + "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
                "/*/*/*/*/astore_metric=temperature", "/*.snappy.parquet"))
 
-    print("Listing finished in [{}] s".format(int(round(time.time())) - time_start))
+    print("Listing finished ...")
     dataset.createOrReplaceTempView('dataset')
 
     # dataset = spark.sql("""
@@ -125,8 +125,8 @@ def pipeline():
         ORDER BY timestamp
     """)
 
-    print("Dataset filtered in [{}] s".format(int(round(time.time())) - time_start))
     dataframe = dataset.toPandas()
+    print("Dataset collected ...")
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
@@ -142,7 +142,7 @@ def pipeline():
     dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
     dataframe.columns = dataframe.columns.map(
         lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
-    print("Dataset compiled in [{}] s".format(int(round(time.time())) - time_start))
+    print("Dataset compiled ...")
     print("Training data:\n{}\n\n".format(dataframe.describe()))
     output = tempfile.NamedTemporaryFile(
         prefix='asystem-temperature-', suffix='.csv', delete=False).name
