@@ -42,6 +42,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
 from sklearn.externals import joblib
 
+from repo_util import paths
 from repo_util import publish
 from script_util import qualify
 
@@ -76,6 +77,7 @@ pd.set_option('display.width', 1000)
 
 def execute(model=None, features=None, labels=False,
             engineering=False, prediction=False):
+
     if prediction:
         return model['pipeline'].loc[features[
             'energy__production_Dforecast_Ddaylight__inverter']] \
@@ -86,6 +88,7 @@ def execute(model=None, features=None, labels=False,
 
 # noinspection PyStatementEffect
 def pipeline():
+
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
         "s3a://asystem-astore-staging"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \
@@ -96,20 +99,12 @@ def pipeline():
     time_start = int(round(time.time()))
     spark = SparkSession.builder \
         .appName("asystem-amodel-energyforecastintraday").getOrCreate()
-
-    datasets = []
     timezone = 'Australia/Perth'
-    print("Loading data:")
-    for path in [os.path.join(remote_data_path, str(i),
-                              "asystem/astore/processed/canonical/parquet/dict/snappy"
-                              ) for i in range(10)]:
-        try:
-            path_uri = qualify(path)
-            datasets.append(spark.read.parquet(path_uri))
-            print("Loaded path [{}]".format(path_uri))
-        except AnalysisException:
-            continue
-    ds = reduce(lambda x, y: x.union(y), datasets)
+    ds = spark.read.parquet(
+        *paths(qualify(remote_data_path +
+                       "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
+               ["/*/*/*/*/astore_metric=energy","/*/*/*/*/astore_metric=sun"],
+                    "/*.snappy.parquet"))
     ds.createOrReplaceTempView('dataset')
     df_energy = spark.sql("""
         SELECT
@@ -117,7 +112,6 @@ def pipeline():
           data_value / data_scale AS bin_energy
         FROM dataset
         WHERE
-          astore_metric='energy' AND
           data_metric='energy__production__inverter' AND 
           data_type='integral' AND
           bin_width=1 AND
@@ -130,7 +124,6 @@ def pipeline():
           data_value / data_scale AS bin_sunrise
         FROM dataset
         WHERE          
-          astore_metric='sun' AND
           data_metric='sun__outdoor__rise' AND
           data_type='epoch' AND
           bin_width=1 AND
@@ -143,7 +136,6 @@ def pipeline():
           data_value / data_scale AS bin_sunset
         FROM dataset
         WHERE          
-          astore_metric='sun' AND
           data_metric='sun__outdoor__set' AND
           data_type='epoch' AND
           bin_width=1 AND

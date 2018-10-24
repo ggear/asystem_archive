@@ -57,6 +57,7 @@ pd.set_option('display.width', 1000)
 
 def execute(model=None, features=None,
             labels=False, statistics=False, engineering=False, prediction=False):
+
     import pandas as pd
     import numpy as np
     from sklearn.pipeline import Pipeline
@@ -64,6 +65,7 @@ def execute(model=None, features=None,
     from sklearn.linear_model import RidgeCV
     from sklearn.linear_model import LassoCV
     from sklearn.feature_extraction import DictVectorizer
+
     feature_columns = [
         'temperature',
         'rain_mm',
@@ -128,6 +130,7 @@ def execute(model=None, features=None,
 
 
 def pipeline():
+
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else \
         "s3a://asystem-amodel-staging/asystem/amodel/energyforecastinterday"
     remote_model_path = sys.argv[2] if len(sys.argv) > 2 else \

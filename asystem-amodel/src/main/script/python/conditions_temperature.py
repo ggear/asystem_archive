@@ -54,8 +54,9 @@ def pipeline():
     print("Session created ...")
 
     dataset = spark.read.parquet(
-        *paths(qualify(remote_data_path + "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
-               "/*/*/*/*/astore_metric=temperature", "/*.snappy.parquet"))
+        *paths(qualify(remote_data_path +
+                       "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
+               ["/*/*/*/*/astore_metric=temperature"], "/*.snappy.parquet"))
     print("Listing finished ...")
 
     dataset.createOrReplaceTempView('dataset')
@@ -77,7 +78,7 @@ def pipeline():
         ORDER BY timestamp
     """)
     dataframe = dataset.toPandas()
-    print("Dataset collected ...")
+    print("Dataframe collected ...")
 
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
@@ -94,7 +95,7 @@ def pipeline():
     dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
     dataframe.columns = dataframe.columns.map(
         lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
-    print("Dataset compiled ...")
+    print("Output compiled ...")
 
     print("\nTraining data:\n{}\n\n".format(dataframe.describe()))
     output = tempfile.NamedTemporaryFile(

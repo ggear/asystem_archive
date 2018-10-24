@@ -90,15 +90,17 @@ def get(publish_url):
     raise Exception("Could not get URL [{}]".format(publish_url))
 
 
-def paths(prefix_glob, partitions_glob, suffix_glob):
+def paths(prefix_glob, partitions_globs, suffix_glob):
     paths = []
     if prefix_glob.startswith('s3a://'):
         publish_re = re.search('s3a://([0-9a-z\-]*)/\[0-9\](/.*)', prefix_glob)
         s3_bucket_name = publish_re.group(1)
         s3_key_prefix = publish_re.group(2) + "/"
-        s3_key_partitions = ['/{0}/'.format(i) for i in
-                             filter(lambda j: '*' not in j,
-                                    filter(None, partitions_glob.split("/")))]
+        s3_key_partitions = []
+        for partitions_glob in partitions_globs:
+            s3_key_partitions.extend(['/{0}/'.format(i) for i in
+                                      filter(lambda j: '*' not in j,
+                                             filter(None, partitions_glob.split("/")))])
         s3_key_suffix = re.search('/\*(.*)', suffix_glob).group(1)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
@@ -108,5 +110,6 @@ def paths(prefix_glob, partitions_glob, suffix_glob):
                         any(partition in path.key for partition in s3_key_partitions):
                     paths.append(os.path.join("s3a://" + s3_bucket_name, path.key))
     else:
-        paths.append(prefix_glob + partitions_glob + suffix_glob)
+        for partitions_glob in partitions_globs:
+            paths.append(prefix_glob + partitions_glob + suffix_glob)
     return paths
