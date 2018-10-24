@@ -44,68 +44,20 @@ pd.set_option('display.width', 1000)
 
 
 def pipeline():
-    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
 
-    print("Pipeline starting on [{}]".format(remote_data_path))
+    remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
+    print("Pipeline starting on [{}]\n".format(remote_data_path))
+
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
     print("Session created ...")
 
-    # datasets = []
-    # for path in [os.path.join(remote_data_path, str(i),
-    #                           "asystem/astore/processed/canonical/parquet/dict/snappy"
-    #                           ) for i in range(10)]:
-    #     try:
-    #         path_uri = qualify(path)
-    #         datasets.append(spark.read.parquet(path_uri))
-    #         print("Cached partitions [{}]".format(path_uri))
-    #     except AnalysisException:
-    #         continue
-    # dataset = reduce(lambda x, y: x.union(y), datasets)
-
-    # from boto.s3.connection import S3Connection
-    # s3_connection = S3Connection()
-    # s3_bucket = s3_connection.get_bucket('asystem-astore')
-    # prefix = '/asystem/astore/processed/canonical/parquet/dict/snappy/'
-    # partitions = ['/astore_metric=temperature/']
-    # suffix = 'parquet'
-    # paths = []
-    # for i in range(10):
-    #     for path in list(s3_bucket.list(prefix=str(i) + prefix)):
-    #         if path.key.endswith(suffix) and any(partition in path.key for partition in partitions):
-    #             paths.append(os.path.join(remote_data_path, path.key))
-    # dataset = spark.read.parquet(*paths)
-
-    # paths = ['s3a://asystem-astore/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy/' +
-    #          '*/*/*/*/astore_metric=temperature/*.snappy.parquet']
-    # dataset = spark.read.parquet(*paths)
-
     dataset = spark.read.parquet(
         *paths(qualify(remote_data_path + "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
                "/*/*/*/*/astore_metric=temperature", "/*.snappy.parquet"))
-
     print("Listing finished ...")
+
     dataset.createOrReplaceTempView('dataset')
-
-    # dataset = spark.sql("""
-    #     SELECT
-    #       bin_timestamp AS timestamp,
-    #       data_metric AS metric,
-    #       data_temporal AS temporal,
-    #       data_value / data_scale AS temperature
-    #     FROM dataset
-    #     WHERE
-    #       astore_metric='temperature' AND
-    #       data_temporal='current' AND
-    #       data_type='point' AND
-    #       data_version=2 AND
-    #       data_metric NOT LIKE '%forecast%' AND
-    #       data_metric NOT LIKE '%parents' AND
-    #       data_metric NOT LIKE '%shed' AND
-    #       data_metric NOT LIKE '%roof'
-    #     ORDER BY timestamp
-    # """)
-
     dataset = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
@@ -123,9 +75,9 @@ def pipeline():
           data_metric NOT LIKE '%roof'
         ORDER BY timestamp
     """)
-
     dataframe = dataset.toPandas()
     print("Dataset collected ...")
+
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
     dataframe = dataframe.set_index(pd.to_datetime(dataframe.index, unit='s')
@@ -142,12 +94,15 @@ def pipeline():
     dataframe.columns = dataframe.columns.map(
         lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
     print("Dataset compiled ...")
-    print("Training data:\n{}\n\n".format(dataframe.describe()))
+
+    print("\nTraining data:\n{}\n\n".format(dataframe.describe()))
     output = tempfile.NamedTemporaryFile(
         prefix='asystem-temperature-', suffix='.csv', delete=False).name
+
     print("Writing output to [{}]".format(output))
     dataframe.to_csv(output)
-    print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
+
+    print("\nPipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
 # Run pipeline# IGNORE SCRIPT BOILERPLATE #pipeline()
 
