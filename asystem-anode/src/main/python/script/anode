@@ -12,11 +12,11 @@
 # Description:       ANode daemon
 ### END INIT INFO
 
-ANODE_PATH=$(which anode 2> /dev/null)
 ANODE_LOCK=/var/lock/subsys/anode
 ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/bash.bashrc"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
+ANODE_PATH=${ANODE_PATH:-"$(which anode 2> /dev/null)"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
   $(grep AWS ${ANODE_ENV_FILE})

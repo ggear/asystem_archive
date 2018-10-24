@@ -15,6 +15,8 @@ from anode.plugin.plugin import DATUM_QUEUE_LAST
 from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
+HOST = "192.168.2.10"
+
 HTTP_TIMEOUT = 5
 POLL_METER_ITERATIONS = 5
 
@@ -32,11 +34,12 @@ HOUR_OFFPEAK_START = 21
 
 # noinspection PyBroadException
 class Fronius(Plugin):
+
     def _poll(self):
-        self.http_get("http://192.168.2.10/solar_api/v1/GetPowerFlowRealtimeData.fcgi", self.push_flow)
+        self.http_get("http://" + HOST + "/solar_api/v1/GetPowerFlowRealtimeData.fcgi", self.push_flow)
         if self.is_clock or self.poll_meter_iteration == POLL_METER_ITERATIONS:
             self.poll_meter_iteration = 0
-            self.http_get("http://192.168.2.10/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System", self.push_meter)
+            self.http_get("http://" + HOST + "/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System", self.push_meter)
         else:
             self.poll_meter_iteration += 1
 

@@ -16,6 +16,7 @@ HTTP_TIMEOUT = 10
 
 
 class Wunderground(Plugin):
+
     def _poll(self):
         self.http_get("http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json", self.push_forecast)
 

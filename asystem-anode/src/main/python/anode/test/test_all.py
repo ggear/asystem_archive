@@ -43,6 +43,7 @@ from anode.plugin import Plugin
 
 # noinspection PyPep8Naming, PyUnresolvedReferences, PyShadowingNames,PyPep8,PyTypeChecker
 class ANodeTest(TestCase):
+
     def setUp(self):
         self.patch(treq, "get", lambda url, headers=None, timeout=0, pool=None: MockHttpResponse(url))
         self.patch(treq, "post", lambda url, data, timeout=0, pool=None: MockHttpResponse(url))

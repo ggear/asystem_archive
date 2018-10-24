@@ -15,6 +15,7 @@ HTTP_TIMEOUT = 10
 
 
 class Netatmo(Plugin):
+
     def _poll(self):
         if not self.disabled:
             if self.token_access is None:
@@ -77,8 +78,8 @@ class Netatmo(Plugin):
             dict_content = json.loads(content, parse_float=Decimal)
             bin_timestamp = self.get_time()
             for device in dict_content["body"]["devices"]:
-                module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" \
-                    else ("station_name" if "station_name" in device else "name")].lower().encode("UTF-8")
+                module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" else (
+                    "station_name" if "station_name" in device else "name")].lower().encode("UTF-8")
                 if module_name != "__indoor__ignore":
                     data_timestamp = device["dashboard_data"]["time_utc"]
                     self.datum_push(

@@ -13,6 +13,15 @@ plugin:
     repeat_seconds: -1
     publish_ticks: -1
     publish_upstream: True
+  kasa:
+    poll_seconds: 1
+    buffer_ticks: 30
+    history_partitions: 14
+    history_ticks: 3500000
+    history_partition_seconds: 86400
+    repeat_seconds: -1
+    publish_ticks: -1
+    publish_upstream: True
   davis:
     poll_seconds: -1
     buffer_ticks: 30

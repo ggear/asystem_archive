@@ -11,6 +11,7 @@ from anode.plugin.plugin import Plugin
 
 # noinspection PyUnusedLocal
 class Davis(Plugin):
+
     def _push(self, content, targets):
         # noinspection PyBroadException
         try:

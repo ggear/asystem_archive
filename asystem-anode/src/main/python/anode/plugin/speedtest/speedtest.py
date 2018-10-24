@@ -16,6 +16,7 @@ SPEEDTEST_ID_METRIC = {
 
 # noinspection PyBroadException
 class Speedtest(Plugin):
+
     def _push(self, content, targets):
         latency_ping = 0
         throughput_upload = 0

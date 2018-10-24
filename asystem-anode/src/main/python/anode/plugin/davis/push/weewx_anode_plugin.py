@@ -12,6 +12,7 @@ URL_PROD = "http://127.0.0.1:8091/rest/?sources=davis"
 
 
 class ANode(StdService):
+
     def __init__(self, engine, config_dict):
         super(ANode, self).__init__(engine, config_dict)
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)

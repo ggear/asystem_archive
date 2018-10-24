@@ -16,6 +16,16 @@ plugin:
     history_partitions: 5
     history_ticks: 3500000
     history_partition_seconds: 86400
+    repeat_seconds: 99
+    repeat_partition: True
+    publish_ticks: -1
+    publish_upstream: True
+  kasa:
+    poll_seconds: 1
+    buffer_ticks: 30
+    history_partitions: 5
+    history_ticks: 3500000
+    history_partition_seconds: 86400
     repeat_seconds: 101
     repeat_partition: True
     publish_ticks: -1

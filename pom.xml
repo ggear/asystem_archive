@@ -144,6 +144,7 @@
                             <directory>src</directory>
                             <includes>
                                 <include>**/*.pyc</include>
+                                <include>**/*.egg</include>
                             </includes>
                         </fileset>
                     </filesets>

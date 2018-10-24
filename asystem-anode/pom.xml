@@ -115,6 +115,8 @@
                                 <resource>
                                     <directory>${dir.source.python}</directory>
                                     <excludes>
+                                        <exclude>**/*.pyc</exclude>
+                                        <exclude>**/*.egg</exclude>
                                         <exclude>anode/test/config/*</exclude>
                                         <exclude>anode/test/pickle/*</exclude>
                                         <exclude>anode/test/template/*</exclude>
@@ -268,13 +270,13 @@
                         <phase>clean</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">
-                                <exec executable="python" dir="${dir.source.python}" failonerror="true">
-                                    <arg value="setup.py" />
+                                <exec executable="python" dir="${java.io.tmpdir}" failonerror="true">
+                                    <arg value="${dir.source.python}/setup.py" />
                                     <arg value="clean" />
                                 </exec>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
+                                    <arg value="ANODE_PATH='${python.home}/bin/anode' ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
                                 <delete file="${project.basedir}/phantomjsdriver.log" />
                                 <delete file="${project.basedir}/../phantomjsdriver.log" />
@@ -306,10 +308,9 @@
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <target unless="${maven.system-test.skip}">
-                                <exec executable="python" dir="${dir.output.python}" failonerror="true">
+                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="true">
                                     <arg value="setup.py" />
-                                    <arg value="develop" />
-                                    <arg value="--user" />
+                                    <arg value="install" />
                                 </exec>
                                 <delete dir="${dir.runtime.anode}" />
                                 <mkdir dir="${dir.runtime.anode}" />
@@ -323,7 +324,7 @@
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode start" />
+                                    <arg value="ANODE_PATH='${python.home}/bin/anode' ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode start" />
                                 </exec>
                                 <echo>
 
@@ -344,19 +345,13 @@
                                 </echo>
                                 <exec executable="/bin/sh" failonerror="true" failifexecutionfails="true">
                                     <arg value="-c" />
-                                    <arg value="ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
+                                    <arg value="ANODE_PATH='${python.home}/bin/anode' ANODE_OPTS='${system.test.anode.opts}' ANODE_LOG_FILE='${system.test.anode.log}' ${dir.source.python}/script/anode stop" />
                                 </exec>
                                 <echo>
 
                                 </echo>
                                 <delete file="${project.basedir}/phantomjsdriver.log" />
                                 <delete file="${project.basedir}/../phantomjsdriver.log" />
-                                <exec executable="${python.runtime}" dir="${dir.output.python}" failonerror="false">
-                                    <arg value="setup.py" />
-                                    <arg value="develop" />
-                                    <arg value="--user" />
-                                    <arg value="--uninstall" />
-                                </exec>
                                 <exec executable="${python.runtime}" dir="${dir.source.python}" failonerror="true">
                                     <arg value="setup.py" />
                                     <arg value="clean" />
