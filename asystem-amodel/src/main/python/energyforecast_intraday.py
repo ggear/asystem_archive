@@ -97,17 +97,17 @@ def pipeline():
     spark = SparkSession.builder \
         .appName("asystem-amodel-energyforecastintraday").getOrCreate()
     timezone = 'Australia/Perth'
-    ds = spark.read.parquet(
+
+    ds_energy = spark.read.parquet(
         *paths(qualify(remote_data_path +
                        "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
-               ["/*/*/*/*/astore_metric=energy","/*/*/*/*/astore_metric=sun"],
-                    "/*.snappy.parquet"))
-    ds.createOrReplaceTempView('dataset')
+               ["/*/*/*/*/astore_metric=energy"], "/*.snappy.parquet"))
+    ds_energy.createOrReplaceTempView('energy')
     df_energy = spark.sql("""
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_energy
-        FROM dataset
+        FROM energy
         WHERE
           data_metric='energy__production__inverter' AND 
           data_type='integral' AND
@@ -115,11 +115,16 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
+    ds_sun = spark.read.parquet(
+        *paths(qualify(remote_data_path +
+                       "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
+               ["/*/*/*/*/astore_metric=sun"], "/*.snappy.parquet"))
+    ds_sun.createOrReplaceTempView('sun')
     df_sun_rise = spark.sql("""
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_sunrise
-        FROM dataset
+        FROM sun
         WHERE          
           data_metric='sun__outdoor__rise' AND
           data_type='epoch' AND
@@ -131,7 +136,7 @@ def pipeline():
         SELECT
           bin_timestamp,
           data_value / data_scale AS bin_sunset
-        FROM dataset
+        FROM sun
         WHERE          
           data_metric='sun__outdoor__set' AND
           data_type='epoch' AND
