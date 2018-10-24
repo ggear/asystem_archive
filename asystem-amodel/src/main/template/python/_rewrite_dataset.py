@@ -16,6 +16,12 @@
 # 1.4. Time with partition dirs (via spark.parallelize(arrow/other) or as spark.load(list))
 # 1.5. Time with (1) with pre-pruned parquet dirs (via spark.parallelize(arrow/other) or as spark.load(list))
 #
+# Custom pruning, partition collapsing, load(list)
+# Arrow/S3FS?
+# S3Gard?
+# Impala?
+# Hive?
+#
 # 5/asystem/astore/processed/canonical/parquet/dict/snappy/astore_version=10.000.0126/astore_year=2018/astore_month=9/astore_model=1001/astore_metric=upload/part-00001-056fe324-89e5-489a-afb5-249636d2c1ec.c000.snappy.parquet
 # 5_asystem_astore_processed_canonical_parquet_dict_snappy/astore_version=10.000.0126_1001/astore_month=2018-09/astore_metric=upload/part-00001-056fe324-89e5-489a-afb5-249636d2c1ec.c000.snappy.parquet
 # 13 dirs -> 4 dirs

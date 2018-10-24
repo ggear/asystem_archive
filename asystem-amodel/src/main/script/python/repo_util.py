@@ -1,15 +1,14 @@
 ###############################################################################
 #
-# Model publish library
+# Repository utility library
 #
 ###############################################################################
 
 import os.path
+import os.path
 import re
 import shutil
-import os.path
 import tempfile
-import shutil
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -20,10 +19,9 @@ def publish(local_file, publish_url):
         '.*/amodel_version=[1-9][0-9]\.[0-9]{3}.[0-9]{4}-SNAPSHOT/.*',
         publish_url) is not None
     if publish_url.startswith('s3a://'):
-        s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*',
-                                   publish_url).group(1)
-        s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)',
-                                publish_url).group(1)
+        publish_re = re.search('s3a://([0-9a-z\-]*)/(.*)', publish_url)
+        s3_bucket_name = publish_re.group(1)
+        s3_key_name = publish_re.group(2)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
         if is_snapshot or \
@@ -41,11 +39,10 @@ def publish(local_file, publish_url):
 
 def nearest(publish_url, publish_file="_SUCCESS", single_level=False):
     if publish_url.startswith('s3a://'):
-        s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*',
-                                   publish_url).group(1)
-        s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)',
-                                publish_url).group(1) + \
-                      "/" + publish_file
+        publish_re = re.search('s3a://([0-9a-z\-]*)/(.*)', publish_url)
+        s3_bucket_name = publish_re.group(1)
+        s3_key_name = publish_re.group(2)
+        "/" + publish_file
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
         s3_list = list(s3_bucket.list(prefix=s3_key_name))
@@ -76,10 +73,9 @@ def get(publish_url):
     local_file = os.path.join(local_dir,
                               publish_url.split('/')[-1])
     if publish_url.startswith('s3a://'):
-        s3_bucket_name = re.search('s3a://([0-9a-z\-]*).*',
-                                   publish_url).group(1)
-        s3_key_name = re.search('s3a://[0-9a-z\-]*/(.*)',
-                                publish_url).group(1)
+        publish_re = re.search('s3a://([0-9a-z\-]*)/(.*)', publish_url)
+        s3_bucket_name = publish_re.group(1)
+        s3_key_name = publish_re.group(2)
         s3_connection = S3Connection()
         s3_bucket = s3_connection.get_bucket(s3_bucket_name)
         s3_list = list(s3_bucket.list(prefix=s3_key_name))
@@ -92,3 +88,25 @@ def get(publish_url):
             shutil.copyfile(publish_url, local_file)
             return local_file
     raise Exception("Could not get URL [{}]".format(publish_url))
+
+
+def paths(prefix_glob, partitions_glob, suffix_glob):
+    paths = []
+    if prefix_glob.startswith('s3a://'):
+        publish_re = re.search('s3a://([0-9a-z\-]*)/\[0-9\](/.*)', prefix_glob)
+        s3_bucket_name = publish_re.group(1)
+        s3_key_prefix = publish_re.group(2) + "/"
+        s3_key_partitions = ['/{0}/'.format(i) for i in
+                             filter(lambda j: '*' not in j,
+                                    filter(None, partitions_glob.split("/")))]
+        s3_key_suffix = re.search('/\*(.*)', suffix_glob).group(1)
+        s3_connection = S3Connection()
+        s3_bucket = s3_connection.get_bucket(s3_bucket_name)
+        for i in range(10):
+            for path in list(s3_bucket.list(prefix=str(i) + s3_key_prefix)):
+                if path.key.endswith(s3_key_suffix) and \
+                        any(partition in path.key for partition in s3_key_partitions):
+                    paths.append(os.path.join("s3a://" + s3_bucket_name, path.key))
+    else:
+        paths.append(prefix_glob + partitions_glob + suffix_glob)
+    return paths

@@ -25,21 +25,20 @@
 #
 ###############################################################################
 
-import os.path
-import tempfile
-import pandas as pd
-import time
-import sys
 import re
+import sys
+import tempfile
+import time
+
+import pandas as pd
+from pyspark.sql import SparkSession
+
+from repo_util import paths
+from script_util import qualify
 
 # Add working directory to the system path
 sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
-from pyspark.sql import SparkSession
-from pyspark.sql.utils import AnalysisException
-from script_util import qualify
-
-pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
@@ -47,21 +46,67 @@ pd.set_option('display.width', 1000)
 
 def pipeline():
     remote_data_path = sys.argv[1] if len(sys.argv) > 1 else "s3a://asystem-astore"
+
     print("Pipeline starting [{}]".format(remote_data_path))
     time_start = int(round(time.time()))
     spark = SparkSession.builder.appName("asystem-amodel-dataset").getOrCreate()
-    datasets = []
-    for path in [os.path.join(remote_data_path, str(i),
-                              "asystem/astore/processed/canonical/parquet/dict/snappy"
-                              ) for i in range(10)]:
-        try:
-            path_uri = qualify(path)
-            datasets.append(spark.read.parquet(path_uri))
-            print("Cached partitions [{}]".format(path_uri))
-        except AnalysisException:
-            continue
-    dataset = reduce(lambda x, y: x.union(y), datasets)
+    print("Session created in [{}] s".format(int(round(time.time())) - time_start))
+
+    # datasets = []
+    # for path in [os.path.join(remote_data_path, str(i),
+    #                           "asystem/astore/processed/canonical/parquet/dict/snappy"
+    #                           ) for i in range(10)]:
+    #     try:
+    #         path_uri = qualify(path)
+    #         datasets.append(spark.read.parquet(path_uri))
+    #         print("Cached partitions [{}]".format(path_uri))
+    #     except AnalysisException:
+    #         continue
+    # dataset = reduce(lambda x, y: x.union(y), datasets)
+
+    # from boto.s3.connection import S3Connection
+    # s3_connection = S3Connection()
+    # s3_bucket = s3_connection.get_bucket('asystem-astore')
+    # prefix = '/asystem/astore/processed/canonical/parquet/dict/snappy/'
+    # partitions = ['/astore_metric=temperature/']
+    # suffix = 'parquet'
+    # paths = []
+    # for i in range(10):
+    #     for path in list(s3_bucket.list(prefix=str(i) + prefix)):
+    #         if path.key.endswith(suffix) and any(partition in path.key for partition in partitions):
+    #             paths.append(os.path.join(remote_data_path, path.key))
+    # dataset = spark.read.parquet(*paths)
+
+    # paths = ['s3a://asystem-astore/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy/' +
+    #          '*/*/*/*/astore_metric=temperature/*.snappy.parquet']
+    # dataset = spark.read.parquet(*paths)
+
+    dataset = spark.read.parquet(
+        *paths(qualify(remote_data_path + "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
+               "/*/*/*/*/astore_metric=temperature", "/*.snappy.parquet"))
+
+    print("Listing finished in [{}] s".format(int(round(time.time())) - time_start))
     dataset.createOrReplaceTempView('dataset')
+
+    # dataset = spark.sql("""
+    #     SELECT
+    #       bin_timestamp AS timestamp,
+    #       data_metric AS metric,
+    #       data_temporal AS temporal,
+    #       data_value / data_scale AS temperature
+    #     FROM dataset
+    #     WHERE
+    #       astore_metric='temperature' AND
+    #       data_temporal='current' AND
+    #       data_type='point' AND
+    #       data_version=2 AND
+    #       data_metric NOT LIKE '%forecast%' AND
+    #       data_metric NOT LIKE '%parents' AND
+    #       data_metric NOT LIKE '%shed' AND
+    #       data_metric NOT LIKE '%roof'
+    #     ORDER BY timestamp
+    # """)
+
     dataset = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
@@ -70,7 +115,6 @@ def pipeline():
           data_value / data_scale AS temperature
         FROM dataset
         WHERE
-          astore_metric='temperature' AND
           data_temporal='current' AND
           data_type='point' AND
           data_version=2 AND
@@ -80,7 +124,8 @@ def pipeline():
           data_metric NOT LIKE '%roof'
         ORDER BY timestamp
     """)
-    print("Data loaded and filtered\n")
+
+    print("Dataset filtered in [{}] s".format(int(round(time.time())) - time_start))
     dataframe = dataset.toPandas()
     dataframe = dataframe.pivot_table(
         values='temperature', index='timestamp', columns='metric')
@@ -97,6 +142,7 @@ def pipeline():
     dataframe = dataframe.loc[(dataframe > -10).all(axis=1), :]
     dataframe.columns = dataframe.columns.map(
         lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
+    print("Dataset compiled in [{}] s".format(int(round(time.time())) - time_start))
     print("Training data:\n{}\n\n".format(dataframe.describe()))
     output = tempfile.NamedTemporaryFile(
         prefix='asystem-temperature-', suffix='.csv', delete=False).name

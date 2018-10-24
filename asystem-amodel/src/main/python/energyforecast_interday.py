@@ -50,7 +50,6 @@ from script_util import qualify
 from repo_util import publish
 from repo_util import nearest
 
-pd.set_option('display.height', 1000)
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
