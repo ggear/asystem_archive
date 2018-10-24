@@ -36,6 +36,8 @@ sys.path.insert(0, 'asystem-amodel/src/main/script/python')
 
 # Add plotting libraries
 import matplotlib.pyplot as plt
+# Remove matplotlib warnings
+plt.rcParams.update({'figure.max_open_warning': 0})
 
 from StringIO import StringIO
 from pyspark.sql import SparkSession
@@ -62,6 +64,8 @@ DAYS_BLACK_LIST = {
     '2018/05/17', '2018/05/18', '2018/05/21', '2018/05/25',
     '2018/05/30', '2018/06/14', '2018/06/15', '2018/08/08',
 }
+
+TIMEZONE = 'Australia/Perth'
 
 DAYS_PLOT = False
 DAYS_PLOT_DEBUG = False
@@ -95,17 +99,25 @@ def pipeline():
         "s3a://asystem-amodel-staging/asystem/amodel/energyforecastintraday"
     local_model_path = sys.argv[3] if len(sys.argv) > 3 else \
         tempfile.mkdtemp()
+    print("Pipeline starting on [{}]\n".format(remote_data_path))
 
     time_start = int(round(time.time()))
     spark = SparkSession.builder \
         .appName("asystem-amodel-energyforecastintraday").getOrCreate()
-    timezone = 'Australia/Perth'
+    print("Session created ...")
 
     ds_energy = spark.read.parquet(
         *paths(qualify(remote_data_path +
                        "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
                ["/*/*/*/*/astore_metric=energy"], "/*.snappy.parquet"))
+    ds_sun = spark.read.parquet(
+        *paths(qualify(remote_data_path +
+                       "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
+               ["/*/*/*/*/astore_metric=sun"], "/*.snappy.parquet"))
+    print("Listing finished ...")
+
     ds_energy.createOrReplaceTempView('energy')
+    ds_energy.cache()
     df_energy = spark.sql("""
         SELECT
           bin_timestamp,
@@ -118,11 +130,8 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
-    ds_sun = spark.read.parquet(
-        *paths(qualify(remote_data_path +
-                       "/[0-9]/asystem/astore/processed/canonical/parquet/dict/snappy"),
-               ["/*/*/*/*/astore_metric=sun"], "/*.snappy.parquet"))
     ds_sun.createOrReplaceTempView('sun')
+    ds_sun.cache()
     df_sun_rise = spark.sql("""
         SELECT
           bin_timestamp,
@@ -147,33 +156,34 @@ def pipeline():
           bin_unit='day'
         ORDER BY bin_timestamp ASC
     """).toPandas()
-    print("Data loaded and filtered\n")
+    spark.catalog.clearCache()
+    print("Dataframes collected ...")
 
     df = df_energy.set_index(pd.to_datetime(df_energy['bin_timestamp'], unit='s')
-                            .dt.tz_localize('UTC').dt.tz_convert(timezone))
+                            .dt.tz_localize('UTC').dt.tz_convert(TIMEZONE))
     df['bin_date'] = df.index.date
     df.set_index('bin_date', inplace=True)
     df_energy_day = df.groupby(df.index)['bin_energy'].max().to_frame() \
         .rename(columns={'bin_energy': 'bin_energy_day'})
     df = df.merge(df_energy_day, how='inner', left_index=True, right_index=True)
     df_sun_rise.set_index(pd.to_datetime(df_sun_rise['bin_timestamp'], unit='s')
-                        .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+                        .dt.tz_localize('UTC').dt.tz_convert(TIMEZONE), inplace=True)
     df_sun_rise['bin_date'] = df_sun_rise.index.date
     df_sun_rise.set_index('bin_date', inplace=True)
     df = df.merge(df_sun_rise.groupby(df_sun_rise.index)['bin_sunrise'].max()
                   .to_frame(), how='inner', left_index=True, right_index=True)
     df_sun_set.set_index(
         pd.to_datetime(df_sun_set['bin_timestamp'], unit='s')
-            .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+            .dt.tz_localize('UTC').dt.tz_convert(TIMEZONE), inplace=True)
     df_sun_set['bin_date'] = df_sun_set.index.date
     df_sun_set.set_index('bin_date', inplace=True)
     df = df.merge(df_sun_set.groupby(df_sun_set.index)['bin_sunset'].max()
                   .to_frame(), how='inner', left_index=True, right_index=True)
     df.set_index(pd.to_datetime(df['bin_timestamp'], unit='s')
-                 .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+                 .dt.tz_localize('UTC').dt.tz_convert(TIMEZONE), inplace=True)
     df.sort_index(inplace=True)
-
-    print("Training data:\n{}\n\n".format(df.describe()))
+    print("Output compiled ...")
+    print("\nTraining data:\n{}\n\n".format(df.describe()))
 
     dfvs = {'VETTED': {}, 'PURGED': {}, 'TOVETT': {}}
     for dfs in df.groupby(df.index.date):
@@ -186,12 +196,12 @@ def pipeline():
         for day, dfv in sorted(dfvs[vetting].iteritems()):
             dfv.set_index(
                 pd.to_datetime(dfv['bin_timestamp'], unit='s')
-                    .dt.tz_localize('UTC').dt.tz_convert(timezone), inplace=True)
+                    .dt.tz_localize('UTC').dt.tz_convert(TIMEZONE), inplace=True)
             if DAYS_PLOT and DAYS_PLOT_DEBUG:
                 dfv.plot(title="Energy ({}) - {}"
                          .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
 
-    for vetting in dfvs: print("{} [{}] days".format(vetting, len(dfvs[vetting])))
+    for vetting in dfvs: print("Processed {} {} days ...".format(len(dfvs[vetting]), vetting.lower()))
 
     dfnss = []
     bins = 1000
@@ -213,7 +223,6 @@ def pipeline():
         dfnss.append(dfns)
         if DAYS_PLOT and DAYS_PLOT_DEBUG:
             dfns.plot(title="Energy ({}) - VETTED".format(day))
-
     dfnsa = pd.concat(dfnss, axis=1, ignore_index=True)
     if DAYS_PLOT:
         dfnsa.plot(title="Energy Normalised/Standardised (All) - VETTED", legend=False)
@@ -221,6 +230,7 @@ def pipeline():
     dfnsa = dfnsa.groupby(dfnsa.index).mean()
     if DAYS_PLOT:
         dfnsa.plot(title="Energy Normalised/Standardised (Mean) - VETTED", legend=False)
+    print("Model built ...")
 
     model_file = '/model/pickle/joblib/none/' \
                  'amodel_version=10.000.0129-SNAPSHOT/amodel_model=1003/model.pkl'
@@ -234,6 +244,7 @@ def pipeline():
     pickled_execute.flush()
     joblib.dump({'pipeline': dfnsa, 'execute': pickled_execute},
                 local_model_file, compress=True)
+    print("Model serialised ...")
 
     model = joblib.load(local_model_file)
     dfi = pd.DataFrame([
@@ -245,11 +256,14 @@ def pipeline():
     ]).apply(pd.to_numeric, errors='ignore')
     dfo = dill.load(StringIO(model['execute'].getvalue())) \
         (model=model, features=dfi, prediction=True)
+    print("Model de-serialised ...")
     print("\nEnergy Mean Input:\n{}\n\nEnergy Mean Output:\n{}\n".format(dfi, dfo))
+
     publish(local_model_file, remote_model_file)
     shutil.rmtree(local_model_path)
+    print("Model published ...")
 
-    print("Pipeline finished in [{}] s".format(int(round(time.time())) - time_start))
+    print("\nPipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
 # Run pipeline
 pipeline()

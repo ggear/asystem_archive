@@ -59,6 +59,7 @@ def pipeline():
     print("Listing finished ...")
 
     dataset.createOrReplaceTempView('dataset')
+    dataset.cache()
     dataset = spark.sql("""
         SELECT
           bin_timestamp AS timestamp,
@@ -77,6 +78,7 @@ def pipeline():
         ORDER BY timestamp
     """)
     dataframe = dataset.toPandas()
+    spark.catalog.clearCache()
     print("Dataframe collected ...")
 
     dataframe = dataframe.pivot_table(
@@ -95,13 +97,12 @@ def pipeline():
     dataframe.columns = dataframe.columns.map(
         lambda name: re.compile('.*__.*__(.*)').sub('\\1', name))
     print("Output compiled ...")
-
     print("\nTraining data:\n{}\n\n".format(dataframe.describe()))
+
     output = tempfile.NamedTemporaryFile(
         prefix='asystem-temperature-', suffix='.csv', delete=False).name
-
-    print("Writing output to [{}]".format(output))
     dataframe.to_csv(output)
+    print("Wrote output to [{}]".format(output))
 
     print("\nPipeline finished in [{}] s".format(int(round(time.time())) - time_start))
 
