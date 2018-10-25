@@ -60,6 +60,7 @@ DAYS_BLACK_LIST = {
     '2018/04/07', '2018/04/08', '2018/04/10', '2018/04/22',
     '2018/05/17', '2018/05/18', '2018/05/21', '2018/05/25',
     '2018/05/30', '2018/06/14', '2018/06/15', '2018/08/08',
+    '2018/09/20', '2018/10/05', '2018/10/24'
 }
 
 TIMEZONE = 'Australia/Perth'
@@ -197,7 +198,8 @@ def pipeline():
                 dfv.plot(title="Energy ({}) - {}"
                          .format(day, vetting), y=['bin_energy', 'bin_energy_day'])
 
-    for vetting in dfvs: print("Processed {} {} days ...".format(len(dfvs[vetting]), vetting.lower()))
+    for vetting in dfvs:
+        print("Processed {} {} days ...".format(len(dfvs[vetting]), vetting.lower()))
 
     dfnss = []
     bins = 1000
