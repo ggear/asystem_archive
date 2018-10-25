@@ -60,9 +60,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         val files = dfs.listFiles(inputPath, true)
         while (files.hasNext) {
           val fileUri = files.next().getPath.toString
-          val fileRewritePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
+          val filePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
           fileUri match {
-            case fileRewritePattern(fileRoot) => inputPaths += fileRoot
+            case filePattern(fileRoot) => inputPaths += fileRoot
             case _ =>
           }
         }
