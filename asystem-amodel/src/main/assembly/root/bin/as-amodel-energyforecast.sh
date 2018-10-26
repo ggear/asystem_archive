@@ -36,7 +36,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   sleep 5
   if [ "$PROCESS_STAGE" = "interday-preparation" ]; then
   $ROOT_DIR/bin/cldr-shell-spark2.sh \
-    "false" \
+    "$WAIT_TASK" \
     "$PROCESS_GROUP-interday-preparation" \
     "com.jag.asystem.amodel.EnergyForecastInterday " \
     "--cldr.job.group=$PROCESS_GROUP --cldr.job.name=$PROCESS_GROUP-validation --cldr.job.version=$APP_VERSION --cldr.job.transaction=$PROCESS_TX --com.jag.metadata.tags=$PROCESS_TAGS --cldr.job.metadata=true $S3_URL_ASTORE/ $S3_URL_AMODEL$S3_URL_ASTAGING/asystem/amodel/energyforecastinterday/" \
@@ -44,7 +44,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$S3_URL_ALIB/jar/"
   elif [ "$PROCESS_STAGE" = "interday-training" ]; then
   $ROOT_DIR/bin/cldr-shell-pyspark2.sh \
-    "false" \
+    "$WAIT_TASK" \
     "$PROCESS_GROUP-interday-training" \
     "energyforecast_interday.py" \
     "" \
@@ -61,13 +61,15 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
   fi
 done
 
-if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX --job_group=$PROCESS_GROUP --job_name=$PROCESS_GROUP-validation --job_version=$APP_VERSION --job_properties=$PROCESS_PROPERTIES --job_validation=$PROCESS_VALIDATION; then
-  if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
-    $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
+if [[ "$WAIT_TASK" = "true" ]]; then
+  if $ROOT_DIR/lib/py/energyforecast_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX --job_group=$PROCESS_GROUP --job_name=$PROCESS_GROUP-validation --job_version=$APP_VERSION --job_properties=$PROCESS_PROPERTIES --job_validation=$PROCESS_VALIDATION; then
+    if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "true" ]]; then
+      $ROOT_DIR/bin/cldr-sync-s3.sh "$S3_URL_AMODEL""$S3_URL_ASTAGING" "$S3_URL_AMODEL" "true"
+    fi
+  else
+    echo "Release quality script failed, halting release"
+    PROCESS_RETURN=1
   fi
-else
-  echo "Release quality script failed, halting release"
-  PROCESS_RETURN=1
 fi
 
 [[ "$DELETE_CLUSTER" = "true" ]] && $ROOT_DIR/bin/cldr-provision.sh "true" "true"

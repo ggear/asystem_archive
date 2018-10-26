@@ -17,6 +17,8 @@ import org.joda.time.Instant
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 object EnergyForecastInterday {
 
@@ -42,7 +44,15 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
 
   private var inputPath: Path = _
   private var outputPath: Path = _
-  private var inputPaths: Set[String] = Set()
+  private val inputPaths = Map(
+    "sun" -> ArrayBuffer[String](),
+    "wind" -> ArrayBuffer[String](),
+    "rain" -> ArrayBuffer[String](),
+    "energy" -> ArrayBuffer[String](),
+    "humidity" -> ArrayBuffer[String](),
+    "conditions" -> ArrayBuffer[String](),
+    "temperature" -> ArrayBuffer[String]()
+  )
   private var timestampStart: Instant = _
   private val outputPathSuffix: String = "/text/csv/none/amodel_version=" + getApplicationProperty("APP_VERSION") +
     "/amodel_model=" + getModelProperty("MODEL_ENERGYFORECAST_INTERDAY_BUILD_VERSION")
@@ -57,13 +67,17 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         inputPath = new Path(arguments(0))
         var dfs = inputPath.getFileSystem(getConf)
         inputPath = dfs.makeQualified(inputPath)
+        var inputPathsRegex: Map[String, Regex] = Map()
+        inputPaths.keys.foreach(partition => inputPathsRegex +=
+          (partition -> (".*/asystem/astore/processed/canonical/parquet/dict/snappy/.*/astore_metric=" + partition + "/.*\\.parquet").r))
         val files = dfs.listFiles(inputPath, true)
         while (files.hasNext) {
           val fileUri = files.next().getPath.toString
-          val filePattern = "(.*/asystem/astore/processed/canonical/parquet/dict/snappy)/.*\\.parquet".r
-          fileUri match {
-            case filePattern(fileRoot) => inputPaths += fileRoot
-            case _ =>
+          for ((partition, filePattern) <- inputPathsRegex) {
+            fileUri match {
+              case filePattern() => inputPaths(partition) += fileUri
+              case _ =>
+            }
           }
         }
         outputPath = new Path(arguments(1))
@@ -76,7 +90,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
             if (getApplicationProperty("APP_VERSION").endsWith("-SNAPSHOT")) dfs.delete(path.getParent, true) else {
               if (Log.isWarnEnabled()) Log.warn("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
                 "] cannot write to pre-existing non-SNAPSHOT directory [" + path.getParent + "], clearing inputs")
-              inputPaths = Set.empty
+              inputPaths.values.foreach(files => files.clear())
             }
           }
         }
@@ -85,7 +99,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
       if (Log.isInfoEnabled()) {
         Log.info("Driver [" + classOf[EnergyForecastInterday].getSimpleName +
           "] prepared with output [" + outputPath.toString + "], input [" + inputPath.toString + "] and inputs:")
-        for (inputPath <- inputPaths) Log.info("  " + inputPath)
+        inputPaths.values.foreach(paths => paths.foreach(path => Log.info("  " + path)))
       }
       if (exit != SUCCESS) {
         val metaData = getMetaData(exit, timestampStart)
@@ -111,127 +125,127 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
     try {
       var outputTest = None: Option[DataFrame]
       var outputTrain = None: Option[DataFrame]
-      if (inputPaths.nonEmpty) {
+      if (!inputPaths.mapValues(_.size).values.contains(0)) {
         val dateFormat = "y/MM/dd"
         val timezoneWorking = "Australia/Perth"
         val timezoneDefault = TimeZone.getDefault.getID
-        val input = inputPaths.map(spark.read.parquet(_)).reduce(_.union(_))
-        input.createTempView("datums")
+        for ((partition, paths) <- inputPaths)
+          spark.read.parquet(paths: _*).cache().createTempView(partition)
         var outputAll = List(
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS energy__production__inverter
-             | FROM datums
+             | FROM energy
              | WHERE
-             |   astore_metric='energy' AND data_metric='energy__production__inverter' AND
+             |   data_metric='energy__production__inverter' AND
              |   data_type='integral' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
-             | FROM datums
+             | FROM temperature
              | WHERE
-             |   astore_metric='temperature' AND data_metric='temperature__forecast__glen_Dforrest' AND
+             |   data_metric='temperature__forecast__glen_Dforrest' AND
              |   data_type='point' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
-             | FROM datums
+             | FROM rain
              | WHERE
-             |   astore_metric='rain' AND data_metric='rain__forecast__glen_Dforrest' AND
+             |   data_metric='rain__forecast__glen_Dforrest' AND
              |   data_type='integral' AND bin_width=1 AND bin_unit='day_Dtime'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
-             | FROM datums
+             | FROM humidity
              | WHERE
-             |   astore_metric='humidity' AND data_metric='humidity__forecast__glen_Dforrest' AND
+             |   data_metric='humidity__forecast__glen_Dforrest' AND
              |   data_type='mean' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
-             | FROM datums
+             | FROM wind
              | WHERE
-             |   astore_metric='wind' AND data_metric='wind__forecast__glen_Dforrest' AND
+             |   data_metric='wind__forecast__glen_Dforrest' AND
              |   data_type='mean' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) AS sun__outdoor__rise
-             | FROM datums
+             | FROM sun
              | WHERE
-             |   astore_metric='sun' AND data_metric='sun__outdoor__rise' AND
+             |   data_metric='sun__outdoor__rise' AND
              |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) AS sun__outdoor__set
-             | FROM datums
+             | FROM sun
              | WHERE
-             |   astore_metric='sun' AND data_metric='sun__outdoor__set' AND
+             |   data_metric='sun__outdoor__set' AND
              |   data_type='epoch' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS sun__outdoor__azimuth
-             | FROM datums
+             | FROM sun
              | WHERE
-             |   astore_metric='sun' AND data_metric='sun__outdoor__azimuth' AND
+             |   data_metric='sun__outdoor__azimuth' AND
              |   data_type='point' AND bin_width=2 AND bin_unit='second'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   max(data_value) / first(data_scale) AS sun__outdoor__altitude
-             | FROM datums
+             | FROM sun
              | WHERE
-             |   astore_metric='sun' AND data_metric='sun__outdoor__altitude'
+             |   data_metric='sun__outdoor__altitude'
              |   AND data_type='point' AND bin_width=2 AND bin_unit='second'
              | GROUP BY datum__bin__date
-              """.stripMargin,
+                  """.stripMargin,
           s"""
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
              |   last(data_string) AS conditions__forecast__glen_Dforrest
-             | FROM datums
+             | FROM conditions
              | WHERE
-             |   astore_metric='conditions' AND data_metric='conditions__forecast__glen_Dforrest'
+             |   data_metric='conditions__forecast__glen_Dforrest'
              |   AND data_type='enumeration' AND bin_width=1 AND bin_unit='day'
              | GROUP BY datum__bin__date
-              """.stripMargin)
+                  """.stripMargin)
           .map(spark.sql).reduce(_.join(_, "datum__bin__date"))
           .where($"datum__bin__date" < new SimpleDateFormat(dateFormat).format(Calendar.getInstance().getTime))
         DaysBlacklist.foreach(day => outputAll = outputAll.where($"datum__bin__date" =!= day))
-        outputAll = outputAll.coalesce(1).orderBy("datum__bin__date")
+        outputAll = outputAll.coalesce(1).orderBy("datum__bin__date").cache()
         addResult("All data:")
         addResult("  " + outputAll.columns.mkString(","))
         outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
@@ -246,12 +260,12 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
             .agg(last("datum__bin__date").as("datum__bin__date"))
             .orderBy("datum__bin__date")
           ).drop("conditions__forecast__glen_Dforrest").orderBy("datum__bin__date")
-          .dropDuplicates().coalesce(1)
+          .dropDuplicates().coalesce(1).cache()
         outputTrain = Some(outputAll.join(outputTrainDays, Seq("datum__bin__date"), "leftanti").
-          sort(asc("datum__bin__date")).coalesce(1))
+          sort(asc("datum__bin__date")).coalesce(1).cache())
         outputTrain.get.write.option("header", "true").csv(outputPath.toString + "/train" + outputPathSuffix)
         outputTest = Some(outputAll.join(outputTrainDays, Seq("datum__bin__date"), "inner").
-          sort(asc("datum__bin__date")).coalesce(1))
+          sort(asc("datum__bin__date")).coalesce(1).cache())
         outputTest.get.write.option("header", "true").csv(outputPath.toString + "/test" + outputPathSuffix)
       }
       else {
