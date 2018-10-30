@@ -219,6 +219,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
   //noinspection ScalaUnusedSymbol
   override def execute(): Int = {
     val exit = SUCCESS
+    var sparkUsed = false
     val spark = SparkSession.builder.config(new SparkConf).appName(
       getConf.get(CONF_CLDR_JOB_NAME, "asystem-astore-process-" + inputMode.toString.toLowerCase)).getOrCreate()
     import spark.implicits._
@@ -254,27 +255,31 @@ class Process(config: Configuration) extends DriverSpark(config) {
           val filesProcessedTodoRedo = filesProcessedSets.keySet.union(filesProcessedRedo.keySet)
           val filesProcessedPath = s"$inputOutputPath/${filesCount.zipWithIndex.min._2}" +
             s"/asystem/astore/processed/canonical/parquet/dict/snappy"
-          if (filesProcessedTodo(("*", "*")).nonEmpty) filesProcessedTodo(("*", "*")).flatMap(filesProcessedTodoParent => {
-            try {
-              Some(spark.read.avro(filesProcessedTodoParent))
-            } catch {
-              case exception: IOException => if (Log.isWarnEnabled())
-                Log.warn("Driver [" + this.getClass.getSimpleName + "] encountered IO issue reading ["
-                  + filesProcessedTodoParent + "], ignoring and continuing")
-                None
-            }
-          })
-            .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
-            .withColumn("astore_version", fileVersion)
-            .withColumn("astore_year", year(to_date(from_unixtime($"bin_timestamp"))))
-            .withColumn("astore_month", month(to_date(from_unixtime($"bin_timestamp"))))
-            .withColumn("astore_model", fileModel)
-            .withColumn("astore_metric", substring_index($"data_metric", "__", 1))
-            .repartition(filesProcessedTodoRedo.size,
-              $"astore_version", $"astore_year", $"astore_month", $"astore_model", $"astore_metric")
-            .write.mode("append")
-            .partitionBy("astore_version", "astore_year", "astore_month", "astore_model", "astore_metric")
-            .parquet(filesProcessedPath)
+          if (filesProcessedTodo(("*", "*")).nonEmpty) {
+            filesProcessedTodo(("*", "*")).flatMap(
+              filesProcessedTodoParent => {
+                try {
+                  Some(spark.read.avro(filesProcessedTodoParent))
+                } catch {
+                  case exception: IOException => if (Log.isWarnEnabled())
+                    Log.warn("Driver [" + this.getClass.getSimpleName + "] encountered IO issue reading ["
+                      + filesProcessedTodoParent + "], ignoring and continuing")
+                    None
+                }
+              })
+              .reduce((dataLeft: DataFrame, dataRight: DataFrame) => dataLeft.union(dataRight))
+              .withColumn("astore_version", fileVersion)
+              .withColumn("astore_year", year(to_date(from_unixtime($"bin_timestamp"))))
+              .withColumn("astore_month", month(to_date(from_unixtime($"bin_timestamp"))))
+              .withColumn("astore_model", fileModel)
+              .withColumn("astore_metric", substring_index($"data_metric", "__", 1))
+              .repartition(filesProcessedTodoRedo.size,
+                $"astore_version", $"astore_year", $"astore_month", $"astore_model", $"astore_metric")
+              .write.mode("append")
+              .partitionBy("astore_version", "astore_year", "astore_month", "astore_model", "astore_metric")
+              .parquet(filesProcessedPath)
+            sparkUsed = true
+          }
           val filesProcessedSuccess = new Path(filesProcessedPath, "_SUCCESS")
           if (dfs.exists(filesProcessedSuccess)) {
             dfs.delete(filesProcessedSuccess, true)
@@ -304,6 +309,7 @@ class Process(config: Configuration) extends DriverSpark(config) {
         case _ =>
       }
     } finally {
+      if (!sparkUsed) spark.sql("SELECT 1+1 AS no_op").collect()
       spark.close()
       val metaData = getMetaData(exit, timestampStart)
       addMetaDataCounter(metaData, PROCESSED_FILES_FAIL,
