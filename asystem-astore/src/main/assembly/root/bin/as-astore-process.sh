@@ -42,7 +42,7 @@ for PROCESS_STAGE in "${PROCESS_STAGES_ARRAY[@]}"; do
     "$S3_URL_ALIB/jar/"
 done
 
-if [[ "$WAIT_TASK" = "true" ]]; then
+if [[ "$WAIT_TASK" = "true" ]] && [[ "$DO_RELEASE" = "true" ]]; then
   if $ROOT_DIR/lib/py/process_release.py --connection_jar=$PROCESS_JAR --transaction_id=$PROCESS_TX; then
     if [[ "$DO_RELEASE" = "true" ]] && [[ "$DO_PRODUCTION" = "false" ]]; then
       $ROOT_DIR/bin/as-astore-process.sh "$WAIT_TASK" "true" "$PROCESS_STAGES" "false" "true"

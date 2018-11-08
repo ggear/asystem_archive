@@ -1,3 +1,5 @@
+#!/Users/graham/.conda/envs/python2/bin/python
+
 # @formatter:off
 #
 # TODO:
@@ -36,6 +38,8 @@
 # https://tech.kinja.com/how-not-to-pull-from-s3-using-apache-spark-1704509219
 # https://gist.githubusercontent.com/pjrt/f1cad93b154ac8958e65/raw/7b0b764408f145f51477dc05ef1a99e8448bce6d/S3Puller.scala
 # https://arrow.apache.org/blog/2017/07/26/spark-arrow
+# https://medium.com/@subhojit20_27731/apache-spark-and-amazon-s3-gotchas-and-best-practices-a767242f3d98
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/request-rate-perf-considerations.html
 #
 # @formatter:on
 
@@ -43,14 +47,7 @@ import re
 
 from boto.s3.connection import S3Connection
 
-processed_re = re.compile(
-    "(.*)/asystem/astore/processed/canonical/parquet/dict/snappy"
-    "/astore_version=(.*)"
-    "/astore_year=(.*)"
-    "/astore_month=(.*)"
-    "/astore_model=(.*)"
-    "/astore_metric=(.*)/(.*)")
-staged_re = re.compile(
+re_staged_original = re.compile(
     "(.*)/asystem/astore/staged/canonical/avro/binary/snappy"
     "/arouter_version=(.*)"
     "/arouter_id=(.*)"
@@ -59,43 +56,32 @@ staged_re = re.compile(
     "/arouter_finish=(.*)"
     "/arouter_model=(.*)/(.*)")
 
-
-def build_new_path(path):
-    match = staged_re.match(path)
-    if match:
-        return (
-            match.group(1) + "_asystem_astore_staged_canonical_avro_binary_snappy/arouter_version=" + match.group(2) + "_" + match.group(7)
-            + "/arouter_id=" + match.group(3)
-            + "/arouter_ingest=" + match.group(4) + "_" + match.group(5) + "_" + match.group(6)
-            , match.group(8))
-    match = processed_re.match(path)
-    if match:
-        return (
-            match.group(1) + "_asystem_astore_processed_canonical_parquet_dict_snappy/astore_version=" + match.group(2) + "_" + match.group(
-                5)
-            + "/astore_month=" + match.group(3) + "_" + match.group(4)
-            + "/astore_metric=" + match.group(6)
-            , match.group(7))
+re_processed_original = re.compile(
+    "(.*)/asystem/astore/processed/canonical/parquet/dict/snappy"
+    "/astore_version=(.*)"
+    "/astore_year=(.*)"
+    "/astore_month=(.*)"
+    "/astore_model=(.*)"
+    "/astore_metric=(.*)/(.*)")
 
 
-# path = "../../../test/resources/data/astore/datums/pristine"
-# for paths, dirs, files in os.walk(path):
-#     for file in files:
-#         path_old = os.path.join(paths, file).replace(path + "/", "")
-#         path_new = build_new_path(path_old)
-#         if path_new:
-#             path_new_root = os.path.join(path, path_new[0])
-#             print("{} =>\n{}/{}".format(path_old, path_new[0], path_new[1]))
-#             if not os.path.isdir(path_new_root): os.makedirs(path_new_root)
-#             os.rename(os.path.join(path, path_old), os.path.join(path_new_root, path_new[1]))
+def list_all(path):
+    return (False, None)
 
-bucket_name = "asystem-astore-staging"
-connection = S3Connection()
-bucket = connection.get_bucket(bucket_name)
-for key in list(bucket.list()):
-    path_new = build_new_path(key.name)
-    if path_new:
-        key_new = path_new[0] + "/" + path_new[1]
-        print("{} =>\n{}".format(key.name, key_new))
-        bucket.copy_key(key_new, bucket_name, key.name)
-        bucket.delete_key(key.name)
+def drop_staged(path):
+    return (re_staged_original.match(path) is not None, None)
+
+
+def run(refactor):
+    bucket_name = "asystem-astore-staging"
+    connection = S3Connection()
+    bucket = connection.get_bucket(bucket_name)
+    for key in list(bucket.list()):
+        refactored = refactor(key.name)
+        if refactored:
+            if refactored[1]: bucket.copy_key(refactored[1], bucket_name, key.name)
+            if refactored[0]: bucket.delete_key(key.name)
+            print("{} =>\n  {}".format(key.name, refactored[1]))
+
+run(list_all)
+#run(drop_staged)
