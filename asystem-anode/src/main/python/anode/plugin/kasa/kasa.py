@@ -10,12 +10,12 @@ from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
 PLUGS = {
-    # "filter": "192.168.2.40",
-    # "kettle": "192.168.2.41",
-    # "fridge": "192.168.2.42",
-    # "freezer": "192.168.2.43",
-    "toaster": "192.168.2.44",
-    # "booster": "192.168.2.45",
+    "adhoc": "192.168.2.60",
+    "filter": "192.168.2.61",
+    "fridge": "192.168.2.62",
+    "freezer": "192.168.2.63",
+    "booster": "192.168.2.64",
+    "servers": "192.168.2.65",
 }
 
 

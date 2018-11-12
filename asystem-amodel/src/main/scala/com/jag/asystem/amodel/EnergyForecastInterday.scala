@@ -283,6 +283,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         recordsTest = outputTest.get.count()
       }
     } finally {
+      spark.catalog.clearCache()
       spark.close()
       val metaData = getMetaData(exit, timestampStart)
       addMetaDataCounter(metaData, TRAINING_INSTANCES, recordsTrain)
