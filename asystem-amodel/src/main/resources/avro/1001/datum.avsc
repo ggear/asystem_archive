@@ -409,15 +409,15 @@
           "mbar",
           "_P24",
           "_P25",
+          "scalar",
+          "datums",
           "m_P2Fs",
           "km_P2Fh",
           "mm_P2Fh",
           "KB_P2Fs",
           "MB_P2Fs",
           "_PC2_PB0",
-          "_PC2_PB0C",
-          "scalar",
-          "datums"
+          "_PC2_PB0C"
         ]
       },
       "default": "__"

@@ -12,7 +12,7 @@ save_seconds: 14400
 plugin:
   fronius:
     poll_seconds: 1
-    buffer_ticks: 60
+    buffer_ticks: 120
     history_partitions: 5
     history_ticks: 3500000
     history_partition_seconds: 86400
@@ -22,7 +22,7 @@ plugin:
     publish_upstream: True
   kasa:
     poll_seconds: 1
-    buffer_ticks: 30
+    buffer_ticks: 110
     history_partitions: 5
     history_ticks: 3500000
     history_partition_seconds: 86400
