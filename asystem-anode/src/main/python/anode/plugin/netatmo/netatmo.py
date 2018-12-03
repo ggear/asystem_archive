@@ -80,7 +80,7 @@ class Netatmo(Plugin):
             for device in dict_content["body"]["devices"]:
                 module_name = "__indoor__" + device["module_name" if device["type"] == "NAMain" else (
                     "station_name" if "station_name" in device else "name")].lower().encode("UTF-8")
-                if module_name != "__indoor__ignore":
+                if module_name != "__indoor__ignore" and "dashboard_data" in device:
                     data_timestamp = device["dashboard_data"]["time_utc"]
                     self.datum_push(
                         "temperature" + module_name,
@@ -192,7 +192,7 @@ class Netatmo(Plugin):
                     for device_sub in device["modules"]:
                         module_name = (("__indoor__" if device_sub["type"] == "NAModule4" else "__outdoor__") +
                                        device_sub["module_name"].lower()).encode("UTF-8")
-                        if module_name != "__outdoor__ignore":
+                        if module_name != "__outdoor__ignore" and "dashboard_data" in device_sub:
                             data_timestamp = device_sub["dashboard_data"]["time_utc"]
                             self.datum_push(
                                 "temperature" + module_name,
