@@ -60,6 +60,7 @@ class ANodeTest(TestCase):
         shutil.copytree(DIR_ROOT + "/src/main/python/anode/test/pickle", state_dir + "/anode")
         shutil.rmtree(DIR_ANODE_TMP, ignore_errors=True)
         os.makedirs(DIR_ANODE_DB_TMP)
+        shutil.rmtree(DIR_ASYSTEM_TMP, ignore_errors=True)
         print("")
 
     @staticmethod
@@ -278,21 +279,25 @@ class ANodeTest(TestCase):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_BARE, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, iterations=5)
         self.assertRest(0, anode, "/rest", False)
+        anode.stop_server()
 
     def test_null(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, True, False)
         self.assertRest(0, anode, "/rest", False)
+        anode.stop_server()
 
     def test_corrupt(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, True)
         self.assertRest(9, anode, "/rest/?metrics=internet&types=point")
+        anode.stop_server()
 
     def test_random(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(True, True, False, False, iterations=5)
         self.assertRest(0, anode, "/rest", False)
+        anode.stop_server()
 
     def test_coverage(self):
         for arguments in [
@@ -302,6 +307,7 @@ class ANodeTest(TestCase):
             self.patch(sys, "argv", arguments)
             anode = self.anode_init(False, True, False, False)
             metrics, metrics_anode = self.metrics_count(anode)
+            anode.stop_server()
             for filter_scope in [None, "last", "publish", "history"]:
                 for filter_format in [None, "json", "csv"]:
                     anode = self.anode_init(False, True, False, False)
@@ -453,6 +459,7 @@ class ANodeTest(TestCase):
                         "/rest/?" +
                         (("&format=" + filter_format) if filter_format is not None else "") +
                         (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
+                    anode.stop_server()
 
     def test_wide(self):
         metrics_period10 = 402
@@ -488,6 +495,7 @@ class ANodeTest(TestCase):
                                     "/rest/?scope=history&format=csv&print=pretty&period=20" +
                                     (("&method=" + filter_method) if filter_method is not None else "") +
                                     (("&fill=" + fitler_fill) if fitler_fill is not None else ""), True)
+            anode.stop_server()
 
     def test_bounded(self):
         period = 1
@@ -496,6 +504,7 @@ class ANodeTest(TestCase):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_BOUNDED_TICKS, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(266, anode, "/rest/?metrics=power&scope=history", True)[1]
+        anode.stop_server()
         for config in [
             FILE_CONFIG_FRONIUS_BOUNDED_TICKS,
             FILE_CONFIG_FRONIUS_BOUNDED_PARTITIONS
@@ -521,6 +530,7 @@ class ANodeTest(TestCase):
                             anode,
                             "/rest/?metrics=power&scope=history",
                             True)
+            anode.stop_server()
 
     def test_unbounded(self):
         period = 1
@@ -529,6 +539,7 @@ class ANodeTest(TestCase):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_LARGE, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=iterations)
         metrics = self.assertRest(1527, anode, "/rest/?scope=history", True)[1]
+        anode.stop_server()
         for config in [
             FILE_CONFIG_FRONIUS_UNBOUNDED_DAY,
             FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL,
@@ -555,6 +566,7 @@ class ANodeTest(TestCase):
                             anode,
                             "/rest/?scope=history",
                             True)
+            anode.stop_server()
 
     def test_publish(self):
         period = 100
@@ -572,6 +584,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?scope=publish&format=csv",
                         True)
+        anode.stop_server()
 
     def test_temporal(self):
         period = 1
@@ -597,6 +610,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?scope=history&format=csv&print=pretty&metrics=energy.export.grid&bins=1day&types=integral",
                         True)
+        anode.stop_server()
 
     def test_dailies(self):
         period = 1
@@ -875,6 +889,7 @@ class ANodeTest(TestCase):
                                           anode,
                                           "/rest/?scope=history&print=pretty&format=csv&metrics=consumption-off-peak.g&bins=1day",
                                           True)[0]["Grid (1 Day)"][5])
+        anode.stop_server()
 
     def test_state(self):
         period = 1
@@ -934,6 +949,7 @@ class ANodeTest(TestCase):
                                           anode,
                                           "/rest/?scope=history&format=csv&metrics=energy.export.grid&bins=1day&types=integral",
                                           True)[0]["bin_timestamp"][iterations - 1])
+        anode.stop_server()
         self.setUp()
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_DB, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=(iterations * 11))
@@ -961,6 +977,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?scope=history&metrics=power",
                         True)
+        anode.stop_server()
 
     def test_pickled(self):
         period = 1
@@ -1026,6 +1043,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=energy",
                         True)
+        anode.stop_server()
 
     def test_partition(self):
         period = 1
@@ -1060,6 +1078,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=power.export.grid&types=point&scope=history&format=csv&print=pretty&partitions=" +
                         "a", True)
+        anode.stop_server()
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_FRONIUS_UNBOUNDED_SMALL_REPEAT_PARTITION, "-d" + DIR_ANODE_DB_TMP, "-s"])
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.clock_tick(anode, 1, 2 * 2460 * 60 + 1, True)
@@ -1067,6 +1086,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=power.consumption.grid&types=point&scope=history&format=csv&print=pretty&partitions=1",
                         True)
+        anode.stop_server()
 
     def test_repeat(self):
         period = 10
@@ -1150,6 +1170,7 @@ class ANodeTest(TestCase):
                                               "/rest/?metrics=energy.consumption.grid&types=integral&bins=1day&scope=history&format=csv"
                                               "&print=pretty",
                                               True)[0]["Grid (1 Day)"].iloc([[-1]])[-1])
+            anode.stop_server()
 
     def test_filter(self):
         period = 1
@@ -1220,6 +1241,7 @@ class ANodeTest(TestCase):
                             "/rest/?metrics=power.production.inverter&types=point&scope=history&format=csv&print=pretty" +
                             "&finish=" + str(TIME_START_OF_DAY - 1) +
                             "&start=" + str(TIME_START_OF_DAY + period * iterations + 1), True)
+            anode.stop_server()
 
     def test_bad_plots(self):
         period = 1
@@ -1276,6 +1298,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?format=svg",
                         False, True)
+        anode.stop_server()
 
     def test_good_plots(self):
         self.patch(sys, "argv", ["anode", "-c" + FILE_CONFIG_ALL, "-d" + DIR_ANODE_DB, "-s"])
@@ -1324,6 +1347,7 @@ class ANodeTest(TestCase):
                             "/rest/?metrics=temperature.indoor.shed&metrics=temperature.outdoor.roof&bins=2second&bins=1day&units=°C"
                             "&types=point&types=integral&types=mean&scope=history&print=pretty&format=svg" + parameters,
                             False, True)
+        anode.stop_server()
 
     def test_models(self):
         if TEST_INTEGRATION:
@@ -1339,6 +1363,7 @@ class ANodeTest(TestCase):
                                 anode,
                                 "/rest/?metrics=energy.production-forecast",
                                 False)
+                anode.stop_server()
             finally:
                 test_integration = False
                 test_integration_tests.clear()
@@ -1351,6 +1376,7 @@ class ANodeTest(TestCase):
                         anode,
                         "/rest/?metrics=ping.internet.perth&types=point",
                         False, True)
+        anode.stop_server()
 
 
 # noinspection PyPep8Naming,PyStatementEffect,PyUnusedLocal
@@ -1456,6 +1482,7 @@ DIR_ANODE = DIR_TARGET + "/anode-runtime"
 DIR_ANODE_DB = DIR_ANODE + "/config"
 DIR_ANODE_TMP = DIR_TARGET + "/anode-runtime-tmp"
 DIR_ANODE_DB_TMP = DIR_ANODE_TMP + "/config"
+DIR_ASYSTEM_TMP = "/tmp/asystem"
 
 FILE_SVG_HTML = DIR_TEST + "/web/index.html"
 

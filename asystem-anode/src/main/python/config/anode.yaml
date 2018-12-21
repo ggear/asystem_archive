@@ -7,8 +7,9 @@ model_pull_seconds: 30
 model_pull_region: 'ap-southeast-2'
 model_pull_bucket: 'asystem-amodel'
 model_pull_bucket_snapshot: '-staging'
+history_path: '/mnt/timecapsule'
 save_on_exit: True
-save_seconds: 14400
+save_seconds: 1800
 plugin:
   fronius:
     poll_seconds: 1

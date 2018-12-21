@@ -40,6 +40,7 @@ from cycler import cycler
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.externals import joblib
+from twisted.internet import threads
 from twisted.internet.task import Clock
 from twisted_s3 import auth
 
@@ -409,6 +410,7 @@ class Plugin(object):
                     datums_df = datums_df[0]
                     if bin_timestamp_partition not in datums_history:
                         datums_history[bin_timestamp_partition] = datums_df
+                        threads.deferToThread(self.datums_store_history, bin_timestamp_partition, datums_history, True)
                     else:
                         datums_history[bin_timestamp_partition]["data_df"] = pandas.concat(
                             [datums_history[bin_timestamp_partition]["data_df"],
@@ -1143,6 +1145,33 @@ class Plugin(object):
                                          lambda: "[{}] setting value {} to default [{}] from response [{}] due to error [{}]".format(
                                              self.name, keys, default, data, exception), exception)
             return None if default is None else int(default * factor)
+
+    def datums_store_history(self, datum_partition, datums_history, off_thread=False):
+        log_timer = anode.Log(logging.INFO).start()
+        if "store" in self.config:
+            partitions = []
+            datums_count = 0
+            datums_key = "/".join(["datums",
+                                   datums_history[datum_partition]["data_metric"],
+                                   datums_history[datum_partition]["data_type"],
+                                   datums_history[datum_partition]["data_unit"],
+                                   datums_history[datum_partition]["bin_unit"] + str(datums_history[datum_partition]["bin_width"])])
+            datums_metadata = self.config["store"].select("metadata") if "metadata" in self.config["store"] else None
+            for partition in datums_history:
+                if partition < datum_partition:
+                    datums_key_partition = datums_key + "/" + str(partition)
+                    if datums_metadata is None or datums_key_partition not in datums_metadata.index:
+                        datums_metadata_new = pandas.DataFrame({"key_partition": [datums_key_partition]}).set_index("key_partition")
+                        datums_metadata = datums_metadata_new if datums_metadata is None \
+                            else datums_metadata.append(datums_metadata_new)
+                        partitions.append(partition)
+            for partition in partitions:
+                datums_count += len(datums_history[partition]["data_df"].index)
+                self.config["store"].append(datums_key, datums_history[partition]["data_df"])
+            if len(partitions) > 0: self.config["store"].put("metadata", datums_metadata)
+        log_timer.log("Plugin", "timer",
+                      lambda: "[{}] history stored [{}] partitions and [{}] datums".format(self.name, len(partitions), datums_count),
+                      context=self.datums_store_history, off_thread=False)
 
     def datums_store(self):
         log_timer = anode.Log(logging.INFO).start()

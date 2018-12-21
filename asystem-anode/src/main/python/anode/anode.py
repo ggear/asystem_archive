@@ -17,6 +17,7 @@ from mqtt.client import publisher
 from mqtt.client.base import MQTTBaseProtocol
 from mqtt.client.factory import MQTTFactory
 from mqtt.error import MQTTStateError
+from pandas import HDFStore
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet import reactor
 from twisted.internet import threads
@@ -55,6 +56,10 @@ class ANode:
         self.options = options
         self.config = config
         self.plugins = {}
+        if "history_path" in self.config:
+            history_path = self.config["history_path"] + "/asystem/astore/datums.h5"
+            if not os.path.exists(os.path.dirname(history_path)): os.makedirs(os.path.dirname(history_path))
+            self.store = HDFStore(self.config["history_path"] + "/asystem/astore/datums.h5")
         self.web_ws = WebWsFactory(u"ws://" + self.config["host"] + ":" + str(self.config["port"]), self)
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
@@ -92,6 +97,7 @@ class ANode:
                                                                   APP_VERSION.endswith("-SNAPSHOT")) else "")}, self.core_reactor)
             looping_call(model_pull.poll, self.config["model_pull_seconds"])
         for plugin_name in self.config["plugin"]:
+            if "history_path" in self.config: self.config["plugin"][plugin_name]["store"] = self.store
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
             self.config["plugin"][plugin_name]["publish_upstream"] = self.publish_upstream and \
@@ -179,8 +185,8 @@ class ANode:
     def stop_server(self):
         log_timer = Log(logging.DEBUG).start()
         Log(logging.INFO).log("Service", "state", lambda: "[anode] stopping")
-        if "save_on_exit" in self.config:
-            self.store_state()
+        if "save_on_exit" in self.config: self.store_state()
+        if "history_path" in self.config: self.store.close()
         log_timer.log("Service", "timer", lambda: "[anode] stopped", context=self.stop_server)
         return succeed(None)
 

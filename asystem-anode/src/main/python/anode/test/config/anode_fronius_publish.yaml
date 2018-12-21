@@ -3,6 +3,7 @@ port: 8091
 publish_host: 37.187.106.16
 publish_port: 1883
 publish_seconds: 10
+history_path: '/mnt/timecapsule'
 plugin:
   fronius:
     poll_seconds: 100

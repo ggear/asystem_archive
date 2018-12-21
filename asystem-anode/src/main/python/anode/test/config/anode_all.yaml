@@ -3,6 +3,7 @@ port: 8091
 save_on_exit: True
 save_seconds: -1
 model_pull_seconds: 1
+history_path: '/mnt/timecapsule'
 plugin:
   fronius:
     poll_seconds: 1
