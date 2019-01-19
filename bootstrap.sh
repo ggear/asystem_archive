@@ -26,6 +26,11 @@ function mode_execute {
   elif [ "${MODE}" = "prepare" ]; then
 
     echo "" && echo "" && echo "" && echo "Prepare [asystem]"
+    ./bootstrap.sh prepare_bastion
+
+  elif [ "${MODE}" = "prepare_bastion" ]; then
+
+    echo "" && echo "" && echo "" && echo "Prepare bastion [asystem]"
     ec2-instance-resize ${CLOUD_HOST_ID} "c4.2xlarge" "true"
     ssh -tt ${CLOUD_HOST_IP} << EOF
       sudo service cloudera-scm-server-db start
@@ -50,8 +55,13 @@ EOF
   elif [ "${MODE}" = "teardown" ]; then
 
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
-    ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro" "false"
+    ./bootstrap.sh teardown_bastion
     ./bootstrap.sh teardown_cluster
+
+  elif [ "${MODE}" = "teardown_bastion" ]; then
+
+    echo "" && echo "" && echo "" && echo "Teardown bastion [asystem]"
+    ec2-instance-resize ${CLOUD_HOST_ID} "t2.micro" "false"
 
   elif [ "${MODE}" = "teardown_cluster" ]; then
 
@@ -258,7 +268,7 @@ function usage {
     echo "  download | download_anode"
     echo "  checkout | checkout_snapshot | checkout_release"
     echo "  compile | build | package | test | release | release_remote | deploy | merge"
-    echo "  prepare | prepare_cluster | teardown | teardown_cluster"
+    echo "  prepare | prepare_bastion | prepare_cluster | teardown | teardown_bastion | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
     echo ""
     exit 1
@@ -278,18 +288,18 @@ function build_package {
 }
 
 function ec2-instance-resize {
-  ec2-stop-instances "$1"
+  aws ec2 stop-instances --instance-ids "$1"
   for TICK in {720..1}; do
-    if [ $(ec2-describe-instance-status -A "$1" | grep stopped | wc -l) -gt 0 ]; then
-      ec2-modify-instance-attribute "$1" --instance-type "$2"
+    if [ $(aws ec2 describe-instance-status --include-all-instances --instance-id "$1" | grep stopped | wc -l) -gt 0 ]; then
+      aws ec2 modify-instance-attribute --instance-id "$1" --instance-type "$2"
       break
     fi
     sleep 1
   done
-  ec2-start-instances "$1"
+  aws ec2 start-instances --instance-ids "$1"
   for TICK in {720..1}; do
-    if [ $(ec2-describe-instance-status -A "$1" | grep running | wc -l) -gt 0 ]; then
-      ec2-describe-instance-status "$1"
+    if [ $(aws ec2 describe-instance-status --include-all-instances --instance-id "$1" | grep running | wc -l) -gt 0 ]; then
+      aws ec2 describe-instance-status --include-all-instances --instance-id "$1"
       break
     fi
     sleep 1
