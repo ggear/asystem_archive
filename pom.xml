@@ -49,7 +49,7 @@
         </repository>
         <repository>
             <id>cloudera-framework-snapshots</id>
-            <url>http://macmini-sheryl:8071/artifactory/libs-snapshots-local</url>
+            <url>http://macmini-sheryl:8071/artifactory/libs-snapshot-local</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
