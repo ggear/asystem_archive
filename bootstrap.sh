@@ -26,7 +26,18 @@ function mode_execute {
   elif [ "${MODE}" = "prepare" ]; then
 
     echo "" && echo "" && echo "" && echo "Prepare [asystem]"
-    ./bootstrap.sh prepare_bastion
+    ./bootstrap.sh prepare_local
+
+  elif [ "${MODE}" = "prepare_local" ]; then
+
+    echo "" && echo "" && echo "" && echo "Prepare local [asystem]"
+		sudo launchctl load -w /Library/LaunchDaemons/org.jenkins-ci.plist
+		sudo launchctl list org.jenkins-ci
+		#open http://macmini-sheryl:8070
+
+		sudo launchctl load -w /Library/LaunchDaemons/com.artifactory.plist
+		sudo launchctl list com.artifactory
+		#open http://macmini-sheryl:8071
 
   elif [ "${MODE}" = "prepare_bastion" ]; then
 
@@ -57,6 +68,12 @@ EOF
     echo "" && echo "" && echo "" && echo "Teardown [asystem]"
     ./bootstrap.sh teardown_bastion
     ./bootstrap.sh teardown_cluster
+
+  elif [ "${MODE}" = "teardown_local" ]; then
+
+    echo "" && echo "" && echo "" && echo "Teardown local [asystem]"
+		sudo launchctl unload -w /Library/LaunchDaemons/org.jenkins-ci.plist
+		sudo launchctl unload -w /Library/LaunchDaemons/com.artifactory.plist
 
   elif [ "${MODE}" = "teardown_bastion" ]; then
 
@@ -268,7 +285,7 @@ function usage {
     echo "  download | download_anode"
     echo "  checkout | checkout_snapshot | checkout_release"
     echo "  compile | build | package | test | release | release_remote | deploy | merge"
-    echo "  prepare | prepare_bastion | prepare_cluster | teardown | teardown_bastion | teardown_cluster"
+    echo "  prepare | prepare_local | prepare_bastion | prepare_cluster | teardown | teardown_local | teardown_bastion | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
     echo ""
     exit 1
