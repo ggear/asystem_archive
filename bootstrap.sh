@@ -185,12 +185,12 @@ EOF
     mvn release:prepare -B \
       -DreleaseVersion=${VERSION_RELEASE} \
       -DdevelopmentVersion=${VERSION_HEAD}-SNAPSHOT -PPKG -Dresume=false
+    mvn release:perform -PPKG
     mvn release:clean
     mvn clean install -PPKG
     git add -A
     git commit -m "Update generated files for asystem-${VERSION_HEAD}-SNAPSHOT"
     git push --all
-    git tag
 
   elif [ "${MODE}" = "release_local" ]; then
 
