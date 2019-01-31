@@ -170,7 +170,7 @@ EOF
     [[ -n "$(git status --porcelain)" ]] && exit 1
     git checkout master
     git remote set-url origin git@github.com:ggear/asystem.git
-    mvn clean install -PCMP -pl .
+    mvn release:clean clean install -PCMP -pl .
     VERSION_RELEASE=$(grep APP_VERSION= target/classes/application.properties | sed 's/APP_VERSION=*//' | sed 's/-SNAPSHOT*//')
     VERSION_HEAD_NUMERIC=$(($(echo $VERSION_RELEASE | sed 's/\.//g')+1))
     VERSION_HEAD=${VERSION_HEAD_NUMERIC:0:2}.${VERSION_HEAD_NUMERIC:2:3}.${VERSION_HEAD_NUMERIC:5:4}
