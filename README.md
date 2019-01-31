@@ -36,11 +36,18 @@ To deploy the latest release to production:
 
 ## Pipeline
 
-To perform a full release, deploy, run pipeline:
+To perform a full local release, deploy pipeline:
+
+```bash
+./bootstrap.sh checkout_snapshot prepare_local release_local deploy_anode teardown_local
+```
+
+and do to do it remotely with an aditional run step: 
 
 ```bash
 ./bootstrap.sh checkout_snapshot prepare release_remote checkout_release run teardown_cluster checkout_snapshot deploy teardown download
 ```
+
 
 ## Videos
 
