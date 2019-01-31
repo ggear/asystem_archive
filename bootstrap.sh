@@ -205,6 +205,12 @@ EOF
   elif [ "${MODE}" = "deploy" ]; then
 
     echo "" && echo "" && echo "" && echo "Deploy [asystem-arouter]"
+    ./bootstrap.sh deploy_arouter
+    ./bootstrap.sh deploy_anode
+
+  elif [ "${MODE}" = "deploy_arouter" ]; then
+
+    echo "" && echo "" && echo "" && echo "Deploy [asystem-arouter]"
     ssh -tt ${AROUTER_HOST_IP} << EOF
       cd dev/asystem
       git checkout master
@@ -215,6 +221,9 @@ EOF
       mvn clean deploy -pl asystem-arouter -PPKG -am -Dmaven.install-flume.skip=false -U
       exit
 EOF
+
+  elif [ "${MODE}" = "deploy_anode" ]; then
+
     echo "" && echo "" && echo "" && echo "Deploy [asystem-anode]"
     ssh -tt janeandgraham.com -p 8092 << EOF
       cd dev/asystem
@@ -284,9 +293,10 @@ function usage {
     echo "  environment |"
     echo "  download | download_anode"
     echo "  checkout | checkout_snapshot | checkout_release"
-    echo "  compile | build | package | test | release | release_remote | deploy | merge"
+    echo "  compile | build | package | test | release | release_remote | merge"
     echo "  prepare | prepare_local | prepare_bastion | prepare_cluster | teardown | teardown_local | teardown_bastion | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
+    echo "  deploy | deploy_anode | deploy_arouter"
     echo ""
     exit 1
 }
