@@ -56,8 +56,12 @@ public class EnergyForecastTest implements TestConstants {
     driver.getConf().set(Driver.CONF_CLDR_JOB_GROUP, "test-asystem-amodel-energyforecast");
     driver.getConf().set(Driver.CONF_CLDR_JOB_NAME, "test-asystem-amodel-energyforecast-validation");
     driver.getConf().set(Driver.CONF_CLDR_JOB_VERSION, getApplicationProperty("APP_VERSION"));
-    driver.getConf().set(CONF_CLDR_JOB_METADATA, "true");
-    driver.pollMetaData(driver.getMetaData(0, null, null));
+
+    // Disable detection of Cloudera Navigator
+    driver.getConf().set(CONF_CLDR_JOB_METADATA, "false");
+    // driverRead.getConf().set(CONF_CLDR_JOB_METADATA, "true");
+    // driverRead.pollMetaData(driverRead.getMetaData(0, null, null));
+
     assertEquals(SUCCESS, driver.runner(
       dfsServer.getPath(DATASET_DIR_ASTORE).toString(), dfsServer.getPath(DATASET_DIR_AMODEL_ENERGYFORECAST_INTERDAY).toString()));
     assertCounterEquals(testMetaData, driver.getCounters());
