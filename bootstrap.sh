@@ -192,6 +192,11 @@ EOF
     git push --all
     git tag
 
+  elif [ "${MODE}" = "release_local" ]; then
+
+    echo "" && echo "" && echo "" && echo "Release local [asystem-arouter]"
+    ./bootstrap.sh checkout_snapshot release
+
   elif [ "${MODE}" = "release_remote" ]; then
 
     echo "" && echo "" && echo "" && echo "Release remote [asystem-arouter]"
@@ -293,7 +298,7 @@ function usage {
     echo "  environment |"
     echo "  download | download_anode"
     echo "  checkout | checkout_snapshot | checkout_release"
-    echo "  compile | build | package | test | release | release_remote | merge"
+    echo "  compile | build | package | test | release | release_local | release_remote | merge"
     echo "  prepare | prepare_local | prepare_bastion | prepare_cluster | teardown | teardown_local | teardown_bastion | teardown_cluster"
     echo "  run | run_anode | run_amodel | run_astore"
     echo "  deploy | deploy_anode | deploy_arouter"
