@@ -33,11 +33,8 @@ function mode_execute {
     echo "" && echo "" && echo "" && echo "Prepare local [asystem]"
 		sudo launchctl load -w /Library/LaunchDaemons/org.jenkins-ci.plist
 		sudo launchctl list org.jenkins-ci
-		#open http://macmini-sheryl:8070
-
 		sudo launchctl load -w /Library/LaunchDaemons/com.artifactory.plist
 		sudo launchctl list com.artifactory
-		#open http://macmini-sheryl:8071
 
   elif [ "${MODE}" = "prepare_bastion" ]; then
 

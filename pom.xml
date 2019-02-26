@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.cloudera.framework</groupId>
         <artifactId>cloudera-framework-parent</artifactId>
-        <version>2.0.3-cdh5.15.1</version>
+        <version>2.0.4-cdh5.15.1</version>
     </parent>
 
     <properties>
@@ -30,6 +30,8 @@
         <maven.install-flume.skip>true</maven.install-flume.skip>
         <maven.install-python.skip>true</maven.install-python.skip>
 
+        <project.runtime.heap.max>4000</project.runtime.heap.max>
+
     </properties>
 
     <scm>
@@ -42,14 +44,14 @@
     <repositories>
         <repository>
             <id>cloudera-framework-releases</id>
-            <url>http://macmini-sheryl:8071/artifactory/libs-release-local</url>
+            <url>http://macmini-delila:8071/artifactory/libs-release-local</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
         </repository>
         <repository>
             <id>cloudera-framework-snapshots</id>
-            <url>http://macmini-sheryl:8071/artifactory/libs-snapshot-local</url>
+            <url>http://macmini-delila:8071/artifactory/libs-snapshot-local</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
