@@ -5,10 +5,7 @@
 #
 ###############################################################################
 
-if [ -z "${CDSW_PROJECT_URL}" ]; then
-  [[ -f "/etc/profile" ]] && . /etc/profile
-  [[ -f "/etc/bash.bashrc" ]] && . /etc/bash.bashrc
-fi
+[[ -z "${CDSW_PROJECT_URL}" ]] && [[ -f "/etc/profile" ]] && . /etc/profile
 
 CLOUD_HOST_ID="i-b2e18030"
 CLOUD_HOST_IP="52.63.86.162"
