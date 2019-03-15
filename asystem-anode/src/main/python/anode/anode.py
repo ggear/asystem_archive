@@ -56,10 +56,14 @@ class ANode:
         self.options = options
         self.config = config
         self.plugins = {}
+
+        # TODO: Reimplement when HDFS restored
+        if "history_path" in self.config: del self.config["history_path"]
         if "history_path" in self.config:
             history_path = self.config["history_path"] + "/asystem/astore/datums.h5"
             if not os.path.exists(os.path.dirname(history_path)): os.makedirs(os.path.dirname(history_path))
             self.store = HDFStore(self.config["history_path"] + "/asystem/astore/datums.h5")
+
         self.web_ws = WebWsFactory(u"ws://" + self.config["host"] + ":" + str(self.config["port"]), self)
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
