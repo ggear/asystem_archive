@@ -1,26 +1,25 @@
 #!/bin/sh
-# chkconfig:   <3,4,5> <start> <stop>
-# description: ANode deamon
-#
 ### BEGIN INIT INFO
 # Provides:          anode
-# Required-Start:    $weewx
-# Required-Stop:     $weewx
-# Default-Start:     3 4 5
-# Default-Stop:      0 1 2 6
-# Short-Description: ANode
-# Description:       ANode daemon
+# Required-Start:    $local_fs $remote_fs $network $syslog $named $weewx
+# Required-Stop:     $local_fs $remote_fs $network $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: ASystem ANode server
+# Description:       Start the ASystem ANode server
+#  This script will start the anode server.
 ### END INIT INFO
 
-PATH=/bin:/usr/bin
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/profile"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
-  $(/bin/grep AWS ${ANODE_ENV_FILE})
-  $(/bin/grep MQTT ${ANODE_ENV_FILE})
-  $(/bin/grep NETATMO ${ANODE_ENV_FILE})
-  $(/bin/grep PYTHON ${ANODE_ENV_FILE})
+  $(grep AWS ${ANODE_ENV_FILE})
+  $(grep MQTT ${ANODE_ENV_FILE})
+  $(grep NETATMO ${ANODE_ENV_FILE})
+  $(grep PYTHON ${ANODE_ENV_FILE})
 fi
 
 ANODE_LOCK=/var/lock/subsys/anode
@@ -46,7 +45,7 @@ start() {
     if [ -z ${ANODE_PATH} ]; then
       log_tail_failure "could not locate anode binary"
     else
-      mkdir -p $(/bin/dirname ${ANODE_PATH}) $(/bin/dirname ${ANODE_LOG_FILE})
+      mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
       nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
       if [ $? -eq 0 ]; then
         echo $! > ${ANODE_LOCK}
@@ -63,7 +62,7 @@ start() {
 stop() {
   log_head "Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    kill $(/bin/cat ${ANODE_LOCK}) 2> /dev/null
+    kill $(cat ${ANODE_LOCK}) 2> /dev/null
     kill_success=$?
     rm -f ${ANODE_LOCK} 2> /dev/null
     if [ ${kill_success} -eq 0 ]; then
