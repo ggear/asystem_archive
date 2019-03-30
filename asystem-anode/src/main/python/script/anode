@@ -12,13 +12,15 @@
 # Description:       ANode daemon
 ### END INIT INFO
 
+PATH=/bin:/usr/bin
+
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/profile"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
-  $(/bin/grep AWS ${ANODE_ENV_FILE})
-  $(/bin/grep MQTT ${ANODE_ENV_FILE})
-  $(/bin/grep NETATMO ${ANODE_ENV_FILE})
-  $(/bin/grep PYTHON ${ANODE_ENV_FILE})
+  $(grep AWS ${ANODE_ENV_FILE})
+  $(grep MQTT ${ANODE_ENV_FILE})
+  $(grep NETATMO ${ANODE_ENV_FILE})
+  $(grep PYTHON ${ANODE_ENV_FILE})
 fi
 
 ANODE_LOCK=/var/lock/subsys/anode
@@ -27,15 +29,15 @@ ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
 ANODE_PATH=${ANODE_PATH:-"$PYTHON2_HOME/bin/anode"}
 
 log_head() {
-  /bin/echo -n "$1"
+  echo -n "$1"
 }
 
 log_tail_success() {
-  /bin/echo "$1"
+  echo "$1"
 }
 
 log_tail_failure() {
-  /bin/echo "$1"
+  echo "$1"
 }
 
 start() {
@@ -44,10 +46,10 @@ start() {
     if [ -z ${ANODE_PATH} ]; then
       log_tail_failure "could not locate anode binary"
     else
-      /bin/mkdir -p $(/bin/dirname ${ANODE_PATH}) $(/bin/dirname ${ANODE_LOG_FILE})
-      /usr/bin/nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
+      mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
+      nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
       if [ $? -eq 0 ]; then
-        /bin/echo $! > ${ANODE_LOCK}
+        echo $! > ${ANODE_LOCK}
         log_tail_success "anode started"
       else
         log_tail_failure "anode failed to start"
@@ -61,9 +63,9 @@ start() {
 stop() {
   log_head "Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    /bin/kill $(/bin/cat ${ANODE_LOCK}) 2> /dev/null
-    /bin/kill_success=$?
-    /bin/rm -f ${ANODE_LOCK} 2> /dev/null
+    kill $(cat ${ANODE_LOCK}) 2> /dev/null
+    kill_success=$?
+    rm -f ${ANODE_LOCK} 2> /dev/null
     if [ ${kill_success} -eq 0 ]; then
       log_tail_success "anode stopped"
     else
@@ -98,7 +100,7 @@ case "$1" in
     status
     ;;
   *)
-    /bin/echo "Usage: $0 {start|stop|status}"
+    echo "Usage: $0 {start|stop|status}"
     exit 1
 esac
 
