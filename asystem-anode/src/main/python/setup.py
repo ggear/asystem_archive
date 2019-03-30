@@ -18,7 +18,7 @@ class CleanCommand(Command):
         pass
 
     def run(self):
-        os.system("rm -vrf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info {}/bin/{}".format(site.USER_BASE, NAME))
+        os.system("rm -vrf ./build ./dist ./*.pyc ./*.tgz ./*.egg* {}/bin/{}".format(site.USER_BASE, NAME))
 
 
 setup(
