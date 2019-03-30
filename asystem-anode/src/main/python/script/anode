@@ -16,10 +16,10 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/profile"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
-  $(grep AWS ${ANODE_ENV_FILE})
-  $(grep MQTT ${ANODE_ENV_FILE})
-  $(grep NETATMO ${ANODE_ENV_FILE})
-  $(grep PYTHON ${ANODE_ENV_FILE})
+  $(grep "export AWS" ${ANODE_ENV_FILE})
+  $(grep "export MQTT" ${ANODE_ENV_FILE})
+  $(grep "export NETATMO" ${ANODE_ENV_FILE})
+  $(grep "export PYTHON2" ${ANODE_ENV_FILE})
 fi
 
 ANODE_LOCK=/var/lock/subsys/anode
