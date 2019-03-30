@@ -17,10 +17,10 @@ PATH=/bin:/usr/bin
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/profile"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
-  $(grep AWS ${ANODE_ENV_FILE})
-  $(grep MQTT ${ANODE_ENV_FILE})
-  $(grep NETATMO ${ANODE_ENV_FILE})
-  $(grep PYTHON ${ANODE_ENV_FILE})
+  $(/bin/grep AWS ${ANODE_ENV_FILE})
+  $(/bin/grep MQTT ${ANODE_ENV_FILE})
+  $(/bin/grep NETATMO ${ANODE_ENV_FILE})
+  $(/bin/grep PYTHON ${ANODE_ENV_FILE})
 fi
 
 ANODE_LOCK=/var/lock/subsys/anode
@@ -46,7 +46,7 @@ start() {
     if [ -z ${ANODE_PATH} ]; then
       log_tail_failure "could not locate anode binary"
     else
-      mkdir -p $(dirname ${ANODE_PATH}) $(dirname ${ANODE_LOG_FILE})
+      mkdir -p $(/bin/dirname ${ANODE_PATH}) $(/bin/dirname ${ANODE_LOG_FILE})
       nohup ${ANODE_PATH} ${ANODE_OPTS} > ${ANODE_LOG_FILE} 2>&1 &
       if [ $? -eq 0 ]; then
         echo $! > ${ANODE_LOCK}
@@ -63,7 +63,7 @@ start() {
 stop() {
   log_head "Stopping anode: "
   if [ -f ${ANODE_LOCK} ]; then
-    kill $(cat ${ANODE_LOCK}) 2> /dev/null
+    kill $(/bin/cat ${ANODE_LOCK}) 2> /dev/null
     kill_success=$?
     rm -f ${ANODE_LOCK} 2> /dev/null
     if [ ${kill_success} -eq 0 ]; then
