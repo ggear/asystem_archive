@@ -12,18 +12,19 @@
 # Description:       ANode daemon
 ### END INIT INFO
 
-ANODE_LOCK=/var/lock/subsys/anode
-ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
 ANODE_ENV_FILE=${ANODE_ENV_FILE:-"/etc/profile"}
-ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
-ANODE_PATH=${ANODE_PATH:-"$(which anode 2> /dev/null)"}
 
 if [ -f ${ANODE_ENV_FILE} ]; then
   $(grep AWS ${ANODE_ENV_FILE})
   $(grep MQTT ${ANODE_ENV_FILE})
   $(grep NETATMO ${ANODE_ENV_FILE})
+  $(grep PYTHON ${ANODE_ENV_FILE})
 fi
-export PYTHONUNBUFFERED=true
+
+ANODE_LOCK=/var/lock/subsys/anode
+ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
+ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
+ANODE_PATH=${ANODE_PATH:-"$PYTHON2_HOME/bin/anode"}
 
 log_head() {
   /bin/echo -n "$1"
