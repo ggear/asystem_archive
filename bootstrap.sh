@@ -232,10 +232,13 @@ EOF
     ssh -tt janeandgraham.com -p 8092 << EOF
       cd dev/asystem
       git checkout master
-      sudo git clean -d -x -f
+      git clean -d -x -f
       git checkout -- .
       git pull -a
-      git checkout $(git describe \-\-tags | cut -c1-19)
+
+      #TODO: Remove tagged checkout, release SNAPSHOT
+      #git checkout $(git describe \-\-tags | cut -c1-19)
+
       mvn clean deploy -pl asystem-anode -PPKG -Dmaven.install-python.skip=false -U
       exit
 EOF
