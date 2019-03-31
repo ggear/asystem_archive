@@ -140,35 +140,52 @@ class Davis(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-                self.datum_push(
-                    "wind__outdoor__roof",
-                    "current", "point",
-                    None if self.datum_value(dict_content["packet"], ["windSpeed"]) is None else self.datum_value(
-                        dict_content["packet"]["windSpeed"] * Decimal(1.60934)),
-                    "km_P2Fh",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "wind_Dbearing__outdoor__roof",
-                    "current", "point",
-                    self.datum_value(dict_content["packet"], ["windDir"]),
-                    "_PC2_PB0",
-                    1,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
-                    data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
+
+                # TODO: Disable wind properties since weewx doesnt seem to report them any more, or at the least they are None when 0
+                # self.datum_push(
+                #     "wind__outdoor__roof",
+                #     "current", "point",
+                #     None if self.datum_value(dict_content["packet"], ["windSpeed"]) is None else self.datum_value(
+                #         dict_content["packet"]["windSpeed"] * Decimal(1.60934)),
+                #     "km_P2Fh",
+                #     1,
+                #     data_timestamp,
+                #     bin_timestamp,
+                #     bin_width,
+                #     bin_unit,
+                #     data_bound_lower=0,
+                #     data_derived_max=True,
+                #     data_derived_min=True
+                # )
+                # self.datum_push(
+                #     "wind_Dbearing__outdoor__roof",
+                #     "current", "point",
+                #     self.datum_value(dict_content["packet"], ["windDir"]),
+                #     "_PC2_PB0",
+                #     1,
+                #     data_timestamp,
+                #     bin_timestamp,
+                #     bin_width,
+                #     bin_unit,
+                #     data_bound_lower=0,
+                #     data_derived_max=True,
+                #     data_derived_min=True
+                # )
+                # self.datum_push(
+                #     "wind_Dchill__outdoor__roof",
+                #     "current", "point",
+                #     None if self.datum_value(dict_content["packet"], ["windchill"]) is None else self.datum_value(
+                #         (dict_content["packet"]["windchill"] - 32) * 5 / 9, factor=10),
+                #     "_PC2_PB0C",
+                #     10,
+                #     data_timestamp,
+                #     bin_timestamp,
+                #     bin_width,
+                #     bin_unit,
+                #     data_derived_max=True,
+                #     data_derived_min=True
+                # )
+
                 self.datum_push(
                     "wind_Dgust__outdoor__roof",
                     "current", "point",
@@ -195,20 +212,6 @@ class Davis(Plugin):
                     bin_width,
                     bin_unit,
                     data_bound_lower=0,
-                    data_derived_max=True,
-                    data_derived_min=True
-                )
-                self.datum_push(
-                    "wind_Dchill__outdoor__roof",
-                    "current", "point",
-                    None if self.datum_value(dict_content["packet"], ["windchill"]) is None else self.datum_value(
-                        (dict_content["packet"]["windchill"] - 32) * 5 / 9, factor=10),
-                    "_PC2_PB0C",
-                    10,
-                    data_timestamp,
-                    bin_timestamp,
-                    bin_width,
-                    bin_unit,
                     data_derived_max=True,
                     data_derived_min=True
                 )
