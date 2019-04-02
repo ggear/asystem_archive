@@ -1,8 +1,11 @@
 host: 0.0.0.0
 port: 8091
+
+# TODO: Disable publish for time being
 #publish_host: 52.63.86.162
 #publish_port: 8093
 #publish_seconds: 4
+
 model_pull_seconds: 30
 model_pull_region: 'ap-southeast-2'
 model_pull_bucket: '0-asystem-amodel'
