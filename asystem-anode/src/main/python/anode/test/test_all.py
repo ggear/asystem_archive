@@ -421,7 +421,7 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=internet&types=point&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 16,
+                    self.assertRest(0 if filter_scope == "publish" else 13,
                                     anode,
                                     "/rest/?bins=2second" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +

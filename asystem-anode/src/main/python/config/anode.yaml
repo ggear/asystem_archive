@@ -86,4 +86,3 @@ plugin:
 #    repeat_partition: True
 #    publish_ticks: -1
 #    publish_upstream: True
-
