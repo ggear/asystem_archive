@@ -28,7 +28,7 @@ class Energyforecast(Plugin):
             if "energyforecastinterday" in model_day_inter and "energyforecastintraday" in model_day_intra and \
                     APP_MODEL_ENERGYFORECAST_INTRADAY_PROD_VERSION in model_day_intra["energyforecastintraday"] and \
                     self.anode.get_plugin("davis") is not None and \
-                    self.anode.get_plugin("wunderground") is not None:
+                    self.anode.get_plugin("darksky") is not None:
                 energy_production_today = self.anode.get_plugin("fronius").datum_get(
                     DATUM_QUEUE_LAST, "energy__production__inverter", "integral", "Wh", 1, "day")
                 energy_production_today = energy_production_today["data_value"] / energy_production_today["data_scale"] \
@@ -54,27 +54,27 @@ class Energyforecast(Plugin):
                         (current - sun_rise) / float(sun_set - sun_rise) * 100))) \
                     if (sun_set is not None and sun_rise is not None and (sun_set - sun_rise) != 0) else 0
                 for day in range(1, 4):
-                    temperature_forecast = self.anode.get_plugin("wunderground").datum_get(
+                    temperature_forecast = self.anode.get_plugin("darksky").datum_get(
                         DATUM_QUEUE_MAX if day == 1 else DATUM_QUEUE_LAST,
                         "temperature__forecast__glen_Dforrest", "point", "_PC2_PB0C", day, "day")
                     temperature_forecast = temperature_forecast["data_value"] / temperature_forecast["data_scale"] \
                         if temperature_forecast is not None else None
-                    rain_forecast = self.anode.get_plugin("wunderground").datum_get(
+                    rain_forecast = self.anode.get_plugin("darksky").datum_get(
                         DATUM_QUEUE_MAX if day == 1 else DATUM_QUEUE_LAST,
                         "rain__forecast__glen_Dforrest", "integral", "mm", day, "day_Dtime")
                     rain_forecast = rain_forecast["data_value"] / rain_forecast["data_scale"] \
                         if rain_forecast is not None else 0
-                    humidity_forecast = self.anode.get_plugin("wunderground").datum_get(
+                    humidity_forecast = self.anode.get_plugin("darksky").datum_get(
                         DATUM_QUEUE_MAX if day == 1 else DATUM_QUEUE_LAST,
                         "humidity__forecast__glen_Dforrest", "mean", "_P25", day, "day")
                     humidity_forecast = humidity_forecast["data_value"] / humidity_forecast["data_scale"] \
                         if humidity_forecast is not None else None
-                    wind_forecast = self.anode.get_plugin("wunderground").datum_get(
+                    wind_forecast = self.anode.get_plugin("darksky").datum_get(
                         DATUM_QUEUE_LAST,
                         "wind__forecast__glen_Dforrest", "mean", "km_P2Fh", day, "day")
                     wind_forecast = wind_forecast["data_value"] / wind_forecast["data_scale"] \
                         if wind_forecast is not None else None
-                    conditions_forecast = self.anode.get_plugin("wunderground").datum_get(
+                    conditions_forecast = self.anode.get_plugin("darksky").datum_get(
                         DATUM_QUEUE_LAST,
                         "conditions__forecast__glen_Dforrest", "enumeration", "__", day, "day")
                     conditions_forecast = conditions_forecast["data_string"] \

@@ -436,7 +436,7 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=power&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 34,
+                    self.assertRest(0 if filter_scope == "publish" else 21,
                                     anode,
                                     "/rest/?metrics=energy.&print=pretty" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
@@ -1374,7 +1374,7 @@ class ANodeTest(TestCase):
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.assertRest(0,
                         anode,
-                        "/rest/?metrics=ping.internet.perth&types=point",
+                        "/rest/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&metrics=humidity.forecast",
                         False, True)
         anode.stop_server()
 
@@ -1532,8 +1532,8 @@ HTTP_GETS = {
         ilio.read(DIR_TEST + "/template/fronius_flow_template.json"),
     "http://192.168.2.10/solar_api/v1/GetMeterRealtimeData.cgi":
         ilio.read(DIR_TEST + "/template/fronius_meter_template.json"),
-    "http://api.wunderground.com/api/8539276b98b4973b/forecast10day/q/zmw:00000.6.94615.json":
-        ilio.read(DIR_TEST + "/template/wunderground_10dayforecast_template.json"),
+    "https://api.darksky.net/forecast/fd02f0c75b26923e31ccc08e5b7e1022/-31.915,116.106":
+        ilio.read(DIR_TEST + "/template/darksky_forecast_template.json"),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com/":
         ilio.read(DIR_TEST + "/template/energyforecast_list_template.xml"),
     "http://asystem-amodel.s3-ap-southeast-2.amazonaws.com" +
