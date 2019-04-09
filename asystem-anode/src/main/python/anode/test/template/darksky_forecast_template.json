@@ -963,7 +963,7 @@
     "icon": "clear-day",
     "data": [
       {
-        "time": 1554480000,
+        "time": "${EPOCH}",
         "summary": "Clear throughout the day.",
         "icon": "clear-day",
         "sunriseTime": 1554503465,
@@ -1002,7 +1002,7 @@
         "apparentTemperatureMaxTime": 1554530400
       },
       {
-        "time": 1554566400,
+        "time": "${EPOCH}",
         "summary": "Clear throughout the day.",
         "icon": "clear-day",
         "sunriseTime": 1554589904,
@@ -1042,7 +1042,7 @@
         "apparentTemperatureMaxTime": 1554620400
       },
       {
-        "time": 1554652800,
+        "time": "${EPOCH}",
         "summary": "Clear throughout the day.",
         "icon": "clear-day",
         "sunriseTime": 1554676344,
@@ -1122,7 +1122,7 @@
         "apparentTemperatureMaxTime": 1554793200
       },
       {
-        "time": 1554825600,
+        "time": "${EPOCH}",
         "summary": "Clear throughout the day.",
         "icon": "clear-day",
         "sunriseTime": 1554849224,
@@ -1162,7 +1162,7 @@
         "apparentTemperatureMaxTime": 1554872400
       },
       {
-        "time": 1554912000,
+        "time": "${EPOCH}",
         "summary": "Partly cloudy in the morning.",
         "icon": "partly-cloudy-night",
         "sunriseTime": 1554935664,
@@ -1202,7 +1202,7 @@
         "apparentTemperatureMaxTime": 1554958800
       },
       {
-        "time": 1554998400,
+        "time": "${EPOCH}",
         "summary": "Partly cloudy in the evening.",
         "icon": "partly-cloudy-night",
         "sunriseTime": 1555022104,
@@ -1242,7 +1242,7 @@
         "apparentTemperatureMaxTime": 1555052400
       },
       {
-        "time": 1555084800,
+        "time": "${EPOCH}",
         "summary": "Rain overnight.",
         "icon": "rain",
         "sunriseTime": 1555108545,

@@ -1375,7 +1375,7 @@ class ANodeTest(TestCase):
         self.assertRest(0,
                         anode,
                         "/rest/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&metrics=humidity.forecast",
-                        False, True)
+                        False, False)
         anode.stop_server()
 
 
