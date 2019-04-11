@@ -70,7 +70,7 @@ class Darksky(Plugin):
                         bin_timestamp,
                         forecast_index + 1,
                         "day",
-                        data_derived_max=forecast_index > 0
+                        data_derived_max=forecast_index == 0
                     )
                     self.datum_push(
                         "temperature__forecast__glen_Dforrest",
@@ -97,8 +97,8 @@ class Darksky(Plugin):
                     #     forecast_index + 1,
                     #     "day",
                     #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index > 0,
-                    #     data_derived_min=forecast_index > 0
+                    #     data_derived_max=forecast_index == 0,
+                    #     data_derived_min=forecast_index == 0
                     # )
                     # self.datum_push(
                     #     "rain__forecast__glen_Dforrest",
@@ -111,8 +111,8 @@ class Darksky(Plugin):
                     #     forecast_index + 1,
                     #     "day_Dtime",
                     #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index > 0,
-                    #     data_derived_min=forecast_index > 0
+                    #     data_derived_max=forecast_index == 0,
+                    #     data_derived_min=forecast_index == 0
                     # )
                     # self.datum_push(
                     #     "rain__forecast__glen_Dforrest",
@@ -125,8 +125,8 @@ class Darksky(Plugin):
                     #     forecast_index + 1,
                     #     "night_Dtime",
                     #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index > 0,
-                    #     data_derived_min=forecast_index > 0
+                    #     data_derived_max=forecast_index == 0,
+                    #     data_derived_min=forecast_index == 0
                     # )
 
                     self.datum_push(
@@ -141,7 +141,7 @@ class Darksky(Plugin):
                         forecast_index + 1,
                         "day",
                         data_bound_lower=0,
-                        data_derived_min=forecast_index > 0
+                        data_derived_min=forecast_index == 0
                     )
                     self.datum_push(
                         "wind__forecast__glen_Dforrest",
@@ -169,8 +169,8 @@ class Darksky(Plugin):
                         "day",
                         data_bound_upper=100,
                         data_bound_lower=0,
-                        data_derived_max=forecast_index > 0,
-                        data_derived_min=forecast_index > 0
+                        data_derived_max=forecast_index == 0,
+                        data_derived_min=forecast_index == 0
                     )
             self.publish()
         except Exception as exception:
