@@ -135,9 +135,9 @@ class Darksky(Plugin):
                     rain = rain_rate * rain_probability * 24
                     self.datum_push(
                         "rain_Dprobability__forecast__glen_Dforrest",
-                        "forecast", "mean",
-                        int(rain_rate * 100),
-                        "_P24",
+                        "forecast", "point",
+                        int(rain_probability * 100),
+                        "_P25",
                         100,
                         data_timestamp,
                         bin_timestamp,
