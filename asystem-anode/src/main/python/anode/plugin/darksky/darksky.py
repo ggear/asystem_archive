@@ -84,51 +84,6 @@ class Darksky(Plugin):
                         forecast_index + 1,
                         "day"
                     )
-
-                    # TODO: Replace rain with precipitation data
-                    # self.datum_push(
-                    #     "rain__forecast__glen_Dforrest",
-                    #     "forecast", "integral",
-                    #     self.datum_value(forecast, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_allday", "mm"]),
-                    #     "mm",
-                    #     1,
-                    #     data_timestamp,
-                    #     bin_timestamp,
-                    #     forecast_index + 1,
-                    #     "day",
-                    #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index == 0,
-                    #     data_derived_min=forecast_index == 0
-                    # )
-                    # self.datum_push(
-                    #     "rain__forecast__glen_Dforrest",
-                    #     "forecast", "integral",
-                    #     self.datum_value(forecast, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_day", "mm"]),
-                    #     "mm",
-                    #     1,
-                    #     data_timestamp,
-                    #     bin_timestamp,
-                    #     forecast_index + 1,
-                    #     "day_Dtime",
-                    #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index == 0,
-                    #     data_derived_min=forecast_index == 0
-                    # )
-                    # self.datum_push(
-                    #     "rain__forecast__glen_Dforrest",
-                    #     "forecast", "integral",
-                    #     self.datum_value(forecast, ["forecast", "simpleforecast", "forecastday", forecast_index, "qpf_night", "mm"]),
-                    #     "mm",
-                    #     1,
-                    #     data_timestamp,
-                    #     bin_timestamp,
-                    #     forecast_index + 1,
-                    #     "night_Dtime",
-                    #     data_bound_lower=0,
-                    #     data_derived_max=forecast_index == 0,
-                    #     data_derived_min=forecast_index == 0
-                    # )
-
                     self.datum_push(
                         "wind__forecast__glen_Dforrest",
                         "forecast", "mean",
@@ -168,6 +123,79 @@ class Darksky(Plugin):
                         forecast_index + 1,
                         "day",
                         data_bound_upper=100,
+                        data_bound_lower=0,
+                        data_derived_max=forecast_index == 0,
+                        data_derived_min=forecast_index == 0
+                    )
+                    is_rain = "precipType" in forecast and forecast["precipType"] == "rain"
+                    rain_probability = float(forecast["precipProbability"] if is_rain and "precipProbability" in forecast else 0)
+                    rain_rate_max_time = forecast["precipIntensityMaxTime"] if is_rain and "precipIntensityMaxTime" in forecast else 0
+                    rain_rate_max = float(forecast["precipIntensityMax"] if is_rain and "precipIntensityMax" in forecast else 0) * 25.4
+                    rain_rate = float(forecast["precipIntensity"] if is_rain and "precipIntensity" in forecast else 0) * 25.4
+                    rain = rain_rate * rain_probability * 24
+                    self.datum_push(
+                        "rain_Dprobability__forecast__glen_Dforrest",
+                        "forecast", "mean",
+                        int(rain_rate * 100),
+                        "_P24",
+                        100,
+                        data_timestamp,
+                        bin_timestamp,
+                        forecast_index + 1,
+                        "day",
+                        data_bound_lower=0,
+                        data_derived_max=forecast_index == 0,
+                        data_derived_min=forecast_index == 0
+                    )
+                    self.datum_push(
+                        "rain_Drate_Dmax_Dtime__forecast__glen_Dforrest",
+                        "forecast", "epoch",
+                        int(rain_rate_max_time),
+                        "scalar",
+                        1,
+                        data_timestamp,
+                        bin_timestamp,
+                        forecast_index + 1,
+                        "day"
+                    )
+                    self.datum_push(
+                        "rain_Drate_Dmax__forecast__glen_Dforrest",
+                        "forecast", "high",
+                        int(rain_rate_max * 10000),
+                        "mm_P2Fh",
+                        10000,
+                        data_timestamp,
+                        bin_timestamp,
+                        forecast_index + 1,
+                        "day",
+                        data_bound_lower=0,
+                        data_derived_max=forecast_index == 0,
+                        data_derived_min=forecast_index == 0
+                    )
+                    self.datum_push(
+                        "rain_Drate__forecast__glen_Dforrest",
+                        "forecast", "mean",
+                        int(rain_rate * 10000),
+                        "mm_P2Fh",
+                        10000,
+                        data_timestamp,
+                        bin_timestamp,
+                        forecast_index + 1,
+                        "day",
+                        data_bound_lower=0,
+                        data_derived_max=forecast_index == 0,
+                        data_derived_min=forecast_index == 0
+                    )
+                    self.datum_push(
+                        "rain__forecast__glen_Dforrest",
+                        "forecast", "integral",
+                        int(rain * 10),
+                        "mm",
+                        10,
+                        data_timestamp,
+                        bin_timestamp,
+                        forecast_index + 1,
+                        "day",
                         data_bound_lower=0,
                         data_derived_max=forecast_index == 0,
                         data_derived_min=forecast_index == 0

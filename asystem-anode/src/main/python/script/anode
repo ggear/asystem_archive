@@ -22,7 +22,7 @@ if [ -f ${ANODE_ENV_FILE} ]; then
   $(grep "export PYTHON2" ${ANODE_ENV_FILE})
 fi
 
-ANODE_TIMEOUT_COUNTER_MAX=10
+ANODE_TIMEOUT_SEC=30
 ANODE_LOCK=/var/lock/subsys/anode
 ANODE_OPTS=${ANODE_OPTS:-"--quiet"}
 ANODE_LOG_FILE=${ANODE_LOG_FILE:-"/var/log/anode.log"}
@@ -67,10 +67,10 @@ stop() {
     kill_success=$?
     rm -f ${ANODE_LOCK} 2> /dev/null
     timeout_counter=0
-    until [ $(ps axg | grep -vw grep | grep -w ${ANODE_PATH} | wc -l) -eq 0 ] || [ ${timeout_counter} -eq ${ANODE_TIMEOUT_COUNTER_MAX} ]; do
+    until [ $(ps axg | grep -vw grep | grep -w ${ANODE_PATH} | wc -l) -eq 0 ] || [ ${timeout_counter} -eq ${ANODE_TIMEOUT_SEC} ]; do
        sleep 1 && ((timeout_counter++))
     done
-    if [ ${kill_success} -eq 0 ] && [ ${timeout_counter} -ne ${ANODE_TIMEOUT_COUNTER_MAX} ]; then
+    if [ ${kill_success} -eq 0 ] && [ ${timeout_counter} -ne ${ANODE_TIMEOUT_SEC} ]; then
       log_tail_success "anode stopped"
     else
       log_tail_failure "failed to stop anode"

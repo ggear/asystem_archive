@@ -351,7 +351,7 @@ class ANodeTest(TestCase):
                                     "/rest/?metrics=rain-rate&types=mean&units=mm" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
                                     (("&scope=" + filter_scope) if filter_scope is not None else ""), True)
-                    self.assertRest(0 if filter_scope == "publish" else 1,
+                    self.assertRest(0 if filter_scope == "publish" else 4,
                                     anode,
                                     "/rest/?metrics=rain-rate&types=mean&units=mm/h" +
                                     (("&format=" + filter_format) if filter_format is not None else "") +
@@ -1374,8 +1374,8 @@ class ANodeTest(TestCase):
         anode = self.anode_init(False, False, False, False, period=period, iterations=1)
         self.assertRest(0,
                         anode,
-                        "/rest/?metrics=conditions.forecast&metrics=temperature.forecast&metrics=wind.forecast&metrics=rain.forecast&metrics=humidity.forecast",
-                        False, False)
+                        "/rest/?metrics=rain.forecast",
+                        False, True)
         anode.stop_server()
 
 
