@@ -138,7 +138,7 @@ class Darksky(Plugin):
                         "forecast", "point",
                         int(rain_probability * 100),
                         "_P25",
-                        100,
+                        1,
                         data_timestamp,
                         bin_timestamp,
                         forecast_index + 1,
