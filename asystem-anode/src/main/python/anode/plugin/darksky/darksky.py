@@ -132,7 +132,7 @@ class Darksky(Plugin):
                     rain_rate_max_time = forecast["precipIntensityMaxTime"] if is_rain and "precipIntensityMaxTime" in forecast else 0
                     rain_rate_max = float(forecast["precipIntensityMax"] if is_rain and "precipIntensityMax" in forecast else 0) * 25.4
                     rain_rate = float(forecast["precipIntensity"] if is_rain and "precipIntensity" in forecast else 0) * 25.4
-                    rain = rain_rate * rain_probability * 24
+                    rain = rain_rate * 24
                     self.datum_push(
                         "rain_Dprobability__forecast__glen_Dforrest",
                         "forecast", "point",
