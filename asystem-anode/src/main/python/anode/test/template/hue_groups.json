@@ -1,0 +1,58 @@
+{
+  "1": {
+    "name": "Dining",
+    "lights": [
+      "1"
+    ],
+    "state": {
+      "any_on": false,
+      "all_on": false
+    },
+    "action": {
+      "on": false,
+      "hue": 41432,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "select",
+      "xy": [
+        0.3146,
+        0.3304
+      ],
+      "bri": 254,
+      "ct": 156,
+      "sat": 75
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Dining"
+  },
+  "2": {
+    "name": "Office",
+    "lights": [
+      "2"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "select",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Office"
+  }
+}
