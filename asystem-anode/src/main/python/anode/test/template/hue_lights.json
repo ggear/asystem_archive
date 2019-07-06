@@ -1,13 +1,59 @@
 {
-  "1": {
-    "swversion": "1.46.13_r26312",
-    "name": "Hue color candle 1",
+  "24": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 9",
     "swupdate": {
       "state": "noupdates",
-      "lastinstall": "2019-06-01T08:25:48"
+      "lastinstall": "2019-06-21T07:59:42"
+    },
+    "uniqueid": "00:17:88:01:04:0e:de:93-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "20": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 14",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:01:58"
     },
     "productid": "Philips-LCT012-1-E14ECLv1",
-    "uniqueid": "00:17:88:01:03:9f:4e:ed-0b",
+    "uniqueid": "00:17:88:01:03:9f:6b:4a-0b",
     "capabilities": {
       "control": {
         "ct": {
@@ -40,20 +86,20 @@
     },
     "productname": "Hue color candle",
     "state": {
-      "on": false,
-      "hue": 41432,
+      "on": true,
+      "hue": 8418,
       "colormode": "ct",
       "effect": "none",
-      "alert": "select",
+      "alert": "none",
       "xy": [
-        0.3146,
-        0.3304
+        0.4573,
+        0.41
       ],
       "reachable": false,
       "mode": "homeautomation",
       "bri": 254,
-      "ct": 156,
-      "sat": 75
+      "ct": 366,
+      "sat": 140
     },
     "manufacturername": "Philips",
     "swconfigid": "8C67986F",
@@ -61,7 +107,7 @@
       "function": "mixed",
       "startup": {
         "configured": true,
-        "mode": "powerfail"
+        "mode": "safety"
       },
       "direction": "omnidirectional",
       "archetype": "candlebulb"
@@ -69,12 +115,196 @@
     "type": "Extended color light",
     "modelid": "LCT012"
   },
+  "21": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 6",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:01:49"
+    },
+    "uniqueid": "00:17:88:01:04:0e:df:ae-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": true,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 230
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "22": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 7",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:00:36"
+    },
+    "uniqueid": "00:17:88:01:04:0e:dc:ad-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "23": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 8",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:01:55"
+    },
+    "uniqueid": "00:17:88:01:04:0e:dd:b2-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "3": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 1",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T06:36:52"
+    },
+    "uniqueid": "00:17:88:01:03:43:c3:4f-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "select",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
   "2": {
-    "swversion": "1.29.0_r21169",
+    "swversion": "1.46.13_r26312",
     "name": "Hue color lamp 1",
     "swupdate": {
-      "state": "readytoinstall",
-      "lastinstall": "2019-06-02T05:30:18"
+      "state": "noupdates",
+      "lastinstall": "2019-06-02T06:14:13"
     },
     "productid": "Philips-LCT010-1-A19ECLv4",
     "uniqueid": "00:17:88:01:04:56:c0:94-0b",
@@ -110,29 +340,1064 @@
     },
     "productname": "Hue color lamp",
     "state": {
+      "on": false,
+      "hue": 17547,
+      "colormode": "xy",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.3691,
+        0.3719
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 233,
+      "sat": 254
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "0CE67A8F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "customsettings": {
+          "xy": [
+            0.3185,
+            0.4463
+          ],
+          "bri": 144
+        },
+        "mode": "custom"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT010"
+  },
+  "5": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 3",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T06:39:09"
+    },
+    "uniqueid": "00:17:88:01:03:43:b9:d8-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "4": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 2",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T06:39:07"
+    },
+    "uniqueid": "00:17:88:01:03:43:c1:47-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "7": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 5",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T07:02:31"
+    },
+    "uniqueid": "00:17:88:01:04:ea:a2:72-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "6": {
+    "swversion": "5.127.1.26420",
+    "name": "Hue ambiance lamp 4",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-09T03:25:54"
+    },
+    "uniqueid": "00:17:88:01:04:ea:a2:88-0b",
+    "capabilities": {
+      "control": {
+        "mindimlevel": 1000,
+        "maxlumen": 806,
+        "ct": {
+          "max": 454,
+          "min": 153
+        }
+      },
+      "streaming": {
+        "renderer": false,
+        "proxy": false
+      },
+      "certified": true
+    },
+    "productname": "Hue ambiance lamp",
+    "state": {
+      "on": true,
+      "colormode": "ct",
+      "alert": "none",
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366
+    },
+    "manufacturername": "Philips",
+    "config": {
+      "function": "functional",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "sultanbulb"
+    },
+    "type": "Color temperature light",
+    "modelid": "LTW001"
+  },
+  "9": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 3",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T07:10:04"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:04:32:99:75-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
       "on": true,
       "hue": 8418,
       "colormode": "ct",
       "effect": "none",
-      "alert": "select",
+      "alert": "none",
       "xy": [
         0.4573,
         0.41
       ],
-      "reachable": true,
+      "reachable": false,
       "mode": "homeautomation",
       "bri": 254,
       "ct": 366,
       "sat": 140
     },
     "manufacturername": "Philips",
-    "swconfigid": "6A139B19",
+    "swconfigid": "8C67986F",
     "config": {
       "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
       "direction": "omnidirectional",
-      "archetype": "sultanbulb"
+      "archetype": "candlebulb"
     },
     "type": "Extended color light",
-    "modelid": "LCT010"
+    "modelid": "LCT012"
+  },
+  "8": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 2",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T07:10:03"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:04:32:83:b0-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "11": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 5",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-09T03:24:50"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:04:44:db:4e-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "10": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 4",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-09T03:24:55"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:04:32:99:6f-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "13": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 7",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-16T07:20:04"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:69:d5-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "12": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 6",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-03T09:30:49"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:4e:ed-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "15": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 9",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:00:10"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:58:4a-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "14": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 8",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T07:59:47"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:56:c4-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "17": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 11",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T07:59:52"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:57:4e-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "16": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 10",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:00:04"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:69:d4-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "19": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 13",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:02:03"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:04:44:ef:85-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
+  },
+  "18": {
+    "swversion": "1.46.13_r26312",
+    "name": "Hue color candle 12",
+    "swupdate": {
+      "state": "noupdates",
+      "lastinstall": "2019-06-21T08:02:52"
+    },
+    "productid": "Philips-LCT012-1-E14ECLv1",
+    "uniqueid": "00:17:88:01:03:9f:6b:78-0b",
+    "capabilities": {
+      "control": {
+        "ct": {
+          "max": 500,
+          "min": 153
+        },
+        "colorgamut": [
+          [
+            0.6915,
+            0.3083
+          ],
+          [
+            0.17,
+            0.7
+          ],
+          [
+            0.1532,
+            0.0475
+          ]
+        ],
+        "mindimlevel": 2000,
+        "maxlumen": 450,
+        "colorgamuttype": "C"
+      },
+      "streaming": {
+        "renderer": true,
+        "proxy": true
+      },
+      "certified": true
+    },
+    "productname": "Hue color candle",
+    "state": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "reachable": false,
+      "mode": "homeautomation",
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "manufacturername": "Philips",
+    "swconfigid": "8C67986F",
+    "config": {
+      "function": "mixed",
+      "startup": {
+        "configured": true,
+        "mode": "safety"
+      },
+      "direction": "omnidirectional",
+      "archetype": "candlebulb"
+    },
+    "type": "Extended color light",
+    "modelid": "LCT012"
   }
 }

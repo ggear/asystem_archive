@@ -1,36 +1,34 @@
 {
-  "1": {
-    "name": "Dining",
+  "10": {
+    "name": "Wardrobe",
     "lights": [
-      "1"
+      "24"
     ],
     "state": {
-      "any_on": false,
-      "all_on": false
+      "any_on": true,
+      "all_on": true
     },
     "action": {
-      "on": false,
-      "hue": 41432,
+      "on": true,
+      "alert": "none",
       "colormode": "ct",
-      "effect": "none",
-      "alert": "select",
-      "xy": [
-        0.3146,
-        0.3304
-      ],
       "bri": 254,
-      "ct": 156,
-      "sat": 75
+      "ct": 366
     },
     "recycle": false,
     "sensors": [],
     "type": "Room",
-    "class": "Dining"
+    "class": "Closet"
   },
-  "2": {
-    "name": "Office",
+  "1": {
+    "name": "Dining",
     "lights": [
-      "2"
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "12"
     ],
     "state": {
       "any_on": true,
@@ -41,7 +39,7 @@
       "hue": 8418,
       "colormode": "ct",
       "effect": "none",
-      "alert": "select",
+      "alert": "none",
       "xy": [
         0.4573,
         0.41
@@ -53,6 +51,195 @@
     "recycle": false,
     "sensors": [],
     "type": "Room",
+    "class": "Dining"
+  },
+  "3": {
+    "name": "Kitchen",
+    "lights": [
+      "3",
+      "4",
+      "5"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 366
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Kitchen"
+  },
+  "2": {
+    "name": "Office",
+    "lights": [
+      "21"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 230
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
     "class": "Office"
+  },
+  "5": {
+    "name": "Butlers",
+    "lights": [
+      "7"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 366
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Kitchen"
+  },
+  "4": {
+    "name": "Laundry",
+    "lights": [
+      "6"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 366
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Laundry room"
+  },
+  "7": {
+    "name": "Lounge",
+    "lights": [
+      "18",
+      "19",
+      "20"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Living room"
+  },
+  "6": {
+    "name": "Hallway",
+    "lights": [
+      "8",
+      "9",
+      "10",
+      "11"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "hue": 8418,
+      "colormode": "ct",
+      "effect": "none",
+      "alert": "none",
+      "xy": [
+        0.4573,
+        0.41
+      ],
+      "bri": 254,
+      "ct": 366,
+      "sat": 140
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Hallway"
+  },
+  "9": {
+    "name": "Ensuite",
+    "lights": [
+      "23"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 366
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Bathroom"
+  },
+  "8": {
+    "name": "Bathroom",
+    "lights": [
+      "22"
+    ],
+    "state": {
+      "any_on": true,
+      "all_on": true
+    },
+    "action": {
+      "on": true,
+      "alert": "none",
+      "colormode": "ct",
+      "bri": 254,
+      "ct": 366
+    },
+    "recycle": false,
+    "sensors": [],
+    "type": "Room",
+    "class": "Bathroom"
   }
 }

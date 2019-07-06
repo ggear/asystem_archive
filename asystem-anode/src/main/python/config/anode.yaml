@@ -14,16 +14,19 @@ history_path: '/mnt/timecapsule'
 save_on_exit: True
 save_seconds: 1800
 plugin:
-  fronius:
-    poll_seconds: 1
-    buffer_ticks: 120
-    history_partitions: 15
-    history_ticks: 10500000
-    history_partition_seconds: 86400
-    repeat_seconds: 99
-    repeat_partition: True
-    publish_ticks: -1
-    publish_upstream: True
+
+  # TODO: Diable until energy meter is moved to Wootoona
+  #  fronius:
+  #    poll_seconds: 1
+  #    buffer_ticks: 120
+  #    history_partitions: 15
+  #    history_ticks: 10500000
+  #    history_partition_seconds: 86400
+  #    repeat_seconds: 99
+  #    repeat_partition: True
+  #    publish_ticks: -1
+  #    publish_upstream: True
+
   kasa:
     poll_seconds: 1
     buffer_ticks: 110
@@ -34,16 +37,19 @@ plugin:
     repeat_partition: True
     publish_ticks: -1
     publish_upstream: True
-  davis:
-    poll_seconds: -1
-    buffer_ticks: 30
-    history_partitions: 15
-    history_ticks: 1800000
-    history_partition_seconds: 86400
-    repeat_seconds: 103
-    repeat_partition: True
-    publish_ticks: -1
-    publish_upstream: True
+
+  # TODO: Diable until weather station is moved to Wootoona
+  #  davis:
+  #    poll_seconds: -1
+  #    buffer_ticks: 30
+  #    history_partitions: 15
+  #    history_ticks: 1800000
+  #    history_partition_seconds: 86400
+  #    repeat_seconds: 103
+  #    repeat_partition: True
+  #    publish_ticks: -1
+  #    publish_upstream: True
+
   darksky:
     poll_seconds: 300
     buffer_ticks: 5
@@ -74,15 +80,25 @@ plugin:
     repeat_partition: True
     publish_ticks: -1
     publish_upstream: True
+  hue:
+    poll_seconds: 1
+    buffer_ticks: 0
+    history_partitions: 0
+    history_ticks: 0
+    history_partition_seconds: 0
+    repeat_seconds: 0
+    repeat_partition: False
+    publish_ticks: -1
+    publish_upstream: False
 
-# TODO: Disable until models retrained with new darksky features
-#  energyforecast:
-#    poll_seconds: 15
-#    buffer_ticks: 5
-#    history_partitions: 15
-#    history_ticks: 300000
-#    history_partition_seconds: 86400
-#    repeat_seconds: 115
-#    repeat_partition: True
-#    publish_ticks: -1
-#    publish_upstream: True
+  # TODO: Disable until models retrained with new darksky features
+  #  energyforecast:
+  #    poll_seconds: 15
+  #    buffer_ticks: 5
+  #    history_partitions: 15
+  #    history_ticks: 300000
+  #    history_partition_seconds: 86400
+  #    repeat_seconds: 115
+  #    repeat_partition: True
+  #    publish_ticks: -1
+  #    publish_upstream: True
