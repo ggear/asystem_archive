@@ -1403,8 +1403,8 @@
   "25": {
     "state": {
       "on": true,
-      "bri": 254,
-      "ct": 230,
+      "bri": 144,
+      "ct": 447,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",

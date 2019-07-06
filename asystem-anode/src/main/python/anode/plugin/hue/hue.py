@@ -31,7 +31,7 @@ LIGHT_STATES = {
     },
     "daylight": {
         "power": {"LTW001": 6, "LCT010": 6, "LCT012": 5},
-        "state": {"ct": 153, "bri": 254}
+        "state": {"ct": 233, "bri": 254}
     },
     "evening": {
         "power": {"LTW001": 7, "LCT010": 7, "LCT012": 5},
@@ -39,7 +39,7 @@ LIGHT_STATES = {
     },
     "witching": {
         "power": {"LTW001": 2, "LCT010": 2, "LCT012": 2},
-        "state": {"ct": 366, "bri": 127}
+        "state": {"ct": 447, "bri": 144}
     }
 }
 
