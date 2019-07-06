@@ -7,6 +7,7 @@ import datetime
 import pytz
 import requests
 import treq
+import urllib3
 from astral import Astral
 from treq.client import HTTPClient
 from twisted.internet import ssl
@@ -42,6 +43,7 @@ LIGHT_STATES = {
     }
 }
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @implementer(IPolicyForHTTPS)
 class DoNotVerifySSLContextFactory(object):

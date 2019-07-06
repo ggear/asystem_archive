@@ -82,14 +82,14 @@ plugin:
     publish_upstream: True
   hue:
     poll_seconds: 1
-    buffer_ticks: 0
-    history_partitions: 0
-    history_ticks: 0
-    history_partition_seconds: 0
-    repeat_seconds: 0
-    repeat_partition: False
+    buffer_ticks: 110
+    history_partitions: 15
+    history_ticks: 10500000
+    history_partition_seconds: 86400
+    repeat_seconds: 117
+    repeat_partition: True
     publish_ticks: -1
-    publish_upstream: False
+    publish_upstream: True
 
   # TODO: Disable until models retrained with new darksky features
   #  energyforecast:
