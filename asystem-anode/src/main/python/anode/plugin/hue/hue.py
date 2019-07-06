@@ -30,8 +30,8 @@ LIGHT_STATES = {
         "state": {"ct": 366, "bri": 254}
     },
     "daylight": {
-        "power": {"LTW001": 5, "LCT010": 5, "LCT012": 4},
-        "state": {"ct": 0, "bri": 254}
+        "power": {"LTW001": 6, "LCT010": 6, "LCT012": 5},
+        "state": {"ct": 153, "bri": 254}
     },
     "evening": {
         "power": {"LTW001": 7, "LCT010": 7, "LCT012": 5},
