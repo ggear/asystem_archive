@@ -16,6 +16,8 @@ from twisted.web.iweb import IPolicyForHTTPS
 from zope.interface import implementer
 
 import anode
+from anode.plugin.plugin import DATUM_QUEUE_LAST
+from anode.plugin.plugin import DATUM_QUEUE_MIN
 from anode.plugin.plugin import Plugin
 
 HTTP_TIMEOUT = 10
@@ -30,7 +32,7 @@ LIGHT_STATES = {
         "state": {"ct": 366, "bri": 254}
     },
     "daylight": {
-        "power": {"LTW001": 6, "LCT010": 6, "LCT012": 5},
+        "power": {"LTW001": 8, "LCT010": 8, "LCT012": 6},
         "state": {"ct": 233, "bri": 254}
     },
     "evening": {
@@ -39,11 +41,12 @@ LIGHT_STATES = {
     },
     "witching": {
         "power": {"LTW001": 2, "LCT010": 2, "LCT012": 2},
-        "state": {"ct": 447, "bri": 144}
+        "state": {"ct": 447, "bri": 100}
     }
 }
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 @implementer(IPolicyForHTTPS)
 class DoNotVerifySSLContextFactory(object):
@@ -56,7 +59,7 @@ class Hue(Plugin):
 
     def _poll(self):
         self.light_state = self.get_light_state()
-        self.http_get("https://" + BRIDGE_IP + "/api/" + BRIDGE_TOKEN + "/lights", self.adjust_lights)
+        self.http_get("https://" + BRIDGE_IP + "/api/" + BRIDGE_TOKEN + "/lights", self.lights_adjust)
 
     def http_get(self, url, callback):
         connection_pool = self.config["pool"] if "pool" in self.config else None
@@ -84,13 +87,13 @@ class Hue(Plugin):
             anode.Log(logging.ERROR).log("Plugin", "error",
                                          lambda: "[{}] error processing HTTP response [{}] with [{}]".format(self.name, url, response.code))
 
-    def adjust_lights(self, content):
+    def lights_adjust(self, content):
         log_timer = anode.Log(logging.DEBUG).start()
         try:
             bin_timestamp = self.get_time()
             lights = json.loads(content)
             for group in self.groups:
-                light_power = 0
+                power = 0
                 group_on = True
                 group_adjust = False
                 for light in self.groups[group]["lights"]:
@@ -103,17 +106,18 @@ class Hue(Plugin):
                                     LIGHT_STATES[self.light_state]["state"]["bri"] != LIGHT_STATES[LIGHT_STATE[light]]["state"]["bri"]:
                                 LIGHT_STATE[light] = self.light_state
                                 group_adjust = True
-                        light_power = LIGHT_STATES[LIGHT_STATE[light]]["power"][lights[light]["modelid"]]
+                        power = LIGHT_STATES[LIGHT_STATE[light]]["power"][lights[light]["modelid"]]
                     else:
                         group_on = False
                         LIGHT_STATE.pop(light, None)
                 if group_adjust:
                     self.http_put("https://" + BRIDGE_IP + "/api/" + BRIDGE_TOKEN + "/groups/" + group + "/action",
-                                  json.dumps(LIGHT_STATES[self.light_state]["state"]))
+                                  json.dumps(LIGHT_STATES[self.light_state]["state"]), self.light_adjusted)
+                power_second_bin = power * len(self.groups[group]["lights"]) if group_on else 0
                 self.datum_push(
                     "power__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
                     "current", "point",
-                    light_power * len(self.groups[group]["lights"]) if group_on else 0,
+                    power_second_bin,
                     "W",
                     1,
                     bin_timestamp,
@@ -124,11 +128,32 @@ class Hue(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
+                energy_consumption_alltime = self.datum_get(
+                    DATUM_QUEUE_LAST, "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
+                    "integral", "Wh", "1", "all_Dtime")
+                energy_consumption_alltime = int((0 if energy_consumption_alltime is None else energy_consumption_alltime["data_value"]) +
+                                                 (float(power_second_bin) / (60 * 60) * 10000))
+                self.datum_push(
+                    "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
+                    "current", "integral",
+                    energy_consumption_alltime,
+                    "Wh",
+                    10000,
+                    bin_timestamp,
+                    bin_timestamp,
+                    1,
+                    "all_Dtime",
+                    data_bound_lower=0
+                )
             self.publish()
         except Exception as exception:
             anode.Log(logging.ERROR).log("Plugin", "error", lambda: "[{}] error [{}] processing response:\n"
                                          .format(self.name, exception), exception)
-        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.adjust_lights)
+        log_timer.log("Plugin", "timer", lambda: "[{}]".format(self.name), context=self.lights_adjust)
+
+    def light_adjusted(self, content):
+        anode.Log(logging.DEBUG).log("Plugin", "state", lambda: "[{}] updated light group state {}"
+                                     .format(self.name, json.dumps([d["success"] for d in json.loads(content)])))
 
     def get_light_state(self):
         astral = Astral()

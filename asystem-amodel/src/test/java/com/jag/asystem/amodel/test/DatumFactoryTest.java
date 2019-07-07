@@ -105,7 +105,7 @@ public class DatumFactoryTest implements TestConstants {
     testDatum("indexed-50", DatumFactory.getDatumIndexed(50),
       "getDataUnit", DatumDataUnit.KB_P2Fs, "getDataMetric", DatumMetric.anode__energyforecast__metrics);
     testDatum("indexed-2147483647", DatumFactory.getDatumIndexed(21474836),
-      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.power__consumption__inverter);
+      "getDataUnit", DatumDataUnit.ms, "getDataMetric", DatumMetric.energy__consumption__dining_Dlights);
     testDatum("random", DatumFactory.getDatumRandom());
   }
 

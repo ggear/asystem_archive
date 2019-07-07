@@ -84,7 +84,7 @@
       "alert": "select",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -130,7 +130,7 @@
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -176,7 +176,7 @@
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -218,7 +218,7 @@
     "state": {
       "on": true,
       "bri": 254,
-      "ct": 153,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
@@ -268,7 +268,7 @@
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -590,18 +590,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -660,18 +660,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -730,18 +730,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -800,18 +800,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -870,18 +870,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -940,18 +940,18 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 40304,
-      "sat": 28,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3559,
-        0.3632
+        0.4573,
+        0.4100
       ],
-      "ct": 215,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -1010,14 +1010,14 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 41491,
-      "sat": 78,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3120,
-        0.3280
+        0.4573,
+        0.4100
       ],
-      "ct": 153,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
@@ -1087,7 +1087,7 @@
         0.4573,
         0.4100
       ],
-      "ct": 153,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
@@ -1150,14 +1150,14 @@
     "state": {
       "on": true,
       "bri": 254,
-      "hue": 41491,
-      "sat": 78,
+      "hue": 8418,
+      "sat": 140,
       "effect": "none",
       "xy": [
-        0.3120,
-        0.3280
+        0.4573,
+        0.4100
       ],
-      "ct": 153,
+      "ct": 366,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
@@ -1220,11 +1220,11 @@
     "state": {
       "on": true,
       "bri": 254,
-      "ct": 153,
+      "ct": 230,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": false
+      "reachable": true
     },
     "swupdate": {
       "state": "noupdates",
@@ -1266,11 +1266,11 @@
     "state": {
       "on": true,
       "bri": 254,
-      "ct": 153,
+      "ct": 233,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
-      "reachable": true
+      "reachable": false
     },
     "swupdate": {
       "state": "noupdates",
@@ -1403,8 +1403,8 @@
   "25": {
     "state": {
       "on": true,
-      "bri": 144,
-      "ct": 447,
+      "bri": 130,
+      "ct": 443,
       "alert": "none",
       "colormode": "ct",
       "mode": "homeautomation",
