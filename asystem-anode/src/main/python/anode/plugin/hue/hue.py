@@ -41,7 +41,7 @@ LIGHT_STATES = {
     },
     "witching": {
         "power": {"LTW001": 2, "LCT010": 2, "LCT012": 2},
-        "state": {"ct": 447, "bri": 100}
+        "state": {"ct": 447, "bri": 50}
     }
 }
 
@@ -113,6 +113,7 @@ class Hue(Plugin):
                 if group_adjust:
                     self.http_put("https://" + BRIDGE_IP + "/api/" + BRIDGE_TOKEN + "/groups/" + group + "/action",
                                   json.dumps(LIGHT_STATES[self.light_state]["state"]), self.light_adjusted)
+
                 power_second_bin = power * len(self.groups[group]["lights"]) if group_on else 0
                 self.datum_push(
                     "power__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
@@ -128,22 +129,43 @@ class Hue(Plugin):
                     data_derived_max=True,
                     data_derived_min=True
                 )
-                energy_consumption_alltime = self.datum_get(
+                energy_consumption_day = self.datum_get(
                     DATUM_QUEUE_LAST, "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
-                    "integral", "Wh", "1", "all_Dtime")
-                energy_consumption_alltime = int((0 if energy_consumption_alltime is None else energy_consumption_alltime["data_value"]) +
-                                                 (float(power_second_bin) / (60 * 60) * 10000))
+                    "integral", "mWh", "1", "day")
+                if energy_consumption_day is not None and self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) != \
+                    self.get_time_period(energy_consumption_day["bin_timestamp"], Plugin.get_seconds(1, "day")):
+                    energy_consumption_day = None
+                energy_consumption_day = int((0 if energy_consumption_day is None else energy_consumption_day["data_value"]) +
+                                             (float(power_second_bin) / (60 * 60) * 10000))
                 self.datum_push(
                     "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
                     "current", "integral",
-                    energy_consumption_alltime,
+                    energy_consumption_day,
+                    "mWh",
+                    10,
+                    bin_timestamp,
+                    bin_timestamp,
+                    1,
+                    "day",
+                    data_bound_lower=0
+                )
+                energy_consumption_alltime_min = self.datum_get(
+                    DATUM_QUEUE_MIN, "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
+                    "integral", "Wh", 1, "all_Dtime", 1, "day")
+                energy_consumption_alltime_min = int((0 if energy_consumption_alltime_min is None
+                                                      else energy_consumption_alltime_min["data_value"]))
+                self.datum_push(
+                    "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
+                    "current", "integral",
+                    int(energy_consumption_alltime_min + energy_consumption_day / 1000),
                     "Wh",
-                    10000,
+                    1,
                     bin_timestamp,
                     bin_timestamp,
                     1,
                     "all_Dtime",
-                    data_bound_lower=0
+                    data_bound_lower=0,
+                    data_derived_min=True
                 )
             self.publish()
         except Exception as exception:
