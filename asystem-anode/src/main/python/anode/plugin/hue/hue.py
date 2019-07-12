@@ -157,7 +157,7 @@ class Hue(Plugin):
                 self.datum_push(
                     "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
                     "current", "integral",
-                    int(energy_consumption_alltime_min + energy_consumption_day / 1000),
+                    int(energy_consumption_alltime_min + energy_consumption_day / 10000),
                     "Wh",
                     1,
                     bin_timestamp,
