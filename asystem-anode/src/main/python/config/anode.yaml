@@ -37,19 +37,16 @@ plugin:
     repeat_partition: True
     publish_ticks: -1
     publish_upstream: True
-
-  # TODO: Diable until weather station is moved to Wootoona
-  #  davis:
-  #    poll_seconds: -1
-  #    buffer_ticks: 30
-  #    history_partitions: 15
-  #    history_ticks: 1800000
-  #    history_partition_seconds: 86400
-  #    repeat_seconds: 103
-  #    repeat_partition: True
-  #    publish_ticks: -1
-  #    publish_upstream: True
-
+  davis:
+      poll_seconds: -1
+      buffer_ticks: 30
+      history_partitions: 15
+      history_ticks: 1800000
+      history_partition_seconds: 86400
+      repeat_seconds: 103
+      repeat_partition: True
+      publish_ticks: -1
+      publish_upstream: True
   darksky:
     poll_seconds: 300
     buffer_ticks: 5
