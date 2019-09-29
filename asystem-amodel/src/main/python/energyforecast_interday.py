@@ -75,21 +75,21 @@ def execute(model=None, features=None,
     feature_columns_original = [
         'datum__bin__date',
         'energy__production__inverter',
-        'temperature__forecast__glen_Dforrest',
-        'rain__forecast__glen_Dforrest',
-        'humidity__forecast__glen_Dforrest',
-        'wind__forecast__glen_Dforrest',
-        'conditions__forecast__glen_Dforrest',
+        'temperature__forecast__darlington',
+        'rain__forecast__darlington',
+        'humidity__forecast__darlington',
+        'wind__forecast__darlington',
+        'conditions__forecast__darlington',
         'day_length_sec'
     ]
     feature_columns_rename = {
         'datum__bin__date': 'date',
         'energy__production__inverter': 'energy',
-        'temperature__forecast__glen_Dforrest': 'temperature',
-        'rain__forecast__glen_Dforrest': 'rain_mm',
-        'humidity__forecast__glen_Dforrest': 'humidity_mbar',
-        'wind__forecast__glen_Dforrest': 'wind_power',
-        'conditions__forecast__glen_Dforrest': 'condition'
+        'temperature__forecast__darlington': 'temperature',
+        'rain__forecast__darlington': 'rain_mm',
+        'humidity__forecast__darlington': 'humidity_mbar',
+        'wind__forecast__darlington': 'wind_power',
+        'conditions__forecast__darlington': 'condition'
     }
     if labels:
         return feature_columns, feature_columns_original, feature_columns_rename

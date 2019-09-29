@@ -48,7 +48,7 @@ class Darksky(Plugin):
                 for forecast_index in range(3):
                     forecast = dict_content["daily"]["data"][forecast_index]
                     self.datum_push(
-                        "conditions__forecast__glen_Dforrest",
+                        "conditions__forecast__darlington",
                         "forecast", "enumeration",
                         0,
                         "__",
@@ -60,7 +60,7 @@ class Darksky(Plugin):
                         data_string=self.datum_value(forecast, ["icon"]).lower().replace("-", " ").encode("ascii", "ignore")
                     )
                     self.datum_push(
-                        "temperature__forecast__glen_Dforrest",
+                        "temperature__forecast__darlington",
                         "forecast", "point",
                         None if self.datum_value(forecast, ["temperatureHigh"]) is None else \
                             int((self.datum_value(forecast, ["temperatureHigh"]) - 32) * 5 / 9 * 10),
@@ -73,7 +73,7 @@ class Darksky(Plugin):
                         data_derived_max=forecast_index == 0
                     )
                     self.datum_push(
-                        "temperature__forecast__glen_Dforrest",
+                        "temperature__forecast__darlington",
                         "forecast", "low",
                         None if self.datum_value(forecast, ["temperatureLow"]) is None else \
                             int((self.datum_value(forecast, ["temperatureLow"]) - 32) * 5 / 9 * 10),
@@ -85,7 +85,7 @@ class Darksky(Plugin):
                         "day"
                     )
                     self.datum_push(
-                        "wind__forecast__glen_Dforrest",
+                        "wind__forecast__darlington",
                         "forecast", "mean",
                         None if self.datum_value(forecast, ["windSpeed"]) is None else \
                             int(self.datum_value(forecast, ["windSpeed"], factor=10) * 1.609344),
@@ -99,7 +99,7 @@ class Darksky(Plugin):
                         data_derived_min=forecast_index == 0
                     )
                     self.datum_push(
-                        "wind__forecast__glen_Dforrest",
+                        "wind__forecast__darlington",
                         "forecast", "high",
                         None if self.datum_value(forecast, ["windGust"]) is None else \
                             int(self.datum_value(forecast, ["windGust"], factor=10) * 1.609344),
@@ -112,7 +112,7 @@ class Darksky(Plugin):
                         data_bound_lower=0
                     )
                     self.datum_push(
-                        "humidity__forecast__glen_Dforrest",
+                        "humidity__forecast__darlington",
                         "forecast", "mean",
                         None if self.datum_value(forecast, ["humidity"]) is None else \
                             int(self.datum_value(forecast, ["humidity"], factor=100)),
@@ -134,7 +134,7 @@ class Darksky(Plugin):
                     rain_rate = float(forecast["precipIntensity"] if is_rain and "precipIntensity" in forecast else 0) * 25.4
                     rain = rain_rate * 24
                     self.datum_push(
-                        "rain_Dprobability__forecast__glen_Dforrest",
+                        "rain_Dprobability__forecast__darlington",
                         "forecast", "point",
                         int(rain_probability * 100),
                         "_P25",
@@ -148,7 +148,7 @@ class Darksky(Plugin):
                         data_derived_min=forecast_index == 0
                     )
                     self.datum_push(
-                        "rain_Drate_Dmax_Dtime__forecast__glen_Dforrest",
+                        "rain_Drate_Dmax_Dtime__forecast__darlington",
                         "forecast", "epoch",
                         int(rain_rate_max_time),
                         "scalar",
@@ -159,7 +159,7 @@ class Darksky(Plugin):
                         "day"
                     )
                     self.datum_push(
-                        "rain_Drate_Dmax__forecast__glen_Dforrest",
+                        "rain_Drate_Dmax__forecast__darlington",
                         "forecast", "high",
                         int(rain_rate_max * 10000),
                         "mm_P2Fh",
@@ -173,7 +173,7 @@ class Darksky(Plugin):
                         data_derived_min=forecast_index == 0
                     )
                     self.datum_push(
-                        "rain_Drate__forecast__glen_Dforrest",
+                        "rain_Drate__forecast__darlington",
                         "forecast", "mean",
                         int(rain_rate * 10000),
                         "mm_P2Fh",
@@ -187,7 +187,7 @@ class Darksky(Plugin):
                         data_derived_min=forecast_index == 0
                     )
                     self.datum_push(
-                        "rain__forecast__glen_Dforrest",
+                        "rain__forecast__darlington",
                         "forecast", "integral",
                         int(rain * 10),
                         "mm",

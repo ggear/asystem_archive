@@ -131,6 +131,9 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         val timezoneDefault = TimeZone.getDefault.getID
         for ((partition, paths) <- inputPaths)
           spark.read.parquet(paths: _*).cache().createTempView(partition)
+
+        // TODO: Current reading *__glen_Dforrest in favour of *__darlington given data has not been updated
+        
         var outputAll = List(
           s"""
              | SELECT
@@ -147,7 +150,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-             |   max(data_value) / first(data_scale) AS temperature__forecast__glen_Dforrest
+             |   max(data_value) / first(data_scale) AS temperature__forecast__darlington
              | FROM temperature
              | WHERE
              |   data_metric='temperature__forecast__glen_Dforrest' AND
@@ -158,7 +161,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-             |   max(data_value) / first(data_scale) AS rain__forecast__glen_Dforrest
+             |   max(data_value) / first(data_scale) AS rain__forecast__darlington
              | FROM rain
              | WHERE
              |   data_metric='rain__forecast__glen_Dforrest' AND
@@ -169,7 +172,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-             |   max(data_value) / first(data_scale) AS humidity__forecast__glen_Dforrest
+             |   max(data_value) / first(data_scale) AS humidity__forecast__darlington
              | FROM humidity
              | WHERE
              |   data_metric='humidity__forecast__glen_Dforrest' AND
@@ -180,7 +183,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-             |   max(data_value) / first(data_scale) AS wind__forecast__glen_Dforrest
+             |   max(data_value) / first(data_scale) AS wind__forecast__darlington
              | FROM wind
              | WHERE
              |   data_metric='wind__forecast__glen_Dforrest' AND
@@ -235,7 +238,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
              | SELECT
              |   date_format(from_utc_timestamp(to_utc_timestamp(cast(bin_timestamp as timestamp),
              |   '$timezoneDefault'), '$timezoneWorking'), '$dateFormat') AS datum__bin__date,
-             |   last(data_string) AS conditions__forecast__glen_Dforrest
+             |   last(data_string) AS conditions__forecast__darlington
              | FROM conditions
              | WHERE
              |   data_metric='conditions__forecast__glen_Dforrest'
@@ -250,16 +253,16 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
         addResult("  " + outputAll.columns.mkString(","))
         outputAll.collect.foreach(row => addResult("  " + row.mkString(",")))
         val outputTrainDays = outputAll
-          .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
-          .groupBy("conditions__forecast__glen_Dforrest")
+          .select("datum__bin__date", "conditions__forecast__darlington")
+          .groupBy("conditions__forecast__darlington")
           .agg(first("datum__bin__date").as("datum__bin__date"))
           .orderBy("datum__bin__date")
           .union(outputAll
-            .select("datum__bin__date", "conditions__forecast__glen_Dforrest")
-            .groupBy("conditions__forecast__glen_Dforrest")
+            .select("datum__bin__date", "conditions__forecast__darlington")
+            .groupBy("conditions__forecast__darlington")
             .agg(last("datum__bin__date").as("datum__bin__date"))
             .orderBy("datum__bin__date")
-          ).drop("conditions__forecast__glen_Dforrest").orderBy("datum__bin__date")
+          ).drop("conditions__forecast__darlington").orderBy("datum__bin__date")
           .dropDuplicates().coalesce(1).cache()
         outputTrain = Some(outputAll.join(outputTrainDays, Seq("datum__bin__date"), "leftanti").
           sort(asc("datum__bin__date")).coalesce(1).cache())
