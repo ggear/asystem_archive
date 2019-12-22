@@ -133,7 +133,7 @@ class EnergyForecastInterday(configuration: Configuration) extends DriverSpark(c
           spark.read.parquet(paths: _*).cache().createTempView(partition)
 
         // TODO: Current reading *__glen_Dforrest in favour of *__darlington given data has not been updated
-        
+
         var outputAll = List(
           s"""
              | SELECT
