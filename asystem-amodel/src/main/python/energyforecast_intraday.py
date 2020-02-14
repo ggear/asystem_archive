@@ -229,7 +229,7 @@ def pipeline():
     print("Model built ...")
 
     model_file = '/model/pickle/joblib/none/' \
-                 'amodel_version=10.000.0140/amodel_model=1003/model.pkl'
+                 'amodel_version=10.000.0141-SNAPSHOT/amodel_model=1003/model.pkl'
     local_model_file = local_model_path + model_file
     remote_model_file = remote_model_path + model_file
     if os.path.exists(os.path.dirname(local_model_file)):
