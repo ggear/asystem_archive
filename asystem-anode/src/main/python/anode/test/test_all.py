@@ -53,7 +53,7 @@ class ANodeTest(TestCase):
                    lambda to_execute, *arguments, **keyword_arguments: to_execute(*arguments, **keyword_arguments))
         self.patch(MqttPublishService, "startService", lambda myself: None)
         self.patch(MqttPublishService, "isConnected", lambda myself: True)
-        self.patch(MqttPublishService, "publishMessage", lambda myself, message, queue, on_failure: succeed(None))
+        self.patch(MqttPublishService, "publishMessage", lambda myself, topic, message, queue, qos, retain, on_failure: succeed(None))
         shutil.rmtree(DIR_ANODE, ignore_errors=True)
         state_dir = DIR_ANODE + "/config"
         os.makedirs(state_dir)

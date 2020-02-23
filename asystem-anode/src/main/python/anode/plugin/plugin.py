@@ -223,27 +223,28 @@ class Plugin(object):
             data_transient=True
         )
         datums_publish_pending = 0
-        publish_service = self.config["publish_service"] \
-            if ("publish_service" in self.config and "publish_upstream" in self.config and self.config["publish_upstream"]) else None
+        publish_service = self.config["publish_service"] if "publish_service" in self.config else None
+        publish_batch_datum_topic = self.config["publish_batch_datum_topic"] if "publish_batch_datum_topic" in self.config else None
         for datum_metric in self.datums:
             for datum_type in self.datums[datum_metric]:
                 for datum_unit in self.datums[datum_metric][datum_type]:
                     for datum_bin in self.datums[datum_metric][datum_type][datum_unit]:
                         datums_publish = self.datums[datum_metric][datum_type][datum_unit][datum_bin][DATUM_QUEUE_PUBLISH]
                         datums_publish_len = len(datums_publish)
-                        if publish_service is not None and publish_service.isConnected():
-                            for index in xrange(datums_publish_len):
-                                datum_avro = datums_publish.popleft()
-                                anode.Log(logging.DEBUG).log("Plugin", "state",
-                                                             lambda: "[{}] publishing datum [{}] datum [{}] of [{}]".format(
-                                                                 self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]),
-                                                                 index + 1, datums_publish_len))
-                                publish_service.publishMessage(datum_avro, datums_publish, lambda failure, message, queue: (
-                                    anode.Log(logging.WARN).log("Plugin", "state",
-                                                                lambda: "[{}] publish failed datum [{}] with reason {}".format(
-                                                                    self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]),
-                                                                    str(failure).replace("\n", ""))),
-                                    queue.appendleft(message)))
+                        if publish_service is not None and publish_batch_datum_topic is not None:
+                            if publish_service.isConnected():
+                                for index in xrange(datums_publish_len):
+                                    datum_avro = datums_publish.popleft()
+                                    anode.Log(logging.DEBUG).log("Plugin", "state",
+                                                                 lambda: "[{}] publishing datum [{}] datum [{}] of [{}]".format(
+                                                                     self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]),
+                                                                     index + 1, datums_publish_len))
+                                    publish_service.publishMessage(publish_batch_datum_topic + PUBLISH_BATCH_TOPIC,
+                                                                   datum_avro, datums_publish, 1, False, lambda failure, message, queue: (
+                                            anode.Log(logging.WARN).log("Plugin", "state", lambda:
+                                            "[{}] publish failed datum [{}] with reason {}".format(
+                                                self.name, self.datum_tostring(self.datum_avro_to_dict(datum_avro)[0]),
+                                                str(failure).replace("\n", ""))), queue.appendleft(message)))
                         elif publish_service is None:
                             datums_publish.clear()
                         datums_publish_pending += len(datums_publish)
@@ -382,6 +383,39 @@ class Plugin(object):
                 anode.Log(logging.DEBUG).log("Plugin", "state",
                                              lambda: "[{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
                 self.anode.push_datums({"dict": [datum_dict]})
+                if not datum_dict["data_metric"].startswith("anode"):
+                    publish_service = self.config["publish_service"] if "publish_service" in self.config else None
+                    publish_push_data_topic = self.config["publish_push_data_topic"] \
+                        if "publish_push_data_topic" in self.config else None
+                    publish_push_metadata_topic = self.config["publish_push_metadata_topic"] \
+                        if "publish_push_metadata_topic" in self.config else None
+                    if publish_service is not None and publish_push_data_topic is not None and publish_push_metadata_topic is not None:
+                        if publish_service.isConnected():
+                            datum_id = Plugin.datum_decode_id(datum_dict)
+                            datum_dict_decoded = Plugin.datum_decode(datum_dict)
+                            datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
+                            if datum_id not in PUBLISH_METADATA_CACHE:
+                                datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
+                                datum_metadata = {
+                                    "unique_id": datum_id,
+                                    "name": datum_id,
+                                    "qos": 1,
+                                    "value_template": "{{value_json.value}}",
+                                    "unit_of_measurement": datum_dict_decoded["data_unit"],
+                                    "state_topic": datum_data_topic
+                                }
+                                publish_service.publishMessage(datum_metadata_topic, json.dumps(datum_metadata), None, 1, True,
+                                                               lambda failure, message, queue: (
+                                                                   anode.Log(logging.WARN).log("Plugin", "state", lambda:
+                                                                   "[{}] publish failed datum metadata [{}] with reason {}".format(
+                                                                       self.name, datum_metadata, str(failure).replace("\n", ""))), None))
+                                PUBLISH_METADATA_CACHE.add(datum_id)
+                            datum_data = {"value": float(int(datum_dict["data_value"]) / Decimal(datum_dict["data_scale"]))}
+                            publish_service.publishMessage(datum_data_topic, json.dumps(datum_data), None, 1, False,
+                                                           lambda failure, message, queue: (
+                                                               anode.Log(logging.WARN).log("Plugin", "state", lambda:
+                                                               "[{}] publish failed datum data [{}] with reason {}".format(
+                                                                   self.name, datum_data, str(failure).replace("\n", ""))), None))
             else:
                 anode.Log(logging.DEBUG).log("Plugin", "state",
                                              lambda: "[{}] dropped datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
@@ -410,7 +444,6 @@ class Plugin(object):
                     datums_df = datums_df[0]
                     if bin_timestamp_partition not in datums_history:
                         datums_history[bin_timestamp_partition] = datums_df
-                        threads.deferToThread(self.datums_store_history, bin_timestamp_partition, datums_history, True)
                     else:
                         datums_history[bin_timestamp_partition]["data_df"] = pandas.concat(
                             [datums_history[bin_timestamp_partition]["data_df"],
@@ -484,6 +517,15 @@ class Plugin(object):
         for field in ("data_source", "data_metric", "data_temporal", "data_type", "data_unit", "bin_unit"):
             datum_dict_decoded[field] = Plugin.datum_field_decode(datum_dict_decoded[field])
         return datum_dict_decoded
+
+    @staticmethod
+    def datum_decode_id(datum_dict):
+        datum_dict_id = datum_dict["data_metric"] + "-" + "_".join([
+            datum_dict["data_type"],
+            datum_dict["data_unit"],
+            datum_dict["bin_unit"],
+            str(datum_dict["bin_width"])])
+        return datum_dict_id
 
     @staticmethod
     def datum_tostring(datum_dict):
@@ -1146,33 +1188,6 @@ class Plugin(object):
                                              self.name, keys, default, data, exception), exception)
             return None if default is None else int(default * factor)
 
-    def datums_store_history(self, datum_partition, datums_history, off_thread=False):
-        log_timer = anode.Log(logging.INFO).start()
-        if "store" in self.config:
-            partitions = []
-            datums_count = 0
-            datums_key = "/".join(["datums",
-                                   datums_history[datum_partition]["data_metric"],
-                                   datums_history[datum_partition]["data_type"],
-                                   datums_history[datum_partition]["data_unit"],
-                                   datums_history[datum_partition]["bin_unit"] + str(datums_history[datum_partition]["bin_width"])])
-            datums_metadata = self.config["store"].select("metadata") if "metadata" in self.config["store"] else None
-            for partition in datums_history:
-                if partition < datum_partition:
-                    datums_key_partition = datums_key + "/" + str(partition)
-                    if datums_metadata is None or datums_key_partition not in datums_metadata.index:
-                        datums_metadata_new = pandas.DataFrame({"key_partition": [datums_key_partition]}).set_index("key_partition")
-                        datums_metadata = datums_metadata_new if datums_metadata is None \
-                            else datums_metadata.append(datums_metadata_new)
-                        partitions.append(partition)
-            for partition in partitions:
-                datums_count += len(datums_history[partition]["data_df"].index)
-                self.config["store"].append(datums_key, datums_history[partition]["data_df"])
-            if len(partitions) > 0: self.config["store"].put("metadata", datums_metadata)
-        log_timer.log("Plugin", "timer",
-                      lambda: "[{}] history stored [{}] partitions and [{}] datums".format(self.name, len(partitions), datums_count),
-                      context=self.datums_store_history, off_thread=False)
-
     def datums_store(self):
         log_timer = anode.Log(logging.INFO).start()
         for datum_metric in self.datums:
@@ -1475,6 +1490,9 @@ DATUM_SCHEMA_AVRO = avro.schema.parse(DATUM_SCHEMA_FILE)
 DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON["fields"][i]["name"].encode("utf-8"): i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"]))}
 DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"][i].encode("utf-8")):
                             i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"]))}
+
+PUBLISH_METADATA_CACHE = set()
+PUBLISH_BATCH_TOPIC = "/anode_version=" + APP_VERSION + "/anode_id=" + ID_HEX + "/anode_model=" + APP_MODEL_VERSION
 
 PICKLES_CACHE = {}
 

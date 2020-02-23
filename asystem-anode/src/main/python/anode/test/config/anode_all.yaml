@@ -3,7 +3,6 @@ port: 8091
 save_on_exit: True
 save_seconds: -1
 model_pull_seconds: 1
-history_path: '/mnt/timecapsule'
 plugin:
   fronius:
     poll_seconds: 1
@@ -13,60 +12,53 @@ plugin:
     history_partition_seconds: 86400
     repeat_seconds: -1
     publish_ticks: -1
-    publish_upstream: True
   kasa:
-    poll_seconds: 1
-    buffer_ticks: 30
-    history_partitions: 14
-    history_ticks: 3500000
-    history_partition_seconds: 86400
-    repeat_seconds: -1
-    publish_ticks: -1
-    publish_upstream: True
+      poll_seconds: 1
+      buffer_ticks: 30
+      history_partitions: 14
+      history_ticks: 3500000
+      history_partition_seconds: 86400
+      repeat_seconds: -1
+      publish_ticks: -1
   davis:
-    poll_seconds: -1
-    buffer_ticks: 30
-    history_partitions: 14
-    history_ticks: 900000
-    history_partition_seconds: 86400
-    repeat_seconds: -1
-    publish_ticks: -1
-    publish_upstream: True
+      poll_seconds: -1
+      buffer_ticks: 30
+      history_partitions: 14
+      history_ticks: 900000
+      history_partition_seconds: 86400
+      repeat_seconds: -1
+      publish_ticks: -1
   netatmo:
-    poll_seconds: 1
-    buffer_ticks: 10
-    history_partitions: 14
-    history_ticks: 900000
-    history_partition_seconds: 86400
-    repeat_seconds: -1
-    publish_ticks: -1
-    publish_upstream: True
+      poll_seconds: 1
+      buffer_ticks: 10
+      history_partitions: 14
+      history_ticks: 900000
+      history_partition_seconds: 86400
+      repeat_seconds: -1
+      publish_ticks: -1
   darksky:
-    poll_seconds: 1
-    buffer_ticks: 10
-    history_partitions: 14
-    history_ticks: 20000
-    history_partition_seconds: 86400
-    repeat_seconds: -1
-    publish_ticks: -1
-    publish_upstream: True
+      poll_seconds: 1
+      buffer_ticks: 10
+      history_partitions: 14
+      history_ticks: 20000
+      history_partition_seconds: 86400
+      repeat_seconds: -1
+      publish_ticks: -1
   speedtest:
-    poll_seconds: -1
-    buffer_ticks: 30
-    history_partitions: 14
-    history_ticks: 900000
-    history_partition_seconds: 86400
-    repeat_seconds: -1
-    publish_ticks: -1
-    publish_upstream: True
+      poll_seconds: -1
+      buffer_ticks: 30
+      history_partitions: 14
+      history_ticks: 900000
+      history_partition_seconds: 86400
+      repeat_seconds: -1
+      publish_ticks: -1
 
-# TODO: Disable until models retrained with new darksky features
-#  energyforecast:
-#    poll_seconds: 1
-#    buffer_ticks: 10
-#    history_partitions: 14
-#    history_ticks: 20000
-#    history_partition_seconds: 86400
-#    repeat_seconds: -1
-#    publish_ticks: -1
-#    publish_upstream: True
+  # TODO: Disable until models retrained with new darksky features
+  #  energyforecast:
+  #    poll_seconds: 1
+  #    buffer_ticks: 10
+  #    history_partitions: 14
+  #    history_ticks: 20000
+  #    history_partition_seconds: 86400
+  #    repeat_seconds: -1
+  #    publish_ticks: -1

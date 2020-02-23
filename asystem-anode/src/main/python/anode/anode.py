@@ -3,11 +3,11 @@ from __future__ import print_function
 import logging
 import logging.config
 import shutil
+import sys
+import time
 import urlparse
 from optparse import OptionParser
 
-import sys
-import time
 import yaml
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
@@ -17,7 +17,6 @@ from mqtt.client import publisher
 from mqtt.client.base import MQTTBaseProtocol
 from mqtt.client.factory import MQTTFactory
 from mqtt.error import MQTTStateError
-from pandas import HDFStore
 from twisted.application.internet import ClientService, backoffPolicy
 from twisted.internet import reactor
 from twisted.internet import threads
@@ -56,36 +55,25 @@ class ANode:
         self.options = options
         self.config = config
         self.plugins = {}
-
-        # TODO: Reimplement when HDFS restored
-        if "history_path" in self.config: del self.config["history_path"]
-        if "history_path" in self.config:
-            history_path = self.config["history_path"] + "/asystem/astore/datums.h5"
-            if not os.path.exists(os.path.dirname(history_path)): os.makedirs(os.path.dirname(history_path))
-            self.store = HDFStore(self.config["history_path"] + "/asystem/astore/datums.h5")
-
         self.web_ws = WebWsFactory(u"ws://" + self.config["host"] + ":" + str(self.config["port"]), self)
         self.web_ws.protocol = WebWs
         self.web_rest = WebRest(self)
         self.web_pool = HTTPConnectionPool(reactor, persistent=True)
-        self.publish_mqtt = None
-        self.publish_upstream_plugin = False
-        self.publish_upstream = "publish_host" in self.config and len(self.config["publish_host"]) > 0 and \
-                                "publish_port" in self.config and self.config["publish_port"] > 0
-        for plugin_name in self.config["plugin"]:
-            self.publish_upstream_plugin = self.publish_upstream_plugin or \
-                                           "publish_upstream" in self.config["plugin"][plugin_name] and \
-                                           self.config["plugin"][plugin_name]["publish_upstream"]
-        if self.publish_upstream and self.publish_upstream_plugin:
+        self.publish_service = None
+        self.publish = "publish_host" in self.config and len(self.config["publish_host"]) > 0 and \
+                       "publish_port" in self.config and self.config["publish_port"] > 0
+        if self.publish:
             access_key = os.environ["MQTT_ACCESS_KEY"] if "MQTT_ACCESS_KEY" in os.environ else None
             secret_key = os.environ["MQTT_SECRET_KEY"] if "MQTT_SECRET_KEY" in os.environ else None
-            self.publish_mqtt = MqttPublishService(
-                clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"])),
-                MQTTFactory(profile=MQTTFactory.PUBLISHER),
-                "asystem/anode/amodel/anode_version=" + APP_VERSION + "/anode_id=" + ID_HEX + "/anode_model=" + APP_MODEL_VERSION,
-                (self.config["publish_seconds"] * 2) if ("publish_seconds" in self.config and self.config["publish_seconds"] > 0) else
-                KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
-            self.publish_mqtt.startService()
+            mqtt_client_string = clientFromString(reactor, "tcp:" + self.config["publish_host"] + ":" + str(self.config["publish_port"]))
+
+            # TODO: Fix keepalive
+            self.publish_service = MqttPublishService(mqtt_client_string, MQTTFactory(profile=MQTTFactory.PUBLISHER),
+                                                      (self.config["publish_batch_seconds"] * 2) if (
+                                                              "publish_batch_seconds" in self.config and self.config[
+                                                          "publish_batch_seconds"] > 0) else
+                                                      KEEPALIVE_DEFAULT_SECONDS, access_key, secret_key)
+            self.publish_service.startService()
 
         def looping_call(loop_function, loop_seconds):
             loop_call = LoopingCall(loop_function)
@@ -101,14 +89,18 @@ class ANode:
                                                                   APP_VERSION.endswith("-SNAPSHOT")) else "")}, self.core_reactor)
             looping_call(model_pull.poll, self.config["model_pull_seconds"])
         for plugin_name in self.config["plugin"]:
-            if "history_path" in self.config: self.config["plugin"][plugin_name]["store"] = self.store
             self.config["plugin"][plugin_name]["pool"] = self.web_pool
             self.config["plugin"][plugin_name]["db_dir"] = self.options.db_dir
-            self.config["plugin"][plugin_name]["publish_upstream"] = self.publish_upstream and \
-                                                                     "publish_upstream" in self.config["plugin"][plugin_name] and \
-                                                                     self.config["plugin"][plugin_name]["publish_upstream"]
-            if self.config["plugin"][plugin_name]["publish_upstream"] and self.publish_mqtt is not None:
-                self.config["plugin"][plugin_name]["publish_service"] = self.publish_mqtt
+            if self.publish_service is not None:
+                self.config["plugin"][plugin_name]["publish_service"] = self.publish_service
+            if "publish_status_topic" in self.config:
+                self.config["plugin"][plugin_name]["publish_status_topic"] = self.config["publish_status_topic"]
+            if "publish_push_data_topic" in self.config:
+                self.config["plugin"][plugin_name]["publish_push_data_topic"] = self.config["publish_push_data_topic"]
+            if "publish_push_metadata_topic" in self.config:
+                self.config["plugin"][plugin_name]["publish_push_metadata_topic"] = self.config["publish_push_metadata_topic"]
+            if "publish_batch_datum_topic" in self.config:
+                self.config["plugin"][plugin_name]["publish_batch_datum_topic"] = self.config["publish_batch_datum_topic"]
             self.plugins[plugin_name] = Plugin.get(self, plugin_name, self.config["plugin"][plugin_name], self.core_reactor)
             if "poll_seconds" in self.config["plugin"][plugin_name] and self.config["plugin"][plugin_name]["poll_seconds"] > 0:
                 looping_call(self.plugins[plugin_name].poll, self.config["plugin"][plugin_name]["poll_seconds"])
@@ -127,9 +119,8 @@ class ANode:
                 self.core_reactor.callLater(time_partition_next,
                                             lambda _plugin_partitioncall, _time_partition: _plugin_partitioncall.start(_time_partition),
                                             plugin_partitioncall, time_partition)
-        if self.publish_upstream and self.publish_upstream_plugin and \
-                "publish_seconds" in self.config and self.config["publish_seconds"] > 0:
-            looping_call(self.publish_datums, self.config["publish_seconds"])
+        if self.publish and "publish_batch_seconds" in self.config and self.config["publish_batch_seconds"] > 0:
+            looping_call(self.publish_datums, self.config["publish_batch_seconds"])
         if "save_seconds" in self.config and self.config["save_seconds"] > 0:
             looping_call(self.store_state, self.config["save_seconds"])
         log_timer.log("Service", "timer", lambda: "[anode] initialised", context=self.__init__)
@@ -190,15 +181,13 @@ class ANode:
         log_timer = Log(logging.DEBUG).start()
         Log(logging.INFO).log("Service", "state", lambda: "[anode] stopping")
         if "save_on_exit" in self.config: self.store_state()
-        if "history_path" in self.config: self.store.close()
         log_timer.log("Service", "timer", lambda: "[anode] stopped", context=self.stop_server)
         return succeed(None)
 
 
 # noinspection PyPep8Naming
 class MqttPublishService(ClientService):
-    def __init__(self, endpoint, factory, topic, keepalive, access_key=None, secret_key=None):
-        self.topic = topic
+    def __init__(self, endpoint, factory, keepalive, access_key=None, secret_key=None):
         self.keepalive = keepalive
         self.protocol = None
         self.access_key = access_key
@@ -230,10 +219,10 @@ class MqttPublishService(ClientService):
     def isConnected(self):
         return self.protocol is not None and isinstance(self.protocol.state, publisher.ConnectedState)
 
-    def publishMessage(self, message, queue, on_failure):
+    def publishMessage(self, topic, message, queue, qos, retain, on_failure):
         Log(logging.DEBUG).log("Interface", "publish", lambda: "[mqtt] message of size [{}]".format(len(message)))
         if self.isConnected():
-            deferred = self.protocol.publish(self.topic, bytearray(message), qos=1)
+            deferred = self.protocol.publish(topic, bytearray(message), qos, retain)
             deferred.addErrback(on_failure, message, queue)
             return deferred
         else:

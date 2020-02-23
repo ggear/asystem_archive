@@ -1,18 +1,21 @@
 host: 0.0.0.0
 port: 8091
+publish_host: 192.168.2.5
+publish_port: 1883
+publish_batch_seconds: 600
 
-# TODO: Disable publish for time being
-#publish_host: 52.63.86.162
-#publish_port: 8093
-#publish_seconds: 4
+#  - Add publish_status on start, expire after some time, add on exit too, perhaps on a metric by metric basis? - maybe dont do?
+publish_status_topic: 'anode/status'
 
+publish_push_data_topic: 'haas/sensor/state'
+publish_push_metadata_topic: 'haas/sensor/config'
+publish_batch_datum_topic: 'asystem/anode/amodel'
 model_pull_seconds: 30
 model_pull_region: 'ap-southeast-2'
 model_pull_bucket: '0-asystem-amodel'
 model_pull_bucket_snapshot: '-staging'
-history_path: '/mnt/timecapsule'
 save_on_exit: True
-save_seconds: 1800
+save_seconds: 600
 plugin:
 
   # TODO: Diable until energy meter is moved to Wootoona
@@ -25,7 +28,6 @@ plugin:
   #    repeat_seconds: 99
   #    repeat_partition: True
   #    publish_ticks: -1
-  #    publish_upstream: True
 
   kasa:
     poll_seconds: 1
@@ -36,27 +38,24 @@ plugin:
     repeat_seconds: 101
     repeat_partition: True
     publish_ticks: -1
-    publish_upstream: True
   davis:
-      poll_seconds: -1
-      buffer_ticks: 30
-      history_partitions: 15
-      history_ticks: 1800000
-      history_partition_seconds: 86400
-      repeat_seconds: 103
-      repeat_partition: True
-      publish_ticks: -1
-      publish_upstream: True
-  darksky:
-    poll_seconds: 300
-    buffer_ticks: 5
+    poll_seconds: -1
+    buffer_ticks: 30
     history_partitions: 15
-    history_ticks: 1500000
+    history_ticks: 1800000
     history_partition_seconds: 86400
-    repeat_seconds: 111
+    repeat_seconds: 103
     repeat_partition: True
     publish_ticks: -1
-    publish_upstream: True
+    darksky:
+      poll_seconds: 300
+      buffer_ticks: 5
+      history_partitions: 15
+      history_ticks: 1500000
+      history_partition_seconds: 86400
+      repeat_seconds: 111
+      repeat_partition: True
+      publish_ticks: -1
   netatmo:
     poll_seconds: 50
     buffer_ticks: 10
@@ -66,7 +65,6 @@ plugin:
     repeat_seconds: 107
     repeat_partition: True
     publish_ticks: -1
-    publish_upstream: True
   speedtest:
     poll_seconds: -1
     buffer_ticks: 30
@@ -76,7 +74,6 @@ plugin:
     repeat_seconds: 113
     repeat_partition: True
     publish_ticks: -1
-    publish_upstream: True
   hue:
     poll_seconds: 1
     buffer_ticks: 110
@@ -86,7 +83,6 @@ plugin:
     repeat_seconds: 117
     repeat_partition: True
     publish_ticks: -1
-    publish_upstream: True
 
   # TODO: Disable until models retrained with new darksky features
   #  energyforecast:
@@ -98,4 +94,3 @@ plugin:
   #    repeat_seconds: 115
   #    repeat_partition: True
   #    publish_ticks: -1
-  #    publish_upstream: True

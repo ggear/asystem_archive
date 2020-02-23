@@ -31,6 +31,6 @@ dependencies:
 - pbr=4.0.4
 - funcsigs=1.0.2
 - pytables=3.4.4
-- pyasn1=0.4.4
+- pyasn1=0.4.8
 - pip=9.0.1
 - python=2.7.11

@@ -65,6 +65,8 @@ setup(
         "pathlib2==2.3.2",
         "python-dateutil==2.6.1",
         "attrs==18.1.0",
+        "pyasn1==0.4.8",
+        "pymysql==0.9.3",
     ],
     tests_require=["mock"],
     test_suite="anode.test",
