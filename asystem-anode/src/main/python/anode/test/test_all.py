@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
+import datetime
 import json
 import logging
 import os.path
@@ -11,16 +12,15 @@ import os.path
 import re
 import shutil
 import socket
+import sys
+import time
 import urlparse
 from StringIO import StringIO
 from random import randint
 
-import datetime
 import ilio
 import pandas
 import requests
-import sys
-import time
 import treq
 from twisted.internet import threads
 from twisted.internet.defer import succeed

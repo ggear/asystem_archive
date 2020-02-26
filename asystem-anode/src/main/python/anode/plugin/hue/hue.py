@@ -1,9 +1,9 @@
 from __future__ import print_function
 
+import datetime
 import json
 import logging
 
-import datetime
 import pytz
 import requests
 import treq
@@ -133,7 +133,7 @@ class Hue(Plugin):
                     DATUM_QUEUE_LAST, "energy__consumption__" + self.groups[group]["name"].lower() + "_Dlights",
                     "integral", "mWh", "1", "day")
                 if energy_consumption_day is not None and self.get_time_period(bin_timestamp, Plugin.get_seconds(1, "day")) != \
-                    self.get_time_period(energy_consumption_day["bin_timestamp"], Plugin.get_seconds(1, "day")):
+                        self.get_time_period(energy_consumption_day["bin_timestamp"], Plugin.get_seconds(1, "day")):
                     energy_consumption_day = None
                 energy_consumption_day = int((0 if energy_consumption_day is None else energy_consumption_day["data_value"]) +
                                              (float(power_second_bin) / (60 * 60) * 10000))

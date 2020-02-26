@@ -5,14 +5,17 @@ import StringIO
 import abc
 import base64
 import calendar
+import datetime
 import decimal
 import io
 import json
 import logging
 import numbers
+import operator
 import os.path
 import re
 import shutil
+import time
 import urllib
 from StringIO import StringIO
 from collections import deque
@@ -25,14 +28,11 @@ import avro
 import avro.io
 import avro.schema
 import avro.schema
-import datetime
 import dill
 import matplotlib
 import matplotlib.pyplot as plot
 import numpy
-import operator
 import pandas
-import time
 import treq
 import xmltodict
 from avro.io import AvroTypeException
@@ -40,7 +40,6 @@ from cycler import cycler
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.externals import joblib
-from twisted.internet import threads
 from twisted.internet.task import Clock
 from twisted_s3 import auth
 
@@ -391,19 +390,26 @@ class Plugin(object):
                         if "publish_push_metadata_topic" in self.config else None
                     if publish_service is not None and publish_push_data_topic is not None and publish_push_metadata_topic is not None:
                         if publish_service.isConnected():
-                            datum_id = Plugin.datum_decode_id(datum_dict)
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
+                            datum_id = Plugin.datum_decode_id(datum_dict)
+                            datum_name = " ".join([
+                                datum_dict_decoded["data_metric"].split(".")[2].title(),
+                                datum_dict_decoded["data_metric"].split(".")[0].title(),
+                            ])
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
                                     "unique_id": datum_id,
-                                    "name": datum_id,
+                                    "name": datum_name,
                                     "qos": 1,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "state_topic": datum_data_topic
                                 }
+
+                                print(datum_metadata["name"])
+
                                 publish_service.publishMessage(datum_metadata_topic, json.dumps(datum_metadata), None, 1, True,
                                                                lambda failure, message, queue: (
                                                                    anode.Log(logging.WARN).log("Plugin", "state", lambda:

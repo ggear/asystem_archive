@@ -73,8 +73,7 @@
                                     document.getElementById("plots").innerHTML = document.getElementById("plots").innerHTML +
                                         "<hr/><div class='datum'><a href='" + datumsPlotUri + "&format=csv'><img src='" +
                                         datumsPlotUri + "&format=svg&renderTimestamp=" + datumsPlotTime + "' class='datum-plot'/></a></div>"
-                                }
-                                else if ((new Date().getTime() - datumsPlotTime) > 1000 * 60) {
+                                } else if ((new Date().getTime() - datumsPlotTime) > 1000 * 60) {
                                     datumsPlotTime = new Date().getTime()
                                     var plotImgs = document.getElementById("plots").getElementsByTagName('img')
                                     for (i = 0; i < plotImgs.length; ++i) {
@@ -196,8 +195,7 @@
             if (document.getElementById("datums_header_links").style.display == "block") {
                 document.getElementById("datums_header_links").style.display = "none";
                 document.getElementById("datums_header_status").innerHTML = "»"
-            }
-            else {
+            } else {
                 document.getElementById("datums_header_links").style.display = "block";
                 document.getElementById("datums_header_status").innerHTML = "«"
             }

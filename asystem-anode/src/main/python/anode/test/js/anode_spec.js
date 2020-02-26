@@ -86,7 +86,7 @@ describe('ANode', function () {
 
 connectionUri = function (parameters, isRest) {
     return "http://localhost:" + WEB_PORT +
-        ((typeof(isRest) === 'undefined' || !isRest) ? "/" : "/rest/") +
+        ((typeof (isRest) === 'undefined' || !isRest) ? "/" : "/rest/") +
         (parameters ? ("?" + parameters) : "");
 };
 

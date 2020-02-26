@@ -1,12 +1,12 @@
 from __future__ import print_function
 
+import datetime
 import logging
 import os
 import re
-
-import datetime
-import pandas
 import time
+
+import pandas
 from scipy.stats import norm
 
 import anode

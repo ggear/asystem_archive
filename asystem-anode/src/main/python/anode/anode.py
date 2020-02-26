@@ -33,7 +33,6 @@ from twisted.web.static import File
 
 from application import *
 from plugin import DATUM_QUEUE_LAST
-from plugin import ID_HEX
 from plugin import ModelPull
 from plugin import Plugin
 

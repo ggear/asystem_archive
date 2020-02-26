@@ -1,12 +1,9 @@
 from __future__ import print_function
 
-import calendar
 import json
 import logging
 from decimal import Decimal
 
-import datetime
-import dateutil.parser
 import treq
 
 import anode

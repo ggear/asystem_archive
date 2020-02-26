@@ -69,8 +69,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         if (typeof onopen !== "undefined") {
             try {
                 onopen(outer.metadata);
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
             }
         }
@@ -80,8 +79,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         if (typeof onmessage !== "undefined") {
             try {
                 onmessage(outer.toDatum(frame.data));
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
             }
         }
@@ -92,8 +90,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         if (typeof onclose !== "undefined") {
             try {
                 onclose();
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
             }
         }
@@ -109,8 +106,7 @@ function ANode(uri, onopen, onclose, onmessage) {
         //noinspection EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS
         if (((datum.data_temporal == "current" || datum.data_temporal == "repeat" || datum.data_temporal == "derived") && datum.data_type == "point") || datum.bin_width == 0) {
             datum.data_timeliness = "now";
-        }
-        else {
+        } else {
             //noinspection EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS,EqualityComparisonWithCoercionJS
             if (datum.data_type != "point" && datum.data_type != "integral" && datum.data_type != "enumeration" && datum.data_type != "epoch") {
                 datum.data_timeliness = datum.data_type + " ";

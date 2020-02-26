@@ -3,9 +3,9 @@ from __future__ import print_function
 import json
 import logging
 import os
+import time
 from decimal import Decimal
 
-import time
 import treq
 
 import anode
