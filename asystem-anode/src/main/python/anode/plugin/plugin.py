@@ -395,7 +395,7 @@ class Plugin(object):
                             datum_name = " ".join([
                                 datum_dict_decoded["data_metric"].split(".")[2].title(),
                                 datum_dict_decoded["data_metric"].split(".")[0].title(),
-                            ])
+                            ]).replace("-", " ")
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)

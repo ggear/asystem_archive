@@ -6,7 +6,7 @@ import yaml
 
 MODE = "QUERY"
 # MODE = "BUILD"
-# MODE = "DELETE"
+#MODE = "DELETE"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
