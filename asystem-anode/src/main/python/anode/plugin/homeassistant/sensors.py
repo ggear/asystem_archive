@@ -6,10 +6,11 @@ import yaml
 
 MODE = "QUERY"
 # MODE = "BUILD"
-#MODE = "DELETE"
+# MODE = "DELETE"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
+CSV_ROWS = [",".join(["ID", "Name", "Location", "Domain", "Group", "Topic", "Metadata"])]
 
 
 # TODO
@@ -27,14 +28,18 @@ def on_message(client, user_data, message):
     topic = message.topic
     if len(message.payload) > 0:
         payload = message.payload.decode('unicode-escape').encode('utf-8')
-        try:
-            print("DETECTED SENSOR on [{}] with METADATA [{}]".format(topic, payload))
-        except Exception as exception:
-            print(exception)
+        payload_json = json.loads(payload)
+        CSV_ROWS.append(",".join([
+            payload_json["unique_id"],
+            payload_json["name"],
+            "Location",
+            "Domain",
+            "Group",
+            topic,
+            "\"" + payload.replace("\"", "\"\"") + "\""
+        ]))
         if MODE == "DELETE":
             client.publish(topic, payload=None, qos=1, retain=True)
-    else:
-        print("DELETED SENSOR [{}]".format(topic))
 
 
 if __name__ == "__main__":
@@ -51,3 +56,8 @@ if __name__ == "__main__":
             if time_elapsed > TIME_WAIT_SECS:
                 client.disconnect()
                 break
+        with open('sensors.csv', 'w') as file:
+            for line in CSV_ROWS:
+                file.write(line)
+                file.write('\n')
+        print("{} [{}] sensors".format("DELETED" if MODE == "DELETE" else "DETECTED", len(CSV_ROWS)))

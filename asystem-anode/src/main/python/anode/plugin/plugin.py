@@ -396,20 +396,22 @@ class Plugin(object):
                                 datum_dict_decoded["data_metric"].split(".")[2].title(),
                                 datum_dict_decoded["data_metric"].split(".")[0].title(),
                             ]).replace("-", " ")
+                            datum_group = datum_dict_decoded["data_metric"].split(".")[0].title().replace("-", " ")
+                            datum_location = datum_dict_decoded["data_metric"].split(".")[2].title().replace("-", " ")
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
                                     "unique_id": datum_id,
-                                    "name": datum_name,
+                                    "name": " ".join([datum_location, datum_group]),
+                                    "group": datum_group,
+                                    "domain": datum_group,
+                                    "location": datum_location,
                                     "qos": 1,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "state_topic": datum_data_topic
                                 }
-
-                                print(datum_metadata["name"])
-
                                 publish_service.publishMessage(datum_metadata_topic, json.dumps(datum_metadata), None, 1, True,
                                                                lambda failure, message, queue: (
                                                                    anode.Log(logging.WARN).log("Plugin", "state", lambda:
