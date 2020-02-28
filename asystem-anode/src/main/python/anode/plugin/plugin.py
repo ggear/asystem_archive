@@ -404,12 +404,12 @@ class Plugin(object):
                                 datum_metadata = {
                                     "unique_id": datum_id,
                                     "name": " ".join([datum_location, datum_group]),
-                                    "group": datum_group,
-                                    "domain": datum_group,
-                                    "location": datum_location,
-                                    "qos": 1,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
+                                    "device": {
+                                        "identifiers": (datum_location, datum_group, datum_group)
+                                    },
+                                    "qos": 1,
                                     "state_topic": datum_data_topic
                                 }
                                 publish_service.publishMessage(datum_metadata_topic, json.dumps(datum_metadata), None, 1, True,

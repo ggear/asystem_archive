@@ -14,10 +14,9 @@ CSV_ROWS = [",".join(["ID", "Name", "Location", "Domain", "Group", "Topic", "Met
 
 
 # TODO
-#   - Write out sensors CSV
-#   - Merge into Asystem CSV (Name, Max/Min etc)
-#   - Merge into Lovelace UI
-#   - Merge into Grafana UI
+#   - Write out sensors CSV, test name, location, domain, group - filter out max/min/counters, rename metrics as necessary
+#   - Merge into Lovelace UI, perhaps do manually based on cohorts
+#   - Merge into Grafana UI, perhaps do automatically based on cohorts
 
 
 def on_connect(client, user_data, flags, return_code):
@@ -25,21 +24,25 @@ def on_connect(client, user_data, flags, return_code):
 
 
 def on_message(client, user_data, message):
-    topic = message.topic
-    if len(message.payload) > 0:
-        payload = message.payload.decode('unicode-escape').encode('utf-8')
-        payload_json = json.loads(payload)
-        CSV_ROWS.append(",".join([
-            payload_json["unique_id"],
-            payload_json["name"],
-            "Location",
-            "Domain",
-            "Group",
-            topic,
-            "\"" + payload.replace("\"", "\"\"") + "\""
-        ]))
-        if MODE == "DELETE":
-            client.publish(topic, payload=None, qos=1, retain=True)
+    try:
+        topic = message.topic
+        if len(message.payload) > 0:
+            payload = message.payload.decode('unicode-escape').encode('utf-8')
+            payload_json = json.loads(payload)
+            payload_csv = ",".join([
+                payload_json["unique_id"],
+                payload_json["name"],
+                payload_json["location"],
+                payload_json["domain"],
+                payload_json["group"],
+                topic,
+                "\"" + payload.replace("\"", "\"\"") + "\""
+            ])
+            CSV_ROWS.append(payload_csv)
+            if MODE == "DELETE":
+                client.publish(topic, payload=None, qos=1, retain=True)
+    except Exception as exception:
+        print(exception)
 
 
 if __name__ == "__main__":
