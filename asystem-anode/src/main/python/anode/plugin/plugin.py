@@ -543,15 +543,6 @@ class Plugin(object):
         return datum_dict_id
 
     @staticmethod
-    def datum_decode_id(datum_dict):
-        datum_dict_id = datum_dict["data_metric"] + "-" + "_".join([
-            datum_dict["data_type"],
-            datum_dict["data_unit"],
-            datum_dict["bin_unit"],
-            str(datum_dict["bin_width"])])
-        return datum_dict_id
-
-    @staticmethod
     def datum_decode_name(datum_dict):
         return datum_dict["data_metric"].split(".")[2].title().replace("-", " ")
 
