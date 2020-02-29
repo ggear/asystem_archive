@@ -413,7 +413,7 @@ class Plugin(object):
                                         "name": "ASystem",
                                         "manufacturer": "Jane and Graham",
                                         "model": "ANode",
-                                        "connections": (ID_HEX),
+                                        "connections": [["id", ID_HEX]],
                                         "sw_version": APP_MODEL_VERSION
                                     },
                                     "qos": 1,
