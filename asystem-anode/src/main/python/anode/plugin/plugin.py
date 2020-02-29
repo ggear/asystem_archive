@@ -409,7 +409,7 @@ class Plugin(object):
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "device": {
-                                        "identifiers": (datum_location, datum_domain, datum_group)
+                                        "identifiers": (datum_domain, datum_location, datum_group)
                                     },
                                     "qos": 1,
                                     "state_topic": datum_data_topic
@@ -552,7 +552,8 @@ class Plugin(object):
 
     @staticmethod
     def datum_decode_location(datum_dict):
-        return Plugin.datum_decode_name(datum_dict) if Plugin.datum_decode_name(datum_dict) in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
+        location = datum_dict["data_metric"].split(".")[2].split("-")[0].title()
+        return location if location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
 
     @staticmethod
     def datum_decode_domain(datum_dict):
@@ -560,7 +561,7 @@ class Plugin(object):
 
     @staticmethod
     def datum_decode_group(datum_dict):
-        return Plugin.datum_decode_domain(datum_dict)
+        return datum_dict["data_metric"].split(".")[0].title().replace("-", " ")
 
     @staticmethod
     def datum_tostring(datum_dict):
@@ -1531,7 +1532,7 @@ DATUM_LOCATIONS = {
     "Shed",
     "Basement",
     "Deck",
-    "Roof"
+    "Roof",
 }
 
 DATUM_SCHEMA_TO_ASCII = {}

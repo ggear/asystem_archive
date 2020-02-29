@@ -12,7 +12,7 @@ MODE = "QUERY"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
-CSV_ROWS = [",".join(["ID", "Name", "Location", "Domain", "Group", "Topic", "Metadata"])]
+CSV_ROWS = [",".join(["ID", "Name", "Domain", "Location", "Group", "Topic", "Metadata"])]
 
 
 # TODO
