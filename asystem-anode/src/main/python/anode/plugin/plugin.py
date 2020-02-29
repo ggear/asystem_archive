@@ -1529,6 +1529,7 @@ DATUM_LOCATIONS = {
     "Office",
     "Pantry",
     "Parents",
+    "Utility",
     "Shed",
     "Basement",
     "Deck",

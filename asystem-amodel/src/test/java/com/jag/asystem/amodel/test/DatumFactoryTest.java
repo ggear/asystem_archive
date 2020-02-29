@@ -90,10 +90,8 @@ public class DatumFactoryTest implements TestConstants {
       DatumFactory.decode(DatumDataUnit.km_P2Fh));
     assertEquals("km/h",
       DatumFactory.decode(DatumDataUnit.km_P2Fh));
-    assertEquals("ping.internet.new-york-city",
-      DatumFactory.decode(DatumMetric.ping__internet__new_Dyork_Dcity));
-    assertEquals("ping.internet.new-york-city",
-      DatumFactory.decode(DatumMetric.ping__internet__new_Dyork_Dcity));
+    assertEquals("internet.speed-test.ping-new-york-city",
+      DatumFactory.decode(DatumMetric.internet__speed_Dtest__ping_Dnew_Dyork_Dcity));
   }
 
   @Test
@@ -105,7 +103,7 @@ public class DatumFactoryTest implements TestConstants {
     testDatum("indexed-50", DatumFactory.getDatumIndexed(50),
       "getDataUnit", DatumDataUnit.km_P2Fh, "getDataMetric", DatumMetric.anode__energyforecast__metrics);
     testDatum("indexed-2147483647", DatumFactory.getDatumIndexed(21474836),
-      "getDataUnit", DatumDataUnit.dB, "getDataMetric", DatumMetric.power__consumption__fridge);
+      "getDataUnit", DatumDataUnit.dB, "getDataMetric", DatumMetric.rain__outdoor__rate);
     testDatum("random", DatumFactory.getDatumRandom());
   }
 

@@ -47,7 +47,7 @@ class Speedtest(Plugin):
                 if target in SPEEDTEST_ID_METRIC:
                     if packet_type != "latency":
                         self.datum_push(
-                            "upload__internet__" + SPEEDTEST_ID_METRIC[target],
+                            "internet__speed_Dtest__upload_D" + SPEEDTEST_ID_METRIC[target],
                             "current", "point",
                             throughput_upload,
                             "KB_P2Fs",
@@ -61,7 +61,7 @@ class Speedtest(Plugin):
                             data_derived_min=True
                         )
                         self.datum_push(
-                            "download__internet__" + SPEEDTEST_ID_METRIC[target],
+                            "internet__speed_Dtest__download_D" + SPEEDTEST_ID_METRIC[target],
                             "current", "point",
                             throughput_download,
                             "MB_P2Fs",
@@ -76,7 +76,7 @@ class Speedtest(Plugin):
                         )
                     if packet_type != "throughput":
                         self.datum_push(
-                            "ping__internet__" + SPEEDTEST_ID_METRIC[target],
+                            "internet__speed_Dtest__ping_D" + SPEEDTEST_ID_METRIC[target],
                             "current", "point",
                             latency_ping,
                             "ms",
