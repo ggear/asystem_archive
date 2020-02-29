@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
+import sys
 import time
 
 import paho.mqtt.client as mqtt
 import yaml
-import sys
-import os
 
 MODE = "QUERY"
 
