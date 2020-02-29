@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-declare -a HOST_ID=("2627" "5029" "24281")
-declare -a HOST_NAME=("per1.speedtest.telstra.net" "nyc.speedtest.sbcglobal.net" "speedtest-london-east.vodafone.co.uk")
+declare -a HOST_ID=("2627" "5029" "27260")
+declare -a HOST_NAME=("per1.speedtest.telstra.net" "nyc.speedtest.sbcglobal.net" "speedtest.ukbroadband.com")
 
 VERBOSE=false
 LATENCY=false
