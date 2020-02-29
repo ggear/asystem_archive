@@ -5,10 +5,10 @@ import time
 
 import paho.mqtt.client as mqtt
 import yaml
+import sys
+import os
 
 MODE = "QUERY"
-# MODE = "BUILD"
-# MODE = "DELETE"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
@@ -49,7 +49,9 @@ def on_message(client, user_data, message):
 
 
 if __name__ == "__main__":
-    with open("./../../../config/anode.yaml", "r") as stream:
+    if len(sys.argv) > 1 and sys.argv[1] == "delete":
+        MODE = "DELETE"
+    with open(os.path.dirname(os.path.realpath(__file__)) + "/../../../config/anode.yaml", "r") as stream:
         CONFIG = yaml.load(stream)
         client = mqtt.Client()
         client.on_connect = on_connect
