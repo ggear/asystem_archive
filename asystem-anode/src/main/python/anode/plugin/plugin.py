@@ -535,11 +535,11 @@ class Plugin(object):
 
     @staticmethod
     def datum_decode_id(datum_dict):
-        datum_dict_id = datum_dict["data_metric"] + "_" + "_".join([
+        datum_dict_id = (datum_dict["data_metric"] + "_" + "_".join([
             datum_dict["data_type"],
             datum_dict["data_unit"],
             datum_dict["bin_unit"],
-            str(datum_dict["bin_width"])]).replace("__", "_").lower()
+            str(datum_dict["bin_width"])])).replace("__", "_").lower()
         return datum_dict_id
 
     @staticmethod
