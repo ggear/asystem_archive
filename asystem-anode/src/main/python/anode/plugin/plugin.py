@@ -382,7 +382,9 @@ class Plugin(object):
                 anode.Log(logging.DEBUG).log("Plugin", "state",
                                              lambda: "[{}] pushed datum [{}]".format(self.name, self.datum_tostring(datum_dict)))
                 self.anode.push_datums({"dict": [datum_dict]})
-                if not datum_dict["data_metric"].startswith("anode"):
+                if not datum_dict["data_metric"].startswith("anode") and \
+                        datum_dict["data_type"] != "low" and \
+                        datum_dict["data_type"] != "high":
                     publish_service = self.config["publish_service"] if "publish_service" in self.config else None
                     publish_push_data_topic = self.config["publish_push_data_topic"] \
                         if "publish_push_data_topic" in self.config else None
@@ -392,10 +394,7 @@ class Plugin(object):
                         if publish_service.isConnected():
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
                             datum_id = Plugin.datum_decode_id(datum_dict)
-                            datum_name = " ".join([
-                                datum_dict_decoded["data_metric"].split(".")[2].title(),
-                                datum_dict_decoded["data_metric"].split(".")[0].title(),
-                            ]).replace("-", " ")
+                            datum_name = datum_dict_decoded["data_metric"].split(".")[2].title().replace("-", " ")
                             datum_group = datum_dict_decoded["data_metric"].split(".")[0].title().replace("-", " ")
                             datum_location = datum_dict_decoded["data_metric"].split(".")[2].title().replace("-", " ")
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
@@ -403,7 +402,7 @@ class Plugin(object):
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
                                     "unique_id": datum_id,
-                                    "name": " ".join([datum_location, datum_group]),
+                                    "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "device": {

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import time
 
@@ -25,18 +27,19 @@ def on_connect(client, user_data, flags, return_code):
 
 def on_message(client, user_data, message):
     try:
-        topic = message.topic
+        topic = message.topic.encode('utf-8')
         if len(message.payload) > 0:
             payload = message.payload.decode('unicode-escape').encode('utf-8')
             payload_json = json.loads(payload)
+            payload_unicode = "\"" + payload.replace("\"", "\"\"") + "\""
             payload_csv = ",".join([
-                payload_json["unique_id"],
-                payload_json["name"],
-                payload_json["location"],
-                payload_json["domain"],
-                payload_json["group"],
+                payload_json["unique_id"].encode('utf-8'),
+                payload_json["name"].encode('utf-8'),
+                payload_json["device"]["identifiers"][0].encode('utf-8'),
+                payload_json["device"]["identifiers"][1].encode('utf-8'),
+                payload_json["device"]["identifiers"][2].encode('utf-8'),
                 topic,
-                "\"" + payload.replace("\"", "\"\"") + "\""
+                payload_unicode,
             ])
             CSV_ROWS.append(payload_csv)
             if MODE == "DELETE":
