@@ -410,9 +410,9 @@ class Plugin(object):
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "json_attributes": (datum_domain, datum_group, datum_location),
                                     "device": {
-                                        "name": "ASystem",
+                                        "name": "ANode",
+                                        "model": "ASystem",
                                         "manufacturer": "Jane and Graham",
-                                        "model": "ANode",
                                         "connections": [["id", ID_HEX]],
                                         "sw_version": APP_MODEL_VERSION
                                     },
