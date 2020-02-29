@@ -390,13 +390,16 @@ class Plugin(object):
                         if "publish_push_data_topic" in self.config else None
                     publish_push_metadata_topic = self.config["publish_push_metadata_topic"] \
                         if "publish_push_metadata_topic" in self.config else None
+
+                    # TODO: Complete publish service
                     if publish_service is not None and publish_push_data_topic is not None and publish_push_metadata_topic is not None:
                         if publish_service.isConnected():
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
                             datum_id = Plugin.datum_decode_id(datum_dict)
-                            datum_name = datum_dict_decoded["data_metric"].split(".")[2].title().replace("-", " ")
-                            datum_group = datum_dict_decoded["data_metric"].split(".")[0].title().replace("-", " ")
-                            datum_location = datum_dict_decoded["data_metric"].split(".")[2].title().replace("-", " ")
+                            datum_name = Plugin.datum_decode_name(datum_dict_decoded)
+                            datum_group = Plugin.datum_decode_group(datum_dict_decoded)
+                            datum_domain = Plugin.datum_decode_domain(datum_dict_decoded)
+                            datum_location = Plugin.datum_decode_location(datum_dict_decoded)
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
@@ -406,7 +409,7 @@ class Plugin(object):
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
                                     "device": {
-                                        "identifiers": (datum_location, datum_group, datum_group)
+                                        "identifiers": (datum_location, datum_domain, datum_group)
                                     },
                                     "qos": 1,
                                     "state_topic": datum_data_topic
@@ -533,6 +536,31 @@ class Plugin(object):
             datum_dict["bin_unit"],
             str(datum_dict["bin_width"])])
         return datum_dict_id
+
+    @staticmethod
+    def datum_decode_id(datum_dict):
+        datum_dict_id = datum_dict["data_metric"] + "-" + "_".join([
+            datum_dict["data_type"],
+            datum_dict["data_unit"],
+            datum_dict["bin_unit"],
+            str(datum_dict["bin_width"])])
+        return datum_dict_id
+
+    @staticmethod
+    def datum_decode_name(datum_dict):
+        return datum_dict["data_metric"].split(".")[2].title().replace("-", " ")
+
+    @staticmethod
+    def datum_decode_location(datum_dict):
+        return Plugin.datum_decode_name(datum_dict) if Plugin.datum_decode_name(datum_dict) in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
+
+    @staticmethod
+    def datum_decode_domain(datum_dict):
+        return datum_dict["data_metric"].split(".")[0].title().replace("-", " ")
+
+    @staticmethod
+    def datum_decode_group(datum_dict):
+        return Plugin.datum_decode_domain(datum_dict)
 
     @staticmethod
     def datum_tostring(datum_dict):
@@ -1488,6 +1516,23 @@ DATUM_QUEUE_LAST = "last"
 DATUM_QUEUE_PUBLISH = "publish"
 DATUM_QUEUE_BUFFER = "buffer"
 DATUM_QUEUE_HISTORY = "history"
+
+DATUM_LOCATION_DEFAULT = "Home"
+DATUM_LOCATIONS = {
+    "Ada",
+    "Dining",
+    "Edwin",
+    "Kitchen",
+    "Laundry",
+    "Lounge",
+    "Office",
+    "Pantry",
+    "Parents",
+    "Shed",
+    "Basement",
+    "Deck",
+    "Roof"
+}
 
 DATUM_SCHEMA_TO_ASCII = {}
 DATUM_SCHEMA_FROM_ASCII = {}
