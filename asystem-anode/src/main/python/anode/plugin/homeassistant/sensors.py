@@ -12,7 +12,7 @@ MODE = "QUERY"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
-CSV_ROWS = [",".join(["ID", "Name", "Domain", "Location", "Group", "Topic", "Metadata"])]
+CSV_ROWS = [",".join(["ID", "Name", "Domain", "Group", "Location", "Topic", "Metadata"])]
 
 
 # TODO
@@ -68,4 +68,4 @@ if __name__ == "__main__":
             for line in CSV_ROWS:
                 file.write(line)
                 file.write('\n')
-        print("{} [{}] sensors".format("DELETED" if MODE == "DELETE" else "DETECTED", len(CSV_ROWS)))
+        print("{} [{}] sensors".format("DELETED" if MODE == "DELETE" else "DETECTED", len(CSV_ROWS) - 1))
