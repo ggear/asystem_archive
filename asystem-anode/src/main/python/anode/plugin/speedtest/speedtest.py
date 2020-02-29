@@ -10,7 +10,7 @@ from anode.plugin.plugin import Plugin
 SPEEDTEST_ID_METRIC = {
     "2627": "perth",
     "5029": "new_Dyork_Dcity",
-    "4078": "london"
+    "27260": "london"
 }
 
 
