@@ -396,7 +396,7 @@ class Plugin(object):
                         if publish_service.isConnected():
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
                             datum_id = Plugin.datum_decode_id(datum_dict)
-                            datum_name = "GG " + Plugin.datum_decode_name(datum_dict_decoded)
+                            datum_name = Plugin.datum_decode_name(datum_dict_decoded)
                             datum_group = Plugin.datum_decode_group(datum_dict_decoded)
                             datum_domain = Plugin.datum_decode_domain(datum_dict_decoded)
                             datum_location = Plugin.datum_decode_location(datum_dict_decoded)
@@ -408,14 +408,6 @@ class Plugin(object):
                                     "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
-                                    "json_attributes": (datum_domain, datum_group, datum_location),
-                                    "device": {
-                                        "name": "ANode",
-                                        "model": "ASystem",
-                                        "manufacturer": "Jane and Graham",
-                                        "connections": [["id", ID_HEX]],
-                                        "sw_version": APP_MODEL_VERSION
-                                    },
                                     "qos": 1,
                                     "state_topic": datum_data_topic
                                 }
