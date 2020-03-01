@@ -1,2 +1,0 @@
-ID,Name,Domain,Group,Location,Topic,Metadata
-energy_consumption_servers_integral_wh_day_1,Servers,,,,haas/sensor/config/sensor/anode/energy_consumption_servers_integral_wh_day_1/config,"{""unit_of_measurement"": ""Wh"", ""qos"": 1, ""name"": ""Servers"", ""value_template"": ""{{value_json.value}}"", ""state_topic"": ""haas/sensor/state/sensor/anode/energy_consumption_servers_integral_wh_day_1/state"", ""unique_id"": ""energy_consumption_servers_integral_wh_day_1""}"
