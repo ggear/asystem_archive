@@ -408,14 +408,6 @@ class Plugin(object):
                                     "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
-                                    "json_attributes": (datum_domain, datum_group, datum_location),
-                                    "device": {
-                                        "name": "ANode",
-                                        "model": "ASystem",
-                                        "manufacturer": "Jane and Graham",
-                                        "connections": [["id", ID_HEX]],
-                                        "sw_version": APP_MODEL_VERSION
-                                    },
                                     "qos": 1,
                                     "state_topic": datum_data_topic
                                 }
