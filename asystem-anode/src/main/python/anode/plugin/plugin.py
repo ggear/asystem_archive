@@ -395,8 +395,8 @@ class Plugin(object):
                     if publish_service is not None and publish_push_data_topic is not None and publish_push_metadata_topic is not None:
                         if publish_service.isConnected():
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
-                            datum_id = Plugin.datum_decode_id(datum_dict)
-                            datum_name = Plugin.datum_decode_name(datum_dict_decoded)
+                            datum_id = "gg_" + Plugin.datum_decode_id(datum_dict)
+                            datum_name = "GG " + Plugin.datum_decode_name(datum_dict_decoded)
                             datum_group = Plugin.datum_decode_group(datum_dict_decoded)
                             datum_domain = Plugin.datum_decode_domain(datum_dict_decoded)
                             datum_location = Plugin.datum_decode_location(datum_dict_decoded)
@@ -404,7 +404,7 @@ class Plugin(object):
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
-                                    "unique_id": "GG " + datum_id,
+                                    "unique_id": datum_id,
                                     "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
