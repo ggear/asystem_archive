@@ -384,7 +384,8 @@ class Plugin(object):
                 self.anode.push_datums({"dict": [datum_dict]})
                 if not datum_dict["data_metric"].startswith("anode") and \
                         datum_dict["data_type"] != "low" and \
-                        datum_dict["data_type"] != "high":
+                        datum_dict["data_type"] != "high" and \
+                        datum_dict["bin_width"] != "all_Dtime":
                     publish_service = self.config["publish_service"] if "publish_service" in self.config else None
                     publish_push_data_topic = self.config["publish_push_data_topic"] \
                         if "publish_push_data_topic" in self.config else None
@@ -774,15 +775,15 @@ class Plugin(object):
             datum_dict["data_value"] = long(datum_dict["data_value"])
             datum_dict["data_unit"] = HTMLParser.HTMLParser().unescape(datum_dict["data_unit"])
             if datum_dict["data_unit"] not in DATUM_SCHEMA_FROM_ASCII:
-                DATUM_SCHEMA_FROM_ASCII[datum_dict["data_unit"]] = urllib.unquote_plus(datum_dict["data_unit"].encode("utf-8")).decode(
-                    "utf-8")
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["data_unit"]] = \
+                    urllib.unquote_plus(datum_dict["data_unit"].encode("utf-8")).decode("utf-8")
             datum_dict["data_scale"] = float(datum_dict["data_scale"])
             datum_dict["data_timestamp"] = long(datum_dict["data_timestamp"])
             datum_dict["bin_timestamp"] = long(datum_dict["bin_timestamp"])
             datum_dict["bin_width"] = int(datum_dict["bin_width"])
             if datum_dict["bin_unit"] not in DATUM_SCHEMA_FROM_ASCII:
-                DATUM_SCHEMA_FROM_ASCII[datum_dict["bin_unit"]] = urllib.unquote_plus(datum_dict["bin_unit"].encode("utf-8")).decode(
-                    "utf-8")
+                DATUM_SCHEMA_FROM_ASCII[datum_dict["bin_unit"]] = \
+                    urllib.unquote_plus(datum_dict["bin_unit"].encode("utf-8")).decode("utf-8")
             datums_dict["dict"].append(datum_dict)
         return datums_dict
 
