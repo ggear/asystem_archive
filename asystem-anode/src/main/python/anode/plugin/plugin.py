@@ -404,7 +404,7 @@ class Plugin(object):
                             if datum_id not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
-                                    "unique_id": datum_id,
+                                    "unique_id": "GG " + datum_id,
                                     "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
