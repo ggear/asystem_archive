@@ -385,7 +385,7 @@ class Plugin(object):
                 if not datum_dict["data_metric"].startswith("anode") and \
                         datum_dict["data_type"] != "low" and \
                         datum_dict["data_type"] != "high" and \
-                        datum_dict["bin_width"] != "all_Dtime":
+                        datum_dict["bin_unit"] != "all_Dtime":
                     publish_service = self.config["publish_service"] if "publish_service" in self.config else None
                     publish_push_data_topic = self.config["publish_push_data_topic"] \
                         if "publish_push_data_topic" in self.config else None
