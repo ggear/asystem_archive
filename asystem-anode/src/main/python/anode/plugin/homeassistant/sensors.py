@@ -35,9 +35,9 @@ def on_message(client, user_data, message):
             payload_csv = ",".join([
                 payload_json["unique_id"].encode('utf-8'),
                 payload_json["name"].encode('utf-8'),
-                payload_json["json_attributes"][0].encode('utf-8'),
-                payload_json["json_attributes"][1].encode('utf-8'),
-                payload_json["json_attributes"][2].encode('utf-8'),
+                payload_json["json_attributes"][0].encode('utf-8') if "json_attributes" in payload_json else "",
+                payload_json["json_attributes"][1].encode('utf-8') if "json_attributes" in payload_json else "",
+                payload_json["json_attributes"][2].encode('utf-8') if "json_attributes" in payload_json else "",
                 topic,
                 payload_unicode,
             ])
