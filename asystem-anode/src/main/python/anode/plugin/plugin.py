@@ -543,7 +543,7 @@ class Plugin(object):
         datum_domain = datum_metric_tokens[0] if len(datum_metric_tokens) > 1 else ""
         datum_group = datum_metric_tokens[1] if len(datum_metric_tokens) > 1 else ""
         datum_location = datum_metric_tokens[2].split("-")[0].title() if len(datum_metric_tokens) > 1 else ""
-        datum_location = datum_location if datum_location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
+        datum_location = (datum_location if datum_location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT).lower()
         return "__".join([
             datum_name,
             datum_domain,

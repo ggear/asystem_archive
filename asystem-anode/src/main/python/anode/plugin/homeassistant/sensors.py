@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import time
+from anode.plugin.plugin import Plugin
 
 import paho.mqtt.client as mqtt
 import yaml
@@ -32,12 +33,15 @@ def on_message(client, user_data, message):
             payload = message.payload.decode('unicode-escape').encode('utf-8')
             payload_json = json.loads(payload)
             payload_unicode = "\"" + payload.replace("\"", "\"\"") + "\""
+            payload_id_tokens = Plugin.datum_field_decode(payload_json["unique_id"]).encode('utf-8').split(".") \
+                if "unique_id" in payload_json else ()
+            payload_id_tokens = [token.replace("-", " ").title() for token in payload_id_tokens]
             payload_csv = ",".join([
                 payload_json["unique_id"].encode('utf-8') if "unique_id" in payload_json else "",
                 payload_json["name"].encode('utf-8') if "name" in payload_json else "",
-                payload_json["json_attributes"][0].encode('utf-8') if "json_attributes" in payload_json else "",
-                payload_json["json_attributes"][1].encode('utf-8') if "json_attributes" in payload_json else "",
-                payload_json["json_attributes"][2].encode('utf-8') if "json_attributes" in payload_json else "",
+                payload_id_tokens[1] if len(payload_id_tokens) > 3 else "",
+                payload_id_tokens[2] if len(payload_id_tokens) > 3 else "",
+                payload_id_tokens[3] if len(payload_id_tokens) > 3 else "",
                 topic,
                 payload_unicode,
             ])
