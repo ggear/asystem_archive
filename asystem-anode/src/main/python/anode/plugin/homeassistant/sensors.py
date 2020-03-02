@@ -45,9 +45,9 @@ def on_message(client, user_data, message):
             payload_csv = ",".join([
                 payload_json["unique_id"].encode('utf-8') if "unique_id" in payload_json else "",
                 payload_json["name"].encode('utf-8') if "name" in payload_json else "",
-                payload_id_tokens[2] if len(payload_id_tokens) > 4 else "",
-                payload_id_tokens[3] if len(payload_id_tokens) > 4 else "",
-                payload_id_tokens[4] if len(payload_id_tokens) > 4 else "",
+                payload_id_tokens[2] if len(payload_id_tokens) > 1 else "",
+                payload_id_tokens[3] if len(payload_id_tokens) > 2 else "",
+                payload_id_tokens[4] if len(payload_id_tokens) > 3 else "",
                 topic,
                 payload_unicode,
             ])
@@ -74,8 +74,12 @@ if __name__ == "__main__":
             if time_elapsed > TIME_WAIT_SECS:
                 client.disconnect()
                 break
-        with open('sensors.csv', 'w') as file:
+        with open('sensors_metadata.csv', 'w') as file:
             for line in CSV_ROWS:
-                file.write(line)
-                file.write('\n')
+                file.write("{}\n".format(line))
+        with open('sensors_entities.yaml', 'w') as file:
+            lines = iter(CSV_ROWS)
+            next(lines)
+            for line in lines:
+                file.write("      - entity: sensor.{}\n".format(line.split(",")[1].replace(" ", "_").lower()))
         print("{} [{}] sensors".format("DELETED" if MODE == "DELETE" else "DETECTED", len(CSV_ROWS) - 1))
