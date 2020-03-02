@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import json
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + "/../../..")
+
+import json
+
 import sys
 import time
 from anode.plugin.plugin import Plugin

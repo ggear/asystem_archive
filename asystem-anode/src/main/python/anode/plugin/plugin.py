@@ -416,7 +416,8 @@ class Plugin(object):
                                         "name": "ANode",
                                         "model": "ASystem",
                                         "manufacturer": "Jane and Graham",
-                                        "connections": [["id", ID_HEX]],
+                                        "identifiers": [["id", ID_HEX]],
+                                        "connections": [["mac", ID_HEX_STRING]],
                                         "sw_version": APP_MODEL_VERSION
                                     },
                                     "qos": 1,
@@ -1489,6 +1490,7 @@ PICKLE_PATH_REGEX = ".*/[a-zA-z]*/([a-zA-z]*)/model/pickle/([a-zA-z]*)/none/" \
 
 ID_BYTE = '{s:0^12}'.format(s=format(get_mac(), "x")).decode("hex")
 ID_HEX = ID_BYTE.encode("hex").upper()
+ID_HEX_STRING = ':'.join(a + b for a, b in zip(ID_HEX[::2], ID_HEX[1::2]))
 ID_BASE64 = base64.b64encode(str(ID_BYTE))
 
 SVG_EMPTY = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
