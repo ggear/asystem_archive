@@ -545,6 +545,7 @@ class Plugin(object):
         datum_location = datum_metric_tokens[2].split("-")[0].title() if len(datum_metric_tokens) > 1 else ""
         datum_location = (datum_location if datum_location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT).lower()
         return "__".join([
+            "anode",
             datum_name,
             datum_domain,
             datum_group,

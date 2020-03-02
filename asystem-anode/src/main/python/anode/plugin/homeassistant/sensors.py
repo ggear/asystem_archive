@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 import yaml
 
 MODE = "QUERY"
+# MODE = "DELETE"
 
 CONFIG = None
 TIME_WAIT_SECS = 2
@@ -39,9 +40,9 @@ def on_message(client, user_data, message):
             payload_csv = ",".join([
                 payload_json["unique_id"].encode('utf-8') if "unique_id" in payload_json else "",
                 payload_json["name"].encode('utf-8') if "name" in payload_json else "",
-                payload_id_tokens[1] if len(payload_id_tokens) > 3 else "",
-                payload_id_tokens[2] if len(payload_id_tokens) > 3 else "",
-                payload_id_tokens[3] if len(payload_id_tokens) > 3 else "",
+                payload_id_tokens[2] if len(payload_id_tokens) > 4 else "",
+                payload_id_tokens[3] if len(payload_id_tokens) > 4 else "",
+                payload_id_tokens[4] if len(payload_id_tokens) > 4 else "",
                 topic,
                 payload_unicode,
             ])
