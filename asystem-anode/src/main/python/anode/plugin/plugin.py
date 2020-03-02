@@ -416,7 +416,7 @@ class Plugin(object):
                                         "name": "ANode",
                                         "model": "ASystem",
                                         "manufacturer": "Jane and Graham",
-                                        "identifiers": [["id", ID_HEX]],
+                                        "identifiers": {("anode", ID_HEX)},
                                         "connections": [["mac", ID_HEX_STRING]],
                                         "sw_version": APP_MODEL_VERSION
                                     },
