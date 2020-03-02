@@ -396,20 +396,22 @@ class Plugin(object):
                     if publish_service is not None and publish_push_data_topic is not None and publish_push_metadata_topic is not None:
                         if publish_service.isConnected():
                             datum_dict_decoded = Plugin.datum_decode(datum_dict)
-                            datum_id = Plugin.datum_decode_id(datum_dict)
-                            datum_name = Plugin.datum_decode_name(datum_dict_decoded)
-                            datum_group = Plugin.datum_decode_group(datum_dict_decoded)
-                            datum_domain = Plugin.datum_decode_domain(datum_dict_decoded)
-                            datum_location = Plugin.datum_decode_location(datum_dict_decoded)
+                            datum_id = Plugin.datum_encode_id(datum_dict)
+                            datum_guid = Plugin.datum_encode_guid(datum_dict)
+                            datum_name = Plugin.datum_decode_label(datum_dict_decoded)
                             datum_data_topic = "{}/sensor/anode/{}/state".format(publish_push_data_topic, datum_id)
-                            if datum_id not in PUBLISH_METADATA_CACHE:
+                            if datum_guid in PUBLISH_METADATA_CACHE and PUBLISH_METADATA_CACHE[datum_guid] != datum_id:
+                                anode.Log(logging.ERROR).log("Plugin", "error",
+                                                             lambda: "[{}] attempting to publish datum with GUID [{}] and ID [{}] "
+                                                                     "when previously published with ID [{}]".format(
+                                                                 self.name, datum_guid, datum_id, PUBLISH_METADATA_CACHE[datum_guid]))
+                            if datum_guid not in PUBLISH_METADATA_CACHE:
                                 datum_metadata_topic = "{}/sensor/anode/{}/config".format(publish_push_metadata_topic, datum_id)
                                 datum_metadata = {
                                     "unique_id": datum_id,
-                                    "name": " ".join([datum_name, datum_domain]),
+                                    "name": datum_name,
                                     "value_template": "{{value_json.value}}",
                                     "unit_of_measurement": datum_dict_decoded["data_unit"],
-                                    "json_attributes": (datum_domain, datum_group, datum_location),
                                     "device": {
                                         "name": "ANode",
                                         "model": "ASystem",
@@ -425,7 +427,7 @@ class Plugin(object):
                                                                    anode.Log(logging.WARN).log("Plugin", "state", lambda:
                                                                    "[{}] publish failed datum metadata [{}] with reason {}".format(
                                                                        self.name, datum_metadata, str(failure).replace("\n", ""))), None))
-                                PUBLISH_METADATA_CACHE.add(datum_id)
+                                PUBLISH_METADATA_CACHE[datum_guid] = datum_id
                             datum_data = {"value": float(int(datum_dict["data_value"]) / Decimal(datum_dict["data_scale"]))}
                             publish_service.publishMessage(datum_data_topic, json.dumps(datum_data), None, 1, False,
                                                            lambda failure, message, queue: (
@@ -535,30 +537,37 @@ class Plugin(object):
         return datum_dict_decoded
 
     @staticmethod
-    def datum_decode_id(datum_dict):
-        datum_dict_id = (datum_dict["data_metric"] + "_" + "_".join([
+    def datum_encode_id(datum_dict):
+        datum_metric_tokens = datum_dict["data_metric"].split("__")
+        datum_name = datum_metric_tokens[2] if len(datum_metric_tokens) > 1 else datum_dict["data_metric"]
+        datum_domain = datum_metric_tokens[0] if len(datum_metric_tokens) > 1 else ""
+        datum_group = datum_metric_tokens[1] if len(datum_metric_tokens) > 1 else ""
+        datum_location = datum_metric_tokens[2].split("-")[0].title() if len(datum_metric_tokens) > 1 else ""
+        datum_location = datum_location if datum_location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
+        return "__".join([
+            datum_name,
+            datum_domain,
+            datum_group,
+            datum_location
+        ])
+
+    @staticmethod
+    def datum_encode_guid(datum_dict):
+        return "_".join([
+            datum_dict["data_metric"],
             datum_dict["data_type"],
             datum_dict["data_unit"],
             datum_dict["bin_unit"],
-            str(datum_dict["bin_width"])])).replace("__", "_").lower()
-        return datum_dict_id
+            str(datum_dict["bin_width"])])
 
     @staticmethod
-    def datum_decode_name(datum_dict):
-        return datum_dict["data_metric"].split(".")[2].title().replace("-", " ")
-
-    @staticmethod
-    def datum_decode_domain(datum_dict):
-        return datum_dict["data_metric"].split(".")[0].title().replace("-", " ")
-
-    @staticmethod
-    def datum_decode_group(datum_dict):
-        return datum_dict["data_metric"].split(".")[1].title().replace("-", " ")
-
-    @staticmethod
-    def datum_decode_location(datum_dict):
-        location = datum_dict["data_metric"].split(".")[2].split("-")[0].title()
-        return location if location in DATUM_LOCATIONS else DATUM_LOCATION_DEFAULT
+    def datum_decode_label(datum_dict_decoded):
+        datum_name = datum_dict_decoded["data_metric"].split(".")[2]
+        datum_domain = datum_dict_decoded["data_metric"].split(".")[0]
+        return (" ".join([
+            datum_name,
+            datum_domain
+        ])).replace("-", " ").title()
 
     @staticmethod
     def datum_tostring(datum_dict):
@@ -1098,8 +1107,9 @@ class Plugin(object):
                     try:
                         datum_df[datum_df_columns] = datum_df[datum_df_columns].interpolate(method="time")
                     except TypeError as type_error:
-                        anode.Log(logging.WARN).log("Plugin", "state", lambda: "[{}] could not interpolate data frame column [{}]".format(
-                            self.name, type_error))
+                        anode.Log(logging.WARN).log("Plugin", "state",
+                                                    lambda: "[plugin] could not interpolate data frame column [{}]".format(
+                                                        type_error))
                 if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "forwardback":
                     datum_df[datum_df_columns] = datum_df[datum_df_columns].fillna(method="ffill").fillna(method="bfill")
                 if datum_options["fill"][0] == "linear" or datum_options["fill"][0] == "zeros":
@@ -1526,12 +1536,16 @@ DATUM_LOCATIONS = {
     "Office",
     "Pantry",
     "Parents",
+    "Ensuite",
+    "Bathroom",
     "Utility",
     "Shed",
     "Basement",
     "Deck",
     "Roof",
 }
+
+PICKLES_CACHE = {}
 
 DATUM_SCHEMA_TO_ASCII = {}
 DATUM_SCHEMA_FROM_ASCII = {}
@@ -1542,10 +1556,8 @@ DATUM_SCHEMA_MODEL = {DATUM_SCHEMA_JSON["fields"][i]["name"].encode("utf-8"): i 
 DATUM_SCHEMA_METRICS = {Plugin.datum_field_decode(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"][i].encode("utf-8")):
                             i * 10 for i in range(len(DATUM_SCHEMA_JSON["fields"][4]["type"]["symbols"]))}
 
-PUBLISH_METADATA_CACHE = set()
+PUBLISH_METADATA_CACHE = {}
 PUBLISH_BATCH_TOPIC = "/anode_version=" + APP_VERSION + "/anode_id=" + ID_HEX + "/anode_model=" + APP_MODEL_VERSION
-
-PICKLES_CACHE = {}
 
 
 class ModelPull(Plugin):

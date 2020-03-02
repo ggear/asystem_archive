@@ -253,7 +253,8 @@ class ANodeTest(TestCase):
             "°": "_PC2_PB0",
             "°C": "_PC2_PB0C",
             "anode.fronius.metrics": "anode__fronius__metrics",
-            "energy.consumption-off-peak-morning.grid": "energy__consumption_Doff_Dpeak_Dmorning__grid"
+            "energy.consumption-off-peak-morning.grid": "energy__consumption_Doff_Dpeak_Dmorning__grid",
+            "some.random.number.of.tokens.even-with-dashes": "some__random__number__of__tokens__even_Dwith_Ddashes"
         }.iteritems():
             self.assertEqual(unescaped, Plugin.datum_field_decode(escaped))
             self.assertEqual(escaped, Plugin.datum_field_encode(unescaped))
