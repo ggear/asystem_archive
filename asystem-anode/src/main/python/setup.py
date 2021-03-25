@@ -60,7 +60,7 @@ setup(
         "scikit-learn==0.18.1",
         "matplotlib==2.0.0",
         "astral==1.9.2",
-        "pyyaml==3.12",
+        "pyyaml==5.4",
         "xmltodict==0.11.0",
         "pathlib2==2.3.2",
         "python-dateutil==2.6.1",
