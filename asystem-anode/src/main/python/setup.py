@@ -50,7 +50,7 @@ setup(
         "treq==17.8.0",
         "avro==1.7.6",
         "cycler==0.10.0",
-        "requests==2.18.4",
+        "requests==2.20.0",
         "ilio==0.3.0",
         "dill==0.2.6",
         "pandas==0.20.1",
