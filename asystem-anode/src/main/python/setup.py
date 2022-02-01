@@ -47,7 +47,7 @@ setup(
         "twisted-mqtt==0.3.6",
         "autobahn==0.16.1",
         "klein==15.3.1",
-        "treq==17.8.0",
+        "treq==22.1.0",
         "avro==1.7.6",
         "cycler==0.10.0",
         "requests==2.18.4",
