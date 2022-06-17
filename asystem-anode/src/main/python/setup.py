@@ -54,7 +54,7 @@ setup(
         "ilio==0.3.0",
         "dill==0.2.6",
         "pandas==0.20.1",
-        "numpy==1.12.0",
+        "numpy==1.21.0",
         "mpmath==1.0.0",
         "scipy==0.19.0",
         "scikit-learn==0.18.1",
